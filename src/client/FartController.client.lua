@@ -63,6 +63,10 @@ local fartParticles = nil
 local lastFartTime = 0
 local fartInterval = 0.3
 
+-- Sonido de comer
+local eatSound = nil
+local eatSoundId = "rbxassetid://6748255118"
+
 -- Partes del cuerpo
 local bodyParts = {}
 local originalSizes = {}
@@ -125,6 +129,17 @@ local function createFartSound(parent)
 	sound.Name = "FartSound"
 	sound.Volume = 1
 	sound.RollOffMaxDistance = 50
+	sound.Parent = parent
+	return sound
+end
+
+local function createEatSound(parent)
+	local sound = Instance.new("Sound")
+	sound.Name = "EatSound"
+	sound.SoundId = eatSoundId
+	sound.Volume = 0.8
+	sound.Looped = true
+	sound.RollOffMaxDistance = 30
 	sound.Parent = parent
 	return sound
 end
@@ -302,6 +317,13 @@ local function setupBody()
 		fartSound = createFartSound(fartParent)
 	end
 
+	-- Configurar sonido de comer (en la cabeza)
+	local head = character:FindFirstChild("Head")
+	if head then
+		if eatSound then eatSound:Destroy() end
+		eatSound = createEatSound(head)
+	end
+
 	return true
 end
 
@@ -410,19 +432,35 @@ end
 
 local function stopEating()
 	isEating = false
+	if eatSound and eatSound.Playing then
+		eatSound:Stop()
+	end
 end
 
 local function updateEating()
 	-- Comer automáticamente si está en zona de comida
 	if not currentFoodZone then
-		isEating = false
+		if isEating then
+			stopEating()
+		end
 		return
 	end
 
-	if isPropelling then return end
+	if isPropelling then
+		if isEating then
+			stopEating()
+		end
+		return
+	end
 	if not isDataLoaded then return end
 
-	isEating = true
+	-- Iniciar sonido de comer si no está sonando
+	if not isEating then
+		isEating = true
+		if eatSound and not eatSound.Playing then
+			eatSound:Play()
+		end
+	end
 
 	-- La comida determina la velocidad base
 	-- El upgrade EatSpeed del jugador da un bonus multiplicador
@@ -438,6 +476,11 @@ local function updateEating()
 	if currentFatness < playerStats.MaxFatness then
 		currentFatness = math.min(currentFatness + eatSpeed, playerStats.MaxFatness)
 		applyBodySize(currentFatness)
+	else
+		-- Ya está lleno, detener sonido
+		if eatSound and eatSound.Playing then
+			eatSound:Stop()
+		end
 	end
 end
 
@@ -586,6 +629,10 @@ local function onCharacterAdded(newCharacter)
 	if fartSound then
 		fartSound:Destroy()
 		fartSound = nil
+	end
+	if eatSound then
+		eatSound:Destroy()
+		eatSound = nil
 	end
 
 	task.wait(0.5)
