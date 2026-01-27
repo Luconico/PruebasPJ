@@ -2,6 +2,7 @@
 	HeightRewards.client.lua
 	Sistema de recompensas por altura con feedback visual tipo "gambling"
 	Efectos llamativos, números grandes, colores brillantes
+	RESPONSIVE: Adaptado para móviles y PC
 ]]
 
 local Players = game:GetService("Players")
@@ -14,7 +15,42 @@ local player = Players.LocalPlayer
 -- Esperar dependencias
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
+
+-- ============================================
+-- TAMAÑOS RESPONSIVE
+-- ============================================
+
+local function getResponsiveSizes()
+	local info = ResponsiveUI.getViewportInfo()
+	local scale = info.Scale
+	local isMobile = info.IsMobile
+
+	return {
+		-- Tamaño base de notificación (antes de aplicar tier scale) - más grande en móvil
+		NotificationWidth = isMobile and 320 or math.floor(400 * scale),
+		NotificationHeight = isMobile and 120 or math.floor(150 * scale),
+
+		-- Tamaños de texto (más legibles en móvil)
+		HeightTextSize = isMobile and 38 or math.floor(48 * scale),
+		CoinsTextSize = isMobile and 44 or math.floor(56 * scale),
+		CoinsTextSizeFlash = isMobile and 54 or math.floor(70 * scale),
+
+		-- Partículas
+		ParticleSize = isMobile and 24 or 30,
+		ParticleTextMin = isMobile and 16 or 20,
+		ParticleTextMax = isMobile and 32 or 40,
+		ParticleDistance = isMobile and 100 or 150,
+		ParticleDistanceMax = isMobile and 220 or 300,
+
+		-- Glow
+		GlowScale = isMobile and 1.3 or 1.5,
+		GlowScalePulse = isMobile and 1.5 or 1.8,
+	}
+end
+
+local sizes = getResponsiveSizes()
 
 -- ============================================
 -- CONFIGURACIÓN VISUAL
@@ -98,6 +134,7 @@ end
 
 local function createCoinParticles(parent, tier)
 	local tierConfig = Config.Rewards.TierEffects[tier] or Config.Rewards.TierEffects.common
+	local info = ResponsiveUI.getViewportInfo()
 
 	-- Emitter principal de monedas/estrellas
 	local particles = Instance.new("Frame")
@@ -106,27 +143,28 @@ local function createCoinParticles(parent, tier)
 	particles.BackgroundTransparency = 1
 	particles.Parent = parent
 
-	-- Crear partículas individuales
-	local numParticles = tier == "mythic" and 30 or (tier == "legendary" and 20 or (tier == "epic" and 15 or 8))
+	-- Menos partículas en móvil para rendimiento
+	local baseParticles = tier == "mythic" and 30 or (tier == "legendary" and 20 or (tier == "epic" and 15 or 8))
+	local numParticles = info.IsMobile and math.floor(baseParticles * 0.6) or baseParticles
 
 	for i = 1, numParticles do
 		local particle = Instance.new("TextLabel")
 		particle.Name = "Particle_" .. i
-		particle.Size = UDim2.new(0, 30, 0, 30)
+		particle.Size = UDim2.new(0, sizes.ParticleSize, 0, sizes.ParticleSize)
 		particle.Position = UDim2.new(0.5, 0, 0.5, 0)
 		particle.AnchorPoint = Vector2.new(0.5, 0.5)
 		particle.BackgroundTransparency = 1
 		particle.Text = math.random() > 0.5 and "$" or "*"
 		particle.TextColor3 = tierConfig.Color
-		particle.TextSize = math.random(20, 40)
+		particle.TextSize = math.random(sizes.ParticleTextMin, sizes.ParticleTextMax)
 		particle.Font = Enum.Font.GothamBlack
 		particle.TextTransparency = 0
 		particle.ZIndex = 5
 		particle.Parent = particles
 
-		-- Animación aleatoria de explosión
+		-- Animación aleatoria de explosión (distancia ajustada para móvil)
 		local angle = math.rad(math.random(0, 360))
-		local distance = math.random(100, 300)
+		local distance = math.random(sizes.ParticleDistance, sizes.ParticleDistanceMax)
 		local targetX = 0.5 + math.cos(angle) * (distance / 500)
 		local targetY = 0.5 + math.sin(angle) * (distance / 300)
 
@@ -159,6 +197,16 @@ local function showRewardNotification(milestone)
 	local tier = milestone.Tier or "common"
 	local tierConfig = Config.Rewards.TierEffects[tier] or Config.Rewards.TierEffects.common
 
+	-- Actualizar tamaños responsive
+	sizes = getResponsiveSizes()
+
+	-- Calcular tamaños finales con tier scale
+	local finalWidth = sizes.NotificationWidth * tierConfig.Scale
+	local finalHeight = sizes.NotificationHeight * tierConfig.Scale
+	local heightTextSize = sizes.HeightTextSize * tierConfig.Scale
+	local coinsTextSize = sizes.CoinsTextSize * tierConfig.Scale
+	local coinsFlashSize = sizes.CoinsTextSizeFlash * tierConfig.Scale
+
 	-- Eliminar notificación anterior con fade out rápido
 	if currentNotification and currentNotification.Parent then
 		local oldNotification = currentNotification
@@ -180,7 +228,7 @@ local function showRewardNotification(milestone)
 	-- Container principal de la notificación
 	local notification = Instance.new("Frame")
 	notification.Name = "Notification"
-	notification.Size = UDim2.new(0, 400 * tierConfig.Scale, 0, 150 * tierConfig.Scale)
+	notification.Size = UDim2.new(0, finalWidth, 0, finalHeight)
 	notification.Position = UDim2.new(0.5, 0, 0.3, 0)
 	notification.AnchorPoint = Vector2.new(0.5, 0.5)
 	notification.BackgroundTransparency = 1
@@ -193,7 +241,7 @@ local function showRewardNotification(milestone)
 	if tier ~= "common" then
 		local glow = Instance.new("ImageLabel")
 		glow.Name = "Glow"
-		glow.Size = UDim2.new(1.5, 0, 2, 0)
+		glow.Size = UDim2.new(sizes.GlowScale, 0, 2, 0)
 		glow.Position = UDim2.new(0.5, 0, 0.5, 0)
 		glow.AnchorPoint = Vector2.new(0.5, 0.5)
 		glow.BackgroundTransparency = 1
@@ -205,7 +253,7 @@ local function showRewardNotification(milestone)
 
 		-- Animación de pulsación del glow
 		local glowTween = TweenService:Create(glow, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, -1, true), {
-			Size = UDim2.new(1.8, 0, 2.5, 0),
+			Size = UDim2.new(sizes.GlowScalePulse, 0, 2.5, 0),
 			ImageTransparency = 0.5
 		})
 		glowTween:Play()
@@ -219,12 +267,18 @@ local function showRewardNotification(milestone)
 	heightText.BackgroundTransparency = 1
 	heightText.Text = milestone.Message
 	heightText.TextColor3 = tierConfig.Color
-	heightText.TextSize = 48 * tierConfig.Scale
+	heightText.TextSize = heightTextSize
 	heightText.Font = Enum.Font.GothamBlack
 	heightText.TextStrokeTransparency = 0
 	heightText.TextStrokeColor3 = Color3.new(0, 0, 0)
 	heightText.ZIndex = 10
+	heightText.TextScaled = true
 	heightText.Parent = notification
+
+	local heightTextConstraint = Instance.new("UITextSizeConstraint")
+	heightTextConstraint.MaxTextSize = heightTextSize
+	heightTextConstraint.MinTextSize = 18
+	heightTextConstraint.Parent = heightText
 
 	-- Texto de monedas ganadas con efecto de contador
 	local coinsText = Instance.new("TextLabel")
@@ -234,12 +288,18 @@ local function showRewardNotification(milestone)
 	coinsText.BackgroundTransparency = 1
 	coinsText.Text = "+0"
 	coinsText.TextColor3 = Color3.fromRGB(255, 215, 0) -- Dorado
-	coinsText.TextSize = 56 * tierConfig.Scale
+	coinsText.TextSize = coinsTextSize
 	coinsText.Font = Enum.Font.GothamBlack
 	coinsText.TextStrokeTransparency = 0
 	coinsText.TextStrokeColor3 = Color3.new(0, 0, 0)
 	coinsText.ZIndex = 10
+	coinsText.TextScaled = true
 	coinsText.Parent = notification
+
+	local coinsTextConstraint = Instance.new("UITextSizeConstraint")
+	coinsTextConstraint.MaxTextSize = coinsFlashSize
+	coinsTextConstraint.MinTextSize = 20
+	coinsTextConstraint.Parent = coinsText
 
 	-- Animación de entrada (scale + fade)
 	notification.Size = UDim2.new(0, 0, 0, 0)
@@ -248,7 +308,7 @@ local function showRewardNotification(milestone)
 
 	-- Pop in
 	local popIn = TweenService:Create(notification, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0, 400 * tierConfig.Scale, 0, 150 * tierConfig.Scale)
+		Size = UDim2.new(0, finalWidth, 0, finalHeight)
 	})
 	popIn:Play()
 
@@ -271,9 +331,11 @@ local function showRewardNotification(milestone)
 
 		coinsText.Text = "+" .. currentValue
 
-		-- Shake effect para tiers altos
+		-- Shake effect para tiers altos (reducido en móvil)
 		if tier == "legendary" or tier == "mythic" or tier == "epic" then
-			local shake = (1 - progress) * 5
+			local info = ResponsiveUI.getViewportInfo()
+			local shakeAmount = info.IsMobile and 3 or 5
+			local shake = (1 - progress) * shakeAmount
 			coinsText.Position = UDim2.new(
 				0, math.random(-shake, shake),
 				0.5, math.random(-shake, shake)
@@ -285,15 +347,17 @@ local function showRewardNotification(milestone)
 			coinsText.Position = UDim2.new(0, 0, 0.5, 0)
 			coinsText.Text = "+" .. targetCoins
 
-			-- Flash final
-			local flash = TweenService:Create(coinsText, TweenInfo.new(0.1), {
-				TextSize = 70 * tierConfig.Scale
-			})
-			flash:Play()
-			flash.Completed:Connect(function()
-				TweenService:Create(coinsText, TweenInfo.new(0.1), {
-					TextSize = 56 * tierConfig.Scale
-				}):Play()
+			-- Flash final usando scale en lugar de TextSize fijo
+			local originalSize = coinsText.Size
+			TweenService:Create(coinsText, TweenInfo.new(0.1), {
+				Size = UDim2.new(originalSize.X.Scale * 1.2, 0, originalSize.Y.Scale * 1.2, 0)
+			}):Play()
+			task.delay(0.1, function()
+				if coinsText and coinsText.Parent then
+					TweenService:Create(coinsText, TweenInfo.new(0.1), {
+						Size = originalSize
+					}):Play()
+				end
 			end)
 		end
 	end)

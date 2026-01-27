@@ -2,6 +2,7 @@
 	UpgradeShop.client.lua
 	Sistema de tienda de upgrades con estilo cartoon
 	Gran impacto visual, botones grandes, animaciones fluidas
+	RESPONSIVE: Adaptado para móviles y PC
 ]]
 
 local Players = game:GetService("Players")
@@ -16,6 +17,79 @@ local playerGui = player:WaitForChild("PlayerGui")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local Shared = ReplicatedStorage:WaitForChild("Shared", 10)
 local Config = require(Shared:WaitForChild("Config"))
+local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
+
+-- ============================================
+-- TAMAÑOS RESPONSIVE
+-- ============================================
+
+local function getResponsiveSizes()
+	local info = ResponsiveUI.getViewportInfo()
+	local scale = info.Scale
+	local isMobile = info.IsMobile
+	local isTablet = info.IsTablet
+
+	-- Escala más suave para móvil (no reducir tanto)
+	local mobileScale = math.max(0.85, scale)
+
+	return {
+		-- Contenedor principal
+		-- En móvil: casi pantalla completa, en PC: ventana centrada
+		ContainerWidth = isMobile and 0.95 or (isTablet and 0.85 or 0.5),
+		ContainerWidthOffset = isMobile and 0 or (isTablet and 0 or 900),
+		ContainerHeight = isMobile and 0.92 or (isTablet and 0.85 or 0.75),
+		ContainerHeightOffset = isMobile and 0 or (isTablet and 0 or 650),
+		UseScale = isMobile or isTablet, -- Si usar Scale en lugar de Offset
+
+		-- Header (más grande en móvil)
+		HeaderHeight = isMobile and 80 or math.floor(100 * scale),
+		TitleSize = isMobile and 28 or math.floor(42 * scale),
+		CloseButtonSize = isMobile and 55 or math.floor(70 * scale),
+		CloseButtonTextSize = isMobile and 32 or math.floor(42 * scale),
+
+		-- Coins display
+		CoinsDisplayWidth = isMobile and 140 or math.floor(200 * scale),
+		CoinsDisplayHeight = isMobile and 40 or math.floor(50 * scale),
+		CoinsIconSize = isMobile and 24 or math.floor(28 * scale),
+		CoinsTextSize = isMobile and 22 or math.floor(28 * scale),
+
+		-- Cards (altura ajustada)
+		CardHeight = isMobile and 140 or math.floor(140 * scale),
+		CardPadding = isMobile and 10 or math.floor(20 * scale),
+		IconSize = isMobile and 55 or math.floor(80 * scale),
+		IconTextSize = isMobile and 34 or math.floor(48 * scale),
+
+		-- Card text (tamaños más legibles)
+		NameTextSize = isMobile and 22 or math.floor(28 * scale),
+		DescTextSize = isMobile and 14 or math.floor(16 * scale),
+		LevelTextSize = isMobile and 16 or math.floor(20 * scale),
+		ValueTextSize = isMobile and 14 or math.floor(16 * scale),
+
+		-- Progress bar
+		ProgressBarHeight = isMobile and 14 or math.floor(16 * scale),
+		ProgressBarWidth = isMobile and 120 or math.floor(200 * scale),
+
+		-- Buttons (compactos en móvil)
+		ButtonHeight = isMobile and 38 or math.floor(50 * scale),
+		ButtonTextSize = isMobile and 16 or math.floor(22 * scale),
+		ButtonIconSize = isMobile and 20 or math.floor(24 * scale),
+		ButtonWidth = isMobile and 130 or math.floor(280 * scale),
+
+		-- Max label
+		MaxLabelSize = isMobile and 24 or math.floor(32 * scale),
+
+		-- General
+		CornerRadius = isMobile and 12 or math.floor(16 * scale),
+		StrokeThickness = isMobile and 3 or math.floor(4 * scale),
+		Padding = isMobile and 12 or math.floor(20 * scale),
+
+		-- Layout
+		IsMobile = isMobile,
+		IsTablet = isTablet,
+	}
+end
+
+local sizes = getResponsiveSizes()
 
 -- ============================================
 -- CONFIGURACIÓN DE ESTILOS (CARTOON)
@@ -89,7 +163,7 @@ local shopGui = nil
 
 local function createCorner(parent, radius)
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = radius or UDim.new(0, 16)
+	corner.CornerRadius = radius or UDim.new(0, sizes.CornerRadius)
 	corner.Parent = parent
 	return corner
 end
@@ -97,7 +171,7 @@ end
 local function createStroke(parent, color, thickness)
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = color or Styles.Colors.Border
-	stroke.Thickness = thickness or 4
+	stroke.Thickness = thickness or sizes.StrokeThickness
 	stroke.Parent = parent
 	return stroke
 end
@@ -151,6 +225,9 @@ end
 -- ============================================
 
 local function createShopUI()
+	-- Actualizar tamaños responsive
+	sizes = getResponsiveSizes()
+
 	-- ScreenGui principal
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "UpgradeShop"
@@ -169,17 +246,21 @@ local function createShopUI()
 	backdrop.BorderSizePixel = 0
 	backdrop.Parent = screenGui
 
-	-- Contenedor principal de la tienda
+	-- Contenedor principal de la tienda (responsive)
 	local mainContainer = Instance.new("Frame")
 	mainContainer.Name = "MainContainer"
-	mainContainer.Size = UDim2.new(0, 900, 0, 650)
+	if sizes.UseScale then
+		mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
+	else
+		mainContainer.Size = UDim2.new(0, sizes.ContainerWidthOffset, 0, sizes.ContainerHeightOffset)
+	end
 	mainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
 	mainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
 	mainContainer.BackgroundColor3 = Styles.Colors.Background
 	mainContainer.Parent = screenGui
 
-	createCorner(mainContainer, UDim.new(0, 24))
-	createStroke(mainContainer, Styles.Colors.Primary, 6)
+	createCorner(mainContainer, UDim.new(0, sizes.IsMobile and 16 or 24))
+	createStroke(mainContainer, Styles.Colors.Primary, sizes.IsMobile and 4 or 6)
 
 	-- Gradiente de fondo sutil
 	createGradient(mainContainer,
@@ -193,11 +274,11 @@ local function createShopUI()
 
 	local header = Instance.new("Frame")
 	header.Name = "Header"
-	header.Size = UDim2.new(1, 0, 0, 100)
+	header.Size = UDim2.new(1, 0, 0, sizes.HeaderHeight)
 	header.BackgroundColor3 = Styles.Colors.Primary
 	header.Parent = mainContainer
 
-	createCorner(header, UDim.new(0, 24))
+	createCorner(header, UDim.new(0, sizes.IsMobile and 16 or 24))
 	createGradient(header,
 		Color3.fromRGB(255, 220, 100),
 		Color3.fromRGB(255, 180, 50),
@@ -216,65 +297,79 @@ local function createShopUI()
 		Color3.fromRGB(255, 180, 50),
 		90)
 
-	-- Título
+	-- Título (responsive)
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(1, -120, 1, 0)
-	title.Position = UDim2.new(0, 20, 0, 0)
+	title.Size = UDim2.new(1, -(sizes.CloseButtonSize + sizes.CoinsDisplayWidth + 40), 1, 0)
+	title.Position = UDim2.new(0, sizes.Padding, 0, 0)
 	title.BackgroundTransparency = 1
-	title.Text = "🛒 TIENDA DE UPGRADES 🛒"
+	title.Text = "🛒 TIENDA 🛒"
 	title.TextColor3 = Styles.Colors.TextDark
-	title.TextSize = 42
+	title.TextSize = sizes.TitleSize
 	title.Font = Styles.Fonts.Title
 	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextScaled = sizes.IsMobile
 	title.Parent = header
 
-	-- Botón de cerrar
+	if sizes.IsMobile then
+		local titleConstraint = Instance.new("UITextSizeConstraint")
+		titleConstraint.MaxTextSize = sizes.TitleSize
+		titleConstraint.MinTextSize = 16
+		titleConstraint.Parent = title
+	end
+
+	-- Botón de cerrar (responsive)
 	local closeButton = Instance.new("TextButton")
 	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, 70, 0, 70)
-	closeButton.Position = UDim2.new(1, -85, 0.5, 0)
+	closeButton.Size = UDim2.new(0, sizes.CloseButtonSize, 0, sizes.CloseButtonSize)
+	closeButton.Position = UDim2.new(1, -(sizes.CloseButtonSize + sizes.Padding), 0.5, 0)
 	closeButton.AnchorPoint = Vector2.new(0, 0.5)
 	closeButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 	closeButton.Text = "X"
 	closeButton.TextColor3 = Color3.new(1, 1, 1)
-	closeButton.TextSize = 42
+	closeButton.TextSize = sizes.CloseButtonTextSize
 	closeButton.Font = Enum.Font.GothamBlack
 	closeButton.Parent = header
 
-	createCorner(closeButton, UDim.new(0, 16))
-	createStroke(closeButton, Color3.fromRGB(200, 50, 50), 4)
+	createCorner(closeButton)
+	createStroke(closeButton, Color3.fromRGB(200, 50, 50))
 
-	-- Mostrar monedas del jugador
+	-- Mostrar monedas del jugador (responsive)
 	local coinsDisplay = Instance.new("Frame")
 	coinsDisplay.Name = "CoinsDisplay"
-	coinsDisplay.Size = UDim2.new(0, 200, 0, 50)
-	coinsDisplay.Position = UDim2.new(1, -300, 0.5, 0)
+	coinsDisplay.Size = UDim2.new(0, sizes.CoinsDisplayWidth, 0, sizes.CoinsDisplayHeight)
+	coinsDisplay.Position = UDim2.new(1, -(sizes.CloseButtonSize + sizes.CoinsDisplayWidth + sizes.Padding * 2 + 10), 0.5, 0)
 	coinsDisplay.AnchorPoint = Vector2.new(0, 0.5)
 	coinsDisplay.BackgroundColor3 = Styles.Colors.Background
 	coinsDisplay.Parent = header
 
-	createCorner(coinsDisplay, UDim.new(0, 12))
-	createStroke(coinsDisplay, Styles.Colors.TextDark, 3)
+	createCorner(coinsDisplay)
+	createStroke(coinsDisplay, Styles.Colors.TextDark)
 
 	local coinsIcon = Instance.new("TextLabel")
-	coinsIcon.Size = UDim2.new(0, 40, 1, 0)
+	coinsIcon.Size = UDim2.new(0, sizes.CoinsDisplayHeight, 1, 0)
 	coinsIcon.BackgroundTransparency = 1
 	coinsIcon.Text = "💰"
-	coinsIcon.TextSize = 28
+	coinsIcon.TextSize = sizes.CoinsIconSize
 	coinsIcon.Parent = coinsDisplay
 
 	local coinsText = Instance.new("TextLabel")
 	coinsText.Name = "CoinsText"
-	coinsText.Size = UDim2.new(1, -50, 1, 0)
-	coinsText.Position = UDim2.new(0, 45, 0, 0)
+	coinsText.Size = UDim2.new(1, -(sizes.CoinsDisplayHeight + 5), 1, 0)
+	coinsText.Position = UDim2.new(0, sizes.CoinsDisplayHeight, 0, 0)
 	coinsText.BackgroundTransparency = 1
 	coinsText.Text = "0"
 	coinsText.TextColor3 = Styles.Colors.Primary
-	coinsText.TextSize = 28
+	coinsText.TextSize = sizes.CoinsTextSize
 	coinsText.Font = Styles.Fonts.Title
 	coinsText.TextXAlignment = Enum.TextXAlignment.Left
+	coinsText.TextScaled = true
 	coinsText.Parent = coinsDisplay
+
+	local coinsTextConstraint = Instance.new("UITextSizeConstraint")
+	coinsTextConstraint.MaxTextSize = sizes.CoinsTextSize
+	coinsTextConstraint.MinTextSize = 12
+	coinsTextConstraint.Parent = coinsText
 
 	-- ============================================
 	-- CONTENEDOR DE UPGRADES
@@ -282,10 +377,10 @@ local function createShopUI()
 
 	local upgradesContainer = Instance.new("ScrollingFrame")
 	upgradesContainer.Name = "UpgradesContainer"
-	upgradesContainer.Size = UDim2.new(1, -40, 1, -130)
-	upgradesContainer.Position = UDim2.new(0, 20, 0, 110)
+	upgradesContainer.Size = UDim2.new(1, -(sizes.Padding * 2), 1, -(sizes.HeaderHeight + sizes.Padding + 10))
+	upgradesContainer.Position = UDim2.new(0, sizes.Padding, 0, sizes.HeaderHeight + 10)
 	upgradesContainer.BackgroundTransparency = 1
-	upgradesContainer.ScrollBarThickness = 8
+	upgradesContainer.ScrollBarThickness = sizes.IsMobile and 4 or 8
 	upgradesContainer.ScrollBarImageColor3 = Styles.Colors.Primary
 	upgradesContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
 	upgradesContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -294,7 +389,7 @@ local function createShopUI()
 	-- Layout para upgrades
 	local upgradesLayout = Instance.new("UIListLayout")
 	upgradesLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	upgradesLayout.Padding = UDim.new(0, 20)
+	upgradesLayout.Padding = UDim.new(0, sizes.CardPadding)
 	upgradesLayout.Parent = upgradesContainer
 
 	return screenGui, mainContainer, upgradesContainer, coinsText, closeButton, backdrop
@@ -305,46 +400,59 @@ end
 -- ============================================
 
 local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder)
+	local accentColor = Styles.UpgradeColors[upgradeName] or Styles.Colors.Primary
+
+	-- Layout horizontal consistente en todas las pantallas (icono | info | botones)
+	local cardHeight = sizes.CardHeight
+
 	local card = Instance.new("Frame")
 	card.Name = "Card_" .. upgradeName
-	card.Size = UDim2.new(1, 0, 0, 140)
+	card.Size = UDim2.new(1, 0, 0, cardHeight)
 	card.BackgroundColor3 = Styles.Colors.BackgroundLight
 	card.LayoutOrder = layoutOrder
 	card.Parent = parent
 
-	createCorner(card, UDim.new(0, 16))
-
-	local accentColor = Styles.UpgradeColors[upgradeName] or Styles.Colors.Primary
-	createStroke(card, accentColor, 4)
+	createCorner(card)
+	createStroke(card, accentColor)
 
 	-- Barra de color lateral
+	local accentBarWidth = sizes.IsMobile and 6 or 8
 	local accentBar = Instance.new("Frame")
 	accentBar.Name = "AccentBar"
-	accentBar.Size = UDim2.new(0, 8, 1, -20)
-	accentBar.Position = UDim2.new(0, 10, 0.5, 0)
+	accentBar.Size = UDim2.new(0, accentBarWidth, 1, -20)
+	accentBar.Position = UDim2.new(0, 8, 0.5, 0)
 	accentBar.AnchorPoint = Vector2.new(0, 0.5)
 	accentBar.BackgroundColor3 = accentColor
 	accentBar.Parent = card
 	createCorner(accentBar, UDim.new(0, 4))
 
-	-- Icono grande
+	-- Icono (centrado verticalmente)
+	local iconOffset = sizes.IsMobile and 22 or 30
 	local icon = Instance.new("TextLabel")
 	icon.Name = "Icon"
-	icon.Size = UDim2.new(0, 80, 0, 80)
-	icon.Position = UDim2.new(0, 30, 0.5, 0)
+	icon.Size = UDim2.new(0, sizes.IconSize, 0, sizes.IconSize)
+	icon.Position = UDim2.new(0, iconOffset, 0.5, 0)
 	icon.AnchorPoint = Vector2.new(0, 0.5)
 	icon.BackgroundColor3 = accentColor
 	icon.BackgroundTransparency = 0.3
 	icon.Text = Styles.UpgradeIcons[upgradeName] or "⭐"
-	icon.TextSize = 48
+	icon.TextSize = sizes.IconTextSize
 	icon.Parent = card
-	createCorner(icon, UDim.new(0, 16))
+	createCorner(icon)
 
-	-- Contenedor de información
+	-- Contenedor de información (layout vertical interno)
+	local infoStartX = iconOffset + sizes.IconSize + 12
+	local infoWidth = sizes.IsMobile and 0.45 or 350 -- En móvil usa Scale, en PC usa Offset
+
 	local infoContainer = Instance.new("Frame")
 	infoContainer.Name = "InfoContainer"
-	infoContainer.Size = UDim2.new(0, 350, 1, -20)
-	infoContainer.Position = UDim2.new(0, 130, 0.5, 0)
+	if sizes.IsMobile then
+		infoContainer.Size = UDim2.new(infoWidth, 0, 1, -20)
+		infoContainer.Position = UDim2.new(0, infoStartX, 0.5, 0)
+	else
+		infoContainer.Size = UDim2.new(0, infoWidth, 1, -20)
+		infoContainer.Position = UDim2.new(0, infoStartX, 0.5, 0)
+	end
 	infoContainer.AnchorPoint = Vector2.new(0, 0.5)
 	infoContainer.BackgroundTransparency = 1
 	infoContainer.Parent = card
@@ -352,43 +460,50 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	-- Nombre del upgrade
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "NameLabel"
-	nameLabel.Size = UDim2.new(1, 0, 0, 35)
+	nameLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 24 or 35)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = upgradeConfig.Name
 	nameLabel.TextColor3 = Styles.Colors.Text
-	nameLabel.TextSize = 28
+	nameLabel.TextSize = sizes.NameTextSize
 	nameLabel.Font = Styles.Fonts.Title
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	nameLabel.TextScaled = true
 	nameLabel.Parent = infoContainer
 
-	-- Descripción
+	local nameConstraint = Instance.new("UITextSizeConstraint")
+	nameConstraint.MaxTextSize = sizes.NameTextSize
+	nameConstraint.MinTextSize = 14
+	nameConstraint.Parent = nameLabel
+
+	-- Descripción (versión corta en móvil)
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Name = "DescLabel"
-	descLabel.Size = UDim2.new(1, 0, 0, 25)
-	descLabel.Position = UDim2.new(0, 0, 0, 35)
+	descLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 18 or 25)
+	descLabel.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 24 or 35)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = upgradeConfig.Description
 	descLabel.TextColor3 = Styles.Colors.TextMuted
-	descLabel.TextSize = 16
+	descLabel.TextSize = sizes.DescTextSize
 	descLabel.Font = Styles.Fonts.Body
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
+	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	descLabel.Parent = infoContainer
 
-	-- Nivel actual
+	-- Nivel y barra de progreso
 	local levelContainer = Instance.new("Frame")
 	levelContainer.Name = "LevelContainer"
-	levelContainer.Size = UDim2.new(1, 0, 0, 30)
-	levelContainer.Position = UDim2.new(0, 0, 0, 65)
+	levelContainer.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 22 or 30)
+	levelContainer.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 44 or 65)
 	levelContainer.BackgroundTransparency = 1
 	levelContainer.Parent = infoContainer
 
 	local levelLabel = Instance.new("TextLabel")
 	levelLabel.Name = "LevelLabel"
-	levelLabel.Size = UDim2.new(0, 100, 1, 0)
+	levelLabel.Size = UDim2.new(0, sizes.IsMobile and 70 or 100, 1, 0)
 	levelLabel.BackgroundTransparency = 1
-	levelLabel.Text = "Nivel: 0/10"
+	levelLabel.Text = "Lv 0/10"
 	levelLabel.TextColor3 = accentColor
-	levelLabel.TextSize = 20
+	levelLabel.TextSize = sizes.LevelTextSize
 	levelLabel.Font = Styles.Fonts.Body
 	levelLabel.TextXAlignment = Enum.TextXAlignment.Left
 	levelLabel.Parent = levelContainer
@@ -396,41 +511,41 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	-- Barra de progreso de nivel
 	local progressBg = Instance.new("Frame")
 	progressBg.Name = "ProgressBg"
-	progressBg.Size = UDim2.new(0, 200, 0, 16)
-	progressBg.Position = UDim2.new(0, 110, 0.5, 0)
+	progressBg.Size = UDim2.new(0, sizes.ProgressBarWidth, 0, sizes.ProgressBarHeight)
+	progressBg.Position = UDim2.new(0, sizes.IsMobile and 70 or 110, 0.5, 0)
 	progressBg.AnchorPoint = Vector2.new(0, 0.5)
 	progressBg.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 	progressBg.Parent = levelContainer
-	createCorner(progressBg, UDim.new(0, 8))
+	createCorner(progressBg, UDim.new(0, math.floor(sizes.ProgressBarHeight / 2)))
 
 	local progressFill = Instance.new("Frame")
 	progressFill.Name = "ProgressFill"
 	progressFill.Size = UDim2.new(0, 0, 1, 0)
 	progressFill.BackgroundColor3 = accentColor
 	progressFill.Parent = progressBg
-	createCorner(progressFill, UDim.new(0, 8))
+	createCorner(progressFill, UDim.new(0, math.floor(sizes.ProgressBarHeight / 2)))
 
 	-- Valor actual → próximo valor
 	local valueLabel = Instance.new("TextLabel")
 	valueLabel.Name = "ValueLabel"
-	valueLabel.Size = UDim2.new(1, 0, 0, 25)
-	valueLabel.Position = UDim2.new(0, 0, 0, 95)
+	valueLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 20 or 25)
+	valueLabel.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 68 or 95)
 	valueLabel.BackgroundTransparency = 1
 	valueLabel.Text = "Valor: 3.0 → 3.5"
 	valueLabel.TextColor3 = Styles.Colors.Text
-	valueLabel.TextSize = 16
+	valueLabel.TextSize = sizes.ValueTextSize
 	valueLabel.Font = Styles.Fonts.Body
 	valueLabel.TextXAlignment = Enum.TextXAlignment.Left
 	valueLabel.Parent = infoContainer
 
 	-- ============================================
-	-- BOTONES DE COMPRA
+	-- BOTONES DE COMPRA (siempre a la derecha)
 	-- ============================================
 
 	local buttonsContainer = Instance.new("Frame")
 	buttonsContainer.Name = "ButtonsContainer"
-	buttonsContainer.Size = UDim2.new(0, 280, 1, -20)
-	buttonsContainer.Position = UDim2.new(1, -20, 0.5, 0)
+	buttonsContainer.Size = UDim2.new(0, sizes.ButtonWidth, 0, sizes.ButtonHeight * 2 + 8)
+	buttonsContainer.Position = UDim2.new(1, -12, 0.5, 0)
 	buttonsContainer.AnchorPoint = Vector2.new(1, 0.5)
 	buttonsContainer.BackgroundTransparency = 1
 	buttonsContainer.Parent = card
@@ -438,15 +553,15 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	-- Botón de monedas
 	local coinButton = Instance.new("TextButton")
 	coinButton.Name = "CoinButton"
-	coinButton.Size = UDim2.new(1, 0, 0, 50)
-	coinButton.Position = UDim2.new(0, 0, 0, 10)
+	coinButton.Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
+	coinButton.Position = UDim2.new(0, 0, 0, 0)
 	coinButton.BackgroundColor3 = Styles.Colors.CoinButton
 	coinButton.Text = ""
 	coinButton.AutoButtonColor = false
 	coinButton.Parent = buttonsContainer
 
-	createCorner(coinButton, UDim.new(0, 12))
-	createStroke(coinButton, Color3.fromRGB(200, 150, 30), 3)
+	createCorner(coinButton)
+	createStroke(coinButton, Color3.fromRGB(200, 150, 30))
 	createGradient(coinButton,
 		Color3.fromRGB(255, 220, 100),
 		Color3.fromRGB(255, 180, 50),
@@ -458,36 +573,44 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	coinButtonContent.Parent = coinButton
 
 	local coinIcon = Instance.new("TextLabel")
-	coinIcon.Size = UDim2.new(0, 40, 1, 0)
+	coinIcon.Size = UDim2.new(0, sizes.ButtonHeight, 1, 0)
 	coinIcon.BackgroundTransparency = 1
 	coinIcon.Text = "💰"
-	coinIcon.TextSize = 24
+	coinIcon.TextSize = sizes.ButtonIconSize
 	coinIcon.Parent = coinButtonContent
 
 	local coinPriceLabel = Instance.new("TextLabel")
 	coinPriceLabel.Name = "PriceLabel"
-	coinPriceLabel.Size = UDim2.new(1, -50, 1, 0)
-	coinPriceLabel.Position = UDim2.new(0, 45, 0, 0)
+	coinPriceLabel.Size = UDim2.new(1, -(sizes.ButtonHeight + 5), 1, 0)
+	coinPriceLabel.Position = UDim2.new(0, sizes.ButtonHeight, 0, 0)
 	coinPriceLabel.BackgroundTransparency = 1
-	coinPriceLabel.Text = "100 Monedas"
+	coinPriceLabel.Text = "100"
 	coinPriceLabel.TextColor3 = Styles.Colors.TextDark
-	coinPriceLabel.TextSize = 22
+	coinPriceLabel.TextSize = sizes.ButtonTextSize
 	coinPriceLabel.Font = Styles.Fonts.Button
 	coinPriceLabel.TextXAlignment = Enum.TextXAlignment.Left
+	coinPriceLabel.TextScaled = sizes.IsMobile
 	coinPriceLabel.Parent = coinButtonContent
+
+	if sizes.IsMobile then
+		local coinPriceConstraint = Instance.new("UITextSizeConstraint")
+		coinPriceConstraint.MaxTextSize = sizes.ButtonTextSize
+		coinPriceConstraint.MinTextSize = 10
+		coinPriceConstraint.Parent = coinPriceLabel
+	end
 
 	-- Botón de Robux
 	local robuxButton = Instance.new("TextButton")
 	robuxButton.Name = "RobuxButton"
-	robuxButton.Size = UDim2.new(1, 0, 0, 50)
-	robuxButton.Position = UDim2.new(0, 0, 0, 70)
+	robuxButton.Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
+	robuxButton.Position = UDim2.new(0, 0, 0, sizes.ButtonHeight + 8)
 	robuxButton.BackgroundColor3 = Styles.Colors.RobuxButton
 	robuxButton.Text = ""
 	robuxButton.AutoButtonColor = false
 	robuxButton.Parent = buttonsContainer
 
-	createCorner(robuxButton, UDim.new(0, 12))
-	createStroke(robuxButton, Color3.fromRGB(70, 150, 70), 3)
+	createCorner(robuxButton)
+	createStroke(robuxButton, Color3.fromRGB(70, 150, 70))
 	createGradient(robuxButton,
 		Color3.fromRGB(130, 230, 130),
 		Color3.fromRGB(80, 180, 80),
@@ -499,34 +622,41 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	robuxButtonContent.Parent = robuxButton
 
 	local robuxIcon = Instance.new("TextLabel")
-	robuxIcon.Size = UDim2.new(0, 40, 1, 0)
+	robuxIcon.Size = UDim2.new(0, sizes.ButtonHeight, 1, 0)
 	robuxIcon.BackgroundTransparency = 1
 	robuxIcon.Text = "💎"
-	robuxIcon.TextSize = 24
+	robuxIcon.TextSize = sizes.ButtonIconSize
 	robuxIcon.Parent = robuxButtonContent
 
 	local robuxPriceLabel = Instance.new("TextLabel")
 	robuxPriceLabel.Name = "PriceLabel"
-	robuxPriceLabel.Size = UDim2.new(1, -50, 1, 0)
-	robuxPriceLabel.Position = UDim2.new(0, 45, 0, 0)
+	robuxPriceLabel.Size = UDim2.new(1, -(sizes.ButtonHeight + 5), 1, 0)
+	robuxPriceLabel.Position = UDim2.new(0, sizes.ButtonHeight, 0, 0)
 	robuxPriceLabel.BackgroundTransparency = 1
-	robuxPriceLabel.Text = "10 Robux"
+	robuxPriceLabel.Text = "10 R$"
 	robuxPriceLabel.TextColor3 = Styles.Colors.TextDark
-	robuxPriceLabel.TextSize = 22
+	robuxPriceLabel.TextSize = sizes.ButtonTextSize
 	robuxPriceLabel.Font = Styles.Fonts.Button
 	robuxPriceLabel.TextXAlignment = Enum.TextXAlignment.Left
+	robuxPriceLabel.TextScaled = sizes.IsMobile
 	robuxPriceLabel.Parent = robuxButtonContent
+
+	if sizes.IsMobile then
+		local robuxPriceConstraint = Instance.new("UITextSizeConstraint")
+		robuxPriceConstraint.MaxTextSize = sizes.ButtonTextSize
+		robuxPriceConstraint.MinTextSize = 10
+		robuxPriceConstraint.Parent = robuxPriceLabel
+	end
 
 	-- Etiqueta de "MAX" cuando está al máximo
 	local maxLabel = Instance.new("TextLabel")
 	maxLabel.Name = "MaxLabel"
-	maxLabel.Size = UDim2.new(1, 0, 1, -20)
-	maxLabel.Position = UDim2.new(0, 0, 0.5, 0)
-	maxLabel.AnchorPoint = Vector2.new(0, 0.5)
+	maxLabel.Size = UDim2.new(1, 0, 1, 0)
+	maxLabel.Position = UDim2.new(0, 0, 0, 0)
 	maxLabel.BackgroundTransparency = 1
-	maxLabel.Text = "⭐ MÁXIMO ⭐"
+	maxLabel.Text = "⭐ MAX ⭐"
 	maxLabel.TextColor3 = Styles.Colors.Primary
-	maxLabel.TextSize = 32
+	maxLabel.TextSize = sizes.MaxLabelSize
 	maxLabel.Font = Styles.Fonts.Title
 	maxLabel.Visible = false
 	maxLabel.Parent = buttonsContainer
@@ -535,6 +665,7 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 		Card = card,
 		LevelLabel = levelLabel,
 		ProgressFill = progressFill,
+		ProgressBg = progressBg,
 		ValueLabel = valueLabel,
 		CoinButton = coinButton,
 		CoinPriceLabel = coinPriceLabel,
@@ -560,12 +691,12 @@ local function updateUpgradeCard(cardData)
 	local isMaxed = currentLevel >= maxLevel
 
 	-- Actualizar nivel
-	cardData.LevelLabel.Text = "Nivel: " .. currentLevel .. "/" .. maxLevel
+	cardData.LevelLabel.Text = "Lv " .. currentLevel .. "/" .. maxLevel
 
-	-- Actualizar barra de progreso
-	local progressWidth = (currentLevel / maxLevel) * 200
+	-- Actualizar barra de progreso (usa Scale en lugar de Offset fijo)
+	local progressPercent = currentLevel / maxLevel
 	TweenService:Create(cardData.ProgressFill, TweenInfo.new(0.3), {
-		Size = UDim2.new(0, progressWidth, 1, 0)
+		Size = UDim2.new(progressPercent, 0, 1, 0)
 	}):Play()
 
 	-- Calcular valores (soporta ValuesPerLevel exponencial o IncrementPerLevel lineal)
@@ -580,12 +711,12 @@ local function updateUpgradeCard(cardData)
 	local nextValue = getValueAtLevel(upgradeConfig, currentLevel + 1)
 
 	if isMaxed then
-		cardData.ValueLabel.Text = "Valor: " .. string.format("%.2f", currentValue) .. " (MAX)"
+		cardData.ValueLabel.Text = string.format("%.2f", currentValue) .. " (MAX)"
 		cardData.CoinButton.Visible = false
 		cardData.RobuxButton.Visible = false
 		cardData.MaxLabel.Visible = true
 	else
-		cardData.ValueLabel.Text = "Valor: " .. string.format("%.2f", currentValue) .. " → " .. string.format("%.2f", nextValue)
+		cardData.ValueLabel.Text = string.format("%.2f", currentValue) .. " → " .. string.format("%.2f", nextValue)
 		cardData.CoinButton.Visible = true
 		cardData.RobuxButton.Visible = true
 		cardData.MaxLabel.Visible = false
@@ -594,8 +725,8 @@ local function updateUpgradeCard(cardData)
 		local coinCost = upgradeConfig.CostCoins[currentLevel + 1]
 		local robuxCost = upgradeConfig.CostRobux[currentLevel + 1]
 
-		cardData.CoinPriceLabel.Text = formatNumber(coinCost) .. " Monedas"
-		cardData.RobuxPriceLabel.Text = robuxCost .. " Robux"
+		cardData.CoinPriceLabel.Text = formatNumber(coinCost)
+		cardData.RobuxPriceLabel.Text = robuxCost .. " R$"
 
 		-- Verificar si puede comprar con monedas
 		local canAfford = playerData.Coins >= coinCost
@@ -643,34 +774,47 @@ end
 local function showPurchaseNotification(success, message)
 	if not shopGui then return end
 
+	local notifWidth = sizes.IsMobile and 280 or 400
+	local notifHeight = sizes.IsMobile and 45 or 60
+	local notifTextSize = sizes.IsMobile and 16 or 24
+
 	local notification = Instance.new("Frame")
 	notification.Name = "Notification"
-	notification.Size = UDim2.new(0, 400, 0, 60)
-	notification.Position = UDim2.new(0.5, 0, 0, -80)
+	notification.Size = UDim2.new(0, notifWidth, 0, notifHeight)
+	notification.Position = UDim2.new(0.5, 0, 0, -notifHeight - 20)
 	notification.AnchorPoint = Vector2.new(0.5, 0)
 	notification.BackgroundColor3 = success and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 80, 80)
 	notification.Parent = shopGui
 
-	createCorner(notification, UDim.new(0, 12))
+	createCorner(notification)
 
 	local notifText = Instance.new("TextLabel")
-	notifText.Size = UDim2.new(1, 0, 1, 0)
+	notifText.Size = UDim2.new(1, -20, 1, 0)
+	notifText.Position = UDim2.new(0, 10, 0, 0)
 	notifText.BackgroundTransparency = 1
 	notifText.Text = success and "✓ " .. message or "✗ " .. message
 	notifText.TextColor3 = Color3.new(1, 1, 1)
-	notifText.TextSize = 24
+	notifText.TextSize = notifTextSize
 	notifText.Font = Styles.Fonts.Title
+	notifText.TextScaled = sizes.IsMobile
 	notifText.Parent = notification
+
+	if sizes.IsMobile then
+		local notifConstraint = Instance.new("UITextSizeConstraint")
+		notifConstraint.MaxTextSize = notifTextSize
+		notifConstraint.MinTextSize = 12
+		notifConstraint.Parent = notifText
+	end
 
 	-- Animación de entrada
 	TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Position = UDim2.new(0.5, 0, 0, 20)
+		Position = UDim2.new(0.5, 0, 0, sizes.IsMobile and 10 or 20)
 	}):Play()
 
 	-- Esperar y salir
 	task.delay(2, function()
 		TweenService:Create(notification, TweenInfo.new(0.3), {
-			Position = UDim2.new(0.5, 0, 0, -80)
+			Position = UDim2.new(0.5, 0, 0, -notifHeight - 20)
 		}):Play()
 		task.wait(0.3)
 		notification:Destroy()
@@ -687,6 +831,9 @@ local function openShop()
 	if isShopOpen then return end
 	isShopOpen = true
 
+	-- Actualizar tamaños responsive
+	sizes = getResponsiveSizes()
+
 	-- Solicitar datos actualizados
 	if Remotes then
 		local GetPlayerData = Remotes:FindFirstChild("GetPlayerData")
@@ -701,14 +848,21 @@ local function openShop()
 
 	shopGui.Enabled = true
 
-	-- Animación de entrada
+	-- Animación de entrada (usa tamaños responsive)
 	local mainContainer = shopGui:FindFirstChild("MainContainer")
 	if mainContainer then
 		mainContainer.Size = UDim2.new(0, 0, 0, 0)
 		mainContainer.BackgroundTransparency = 1
 
+		local targetSize
+		if sizes.UseScale then
+			targetSize = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
+		else
+			targetSize = UDim2.new(0, sizes.ContainerWidthOffset, 0, sizes.ContainerHeightOffset)
+		end
+
 		TweenService:Create(mainContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-			Size = UDim2.new(0, 900, 0, 650),
+			Size = targetSize,
 			BackgroundTransparency = 0
 		}):Play()
 	end
@@ -775,30 +929,32 @@ local function initialize()
 			end
 		end)
 
-		-- Efectos hover
-		cardData.CoinButton.MouseEnter:Connect(function()
-			TweenService:Create(cardData.CoinButton, TweenInfo.new(0.1), {
-				Size = UDim2.new(1, 4, 0, 54)
-			}):Play()
-		end)
+		-- Efectos hover (solo en PC, no en móvil)
+		if not sizes.IsMobile then
+			cardData.CoinButton.MouseEnter:Connect(function()
+				TweenService:Create(cardData.CoinButton, TweenInfo.new(0.1), {
+					Size = UDim2.new(1, 4, 0, sizes.ButtonHeight + 4)
+				}):Play()
+			end)
 
-		cardData.CoinButton.MouseLeave:Connect(function()
-			TweenService:Create(cardData.CoinButton, TweenInfo.new(0.1), {
-				Size = UDim2.new(1, 0, 0, 50)
-			}):Play()
-		end)
+			cardData.CoinButton.MouseLeave:Connect(function()
+				TweenService:Create(cardData.CoinButton, TweenInfo.new(0.1), {
+					Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
+				}):Play()
+			end)
 
-		cardData.RobuxButton.MouseEnter:Connect(function()
-			TweenService:Create(cardData.RobuxButton, TweenInfo.new(0.1), {
-				Size = UDim2.new(1, 4, 0, 54)
-			}):Play()
-		end)
+			cardData.RobuxButton.MouseEnter:Connect(function()
+				TweenService:Create(cardData.RobuxButton, TweenInfo.new(0.1), {
+					Size = UDim2.new(1, 4, 0, sizes.ButtonHeight + 4)
+				}):Play()
+			end)
 
-		cardData.RobuxButton.MouseLeave:Connect(function()
-			TweenService:Create(cardData.RobuxButton, TweenInfo.new(0.1), {
-				Size = UDim2.new(1, 0, 0, 50)
-			}):Play()
-		end)
+			cardData.RobuxButton.MouseLeave:Connect(function()
+				TweenService:Create(cardData.RobuxButton, TweenInfo.new(0.1), {
+					Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
+				}):Play()
+			end)
+		end
 	end
 
 	-- Botón de cerrar
@@ -807,9 +963,9 @@ local function initialize()
 		closeShop()
 	end)
 
-	-- Click en backdrop cierra
+	-- Click/tap en backdrop cierra (soporte para mouse y touch)
 	backdrop.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			closeShop()
 		end
 	end)
@@ -904,4 +1060,27 @@ end)
 -- Inicializar
 initialize()
 
-print("[UpgradeShop] Presiona 'P' para abrir la tienda de upgrades")
+-- ============================================
+-- RESPONSIVE: ESCUCHAR CAMBIOS DE VIEWPORT
+-- ============================================
+
+ResponsiveUI.onViewportChanged(function(info)
+	-- Actualizar tamaños
+	sizes = getResponsiveSizes()
+
+	-- Si la tienda está abierta, cerrarla y volverla a abrir para reconstruir
+	-- (solución simple para evitar tener que actualizar todos los elementos manualmente)
+	if isShopOpen then
+		-- Solo actualizar el contenedor principal por ahora
+		local mainContainer = shopGui:FindFirstChild("MainContainer")
+		if mainContainer then
+			if sizes.UseScale then
+				mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
+			else
+				mainContainer.Size = UDim2.new(0, sizes.ContainerWidthOffset, 0, sizes.ContainerHeightOffset)
+			end
+		end
+	end
+end)
+
+print("[UpgradeShop] Presiona 'P' para abrir la tienda de upgrades (Responsive)")
