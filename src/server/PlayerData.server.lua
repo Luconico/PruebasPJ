@@ -71,25 +71,66 @@ local DeveloperProducts = {
 	FuelEfficiency_8 = 0,
 	FuelEfficiency_9 = 0,
 	FuelEfficiency_10 = 0,
+
+	-- ============================================
+	-- COSMÉTICOS DE PEDO
+	-- ============================================
+	-- Común (25-35 R$)
+	Cosmetic_Blue = 0,
+	Cosmetic_Pink = 0,
+	Cosmetic_Purple = 0,
+
+	-- Raro (75-99 R$)
+	Cosmetic_Toxic = 0,
+	Cosmetic_Fire = 0,
+	Cosmetic_Ice = 0,
+	Cosmetic_Shadow = 0,
+
+	-- Épico (199-249 R$)
+	Cosmetic_Lava = 0,
+	Cosmetic_Electric = 0,
+	Cosmetic_Galaxy = 0,
+	Cosmetic_Neon = 0,
+
+	-- Legendario (499-699 R$)
+	Cosmetic_Rainbow = 0,
+	Cosmetic_Golden = 0,
+	Cosmetic_Diamond = 0,
+
+	-- Mítico (999-1499 R$)
+	Cosmetic_Void = 0,
+	Cosmetic_Chromatic = 0,
+	Cosmetic_Legendary_Phoenix = 0,
 }
 
 -- Mapeo inverso: ProductId -> {UpgradeName, Level}
 local ProductToUpgrade = {}
+-- Mapeo inverso para cosméticos: ProductId -> CosmeticId
+local ProductToCosmetic = {}
+
 for key, productId in pairs(DeveloperProducts) do
 	if productId > 0 then
-		local parts = string.split(key, "_")
-		ProductToUpgrade[productId] = {
-			UpgradeName = parts[1],
-			Level = tonumber(parts[2])
-		}
+		if key:sub(1, 9) == "Cosmetic_" then
+			-- Es un cosmético
+			local cosmeticId = key:sub(10) -- Quitar "Cosmetic_"
+			ProductToCosmetic[productId] = cosmeticId
+		else
+			-- Es un upgrade
+			local parts = string.split(key, "_")
+			ProductToUpgrade[productId] = {
+				UpgradeName = parts[1],
+				Level = tonumber(parts[2])
+			}
+		end
 	end
 end
 
 -- Compras pendientes (para cuando el jugador compra pero aún no se procesa)
 local pendingPurchases = {}
+local pendingCosmeticPurchases = {} -- Para cosméticos
 
 -- DataStore
-local DATA_STORE_NAME = "FartTycoon_PlayerData_v3" -- Cambiar versión para resetear datos
+local DATA_STORE_NAME = "FartTycoon_PlayerData_v4" -- Cambiar versión para resetear datos
 local playerDataStore = DataStoreService:GetDataStore(DATA_STORE_NAME)
 
 -- Cache de datos en memoria
@@ -120,6 +161,8 @@ local function createRemotes()
 		"UpdateFatness",     -- Cliente → Servidor: sincronizar gordura
 		"RegisterHeight",    -- Cliente → Servidor: registrar altura alcanzada
 		"CollectCoin",       -- Cliente → Servidor: recoger moneda
+		"PurchaseCosmetic",  -- Cliente → Servidor: comprar cosmético
+		"EquipCosmetic",     -- Cliente → Servidor: equipar cosmético
 	}
 
 	for _, name in ipairs(events) do
@@ -351,6 +394,104 @@ local function purchaseUpgrade(player, upgradeName, useRobux)
 end
 
 -- ============================================
+-- FUNCIONES DE COSMÉTICOS
+-- ============================================
+
+-- Comprar un cosmético
+local function purchaseCosmetic(player, cosmeticId)
+	local data = getPlayerData(player)
+	if not data then return false, "Datos no disponibles" end
+
+	-- Verificar que el cosmético existe
+	local cosmeticConfig = Config.FartCosmetics[cosmeticId]
+	if not cosmeticConfig then return false, "Cosmético no existe" end
+
+	-- Verificar que no lo tenga ya
+	if data.OwnedCosmetics and data.OwnedCosmetics[cosmeticId] then
+		return false, "Ya tienes este cosmético"
+	end
+
+	-- Si es gratis, darlo directamente
+	if cosmeticConfig.CostRobux == 0 then
+		if not data.OwnedCosmetics then
+			data.OwnedCosmetics = {}
+		end
+		data.OwnedCosmetics[cosmeticId] = true
+
+		updatePlayerData(player, {
+			OwnedCosmetics = data.OwnedCosmetics
+		})
+		return true, "Cosmético desbloqueado"
+	end
+
+	-- Compra con Robux
+	local productKey = "Cosmetic_" .. cosmeticId
+	local productId = DeveloperProducts[productKey]
+
+	if not productId or productId == 0 then
+		-- Modo de prueba: dar gratis
+		warn("[PlayerData] Developer Product no configurado para cosmético:", productKey)
+		warn("[PlayerData] Usando modo de prueba - cosmético gratis")
+
+		if not data.OwnedCosmetics then
+			data.OwnedCosmetics = {}
+		end
+		data.OwnedCosmetics[cosmeticId] = true
+
+		updatePlayerData(player, {
+			OwnedCosmetics = data.OwnedCosmetics
+		})
+		return true, "Cosmético desbloqueado (Modo prueba)"
+	end
+
+	-- Guardar compra pendiente
+	pendingCosmeticPurchases[player.UserId] = {
+		CosmeticId = cosmeticId,
+		ProductId = productId,
+	}
+
+	-- Prompt de compra con Robux
+	local success, errorMessage = pcall(function()
+		MarketplaceService:PromptProductPurchase(player, productId)
+	end)
+
+	if success then
+		return true, "Procesando compra..."
+	else
+		warn("[PlayerData] Error al iniciar compra:", errorMessage)
+		return false, "Error al procesar compra"
+	end
+end
+
+-- Equipar un cosmético
+local function equipCosmetic(player, cosmeticId)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	-- Verificar que el cosmético existe
+	local cosmeticConfig = Config.FartCosmetics[cosmeticId]
+	if not cosmeticConfig then return false end
+
+	-- Verificar que lo tenga
+	if not data.OwnedCosmetics or not data.OwnedCosmetics[cosmeticId] then
+		-- Excepción: Default siempre está disponible
+		if cosmeticId ~= "Default" then
+			return false
+		end
+	end
+
+	-- Equipar
+	data.EquippedCosmetic = cosmeticId
+
+	updatePlayerData(player, {
+		EquippedCosmetic = data.EquippedCosmetic
+	})
+
+	print("[PlayerData] Cosmético equipado:", player.Name, "->", cosmeticId)
+	return true
+end
+
+-- ============================================
 -- PROCESAMIENTO DE COMPRAS ROBUX
 -- ============================================
 
@@ -359,7 +500,61 @@ local function processReceipt(receiptInfo)
 	local productId = receiptInfo.ProductId
 	local player = Players:GetPlayerByUserId(playerId)
 
-	-- Buscar qué upgrade corresponde a este producto
+	-- Obtener datos del jugador
+	local data = playerDataCache[playerId]
+	if not data then
+		warn("[PlayerData] Datos no encontrados para jugador:", playerId)
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+
+	-- ============================================
+	-- VERIFICAR SI ES UN COSMÉTICO
+	-- ============================================
+	local cosmeticId = ProductToCosmetic[productId]
+
+	-- También revisar compras pendientes de cosméticos
+	if not cosmeticId then
+		local pendingCosmetic = pendingCosmeticPurchases[playerId]
+		if pendingCosmetic and pendingCosmetic.ProductId == productId then
+			cosmeticId = pendingCosmetic.CosmeticId
+		end
+	end
+
+	if cosmeticId then
+		-- Es una compra de cosmético
+		if not data.OwnedCosmetics then
+			data.OwnedCosmetics = {}
+		end
+
+		-- Verificar que no lo tenga ya
+		if data.OwnedCosmetics[cosmeticId] then
+			return Enum.ProductPurchaseDecision.PurchaseGranted
+		end
+
+		-- Dar el cosmético
+		data.OwnedCosmetics[cosmeticId] = true
+
+		-- Notificar al jugador si está conectado
+		if player then
+			Remotes.OnDataUpdated:FireClient(player, data)
+			print("[PlayerData] Cosmético comprado con Robux:", cosmeticId)
+		end
+
+		-- Limpiar compra pendiente
+		pendingCosmeticPurchases[playerId] = nil
+
+		-- Guardar datos
+		local saveKey = "Player_" .. playerId
+		pcall(function()
+			playerDataStore:SetAsync(saveKey, data)
+		end)
+
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	-- ============================================
+	-- VERIFICAR SI ES UN UPGRADE
+	-- ============================================
 	local upgradeInfo = ProductToUpgrade[productId]
 
 	if not upgradeInfo then
@@ -375,13 +570,6 @@ local function processReceipt(receiptInfo)
 
 	if not upgradeInfo then
 		warn("[PlayerData] Producto no reconocido:", productId)
-		return Enum.ProductPurchaseDecision.NotProcessedYet
-	end
-
-	-- Obtener datos del jugador
-	local data = playerDataCache[playerId]
-	if not data then
-		warn("[PlayerData] Datos no encontrados para jugador:", playerId)
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
@@ -487,9 +675,15 @@ end
 Remotes.GetPlayerData.OnServerInvoke = function(player)
 	local data = getPlayerData(player)
 	local upgradeValues = getPlayerUpgradeValues(player)
+
+	-- Obtener cosmético equipado
+	local equippedCosmetic = data.EquippedCosmetic or "Default"
+	local cosmeticConfig = Config.FartCosmetics[equippedCosmetic]
+
 	return {
 		Data = data,
 		UpgradeValues = upgradeValues,
+		EquippedCosmeticConfig = cosmeticConfig,
 		Config = {
 			Fatness = Config.Fatness,
 			Rewards = Config.Rewards,
@@ -513,6 +707,14 @@ end
 
 Remotes.RegisterHeight.OnServerInvoke = function(player, height)
 	return registerHeight(player, height)
+end
+
+Remotes.PurchaseCosmetic.OnServerInvoke = function(player, cosmeticId)
+	return purchaseCosmetic(player, cosmeticId)
+end
+
+Remotes.EquipCosmetic.OnServerInvoke = function(player, cosmeticId)
+	return equipCosmetic(player, cosmeticId)
 end
 
 -- Sistema anti-exploit para height bonus (tracking por vuelo)
@@ -591,6 +793,10 @@ Players.PlayerAdded:Connect(function(player)
 	local data = loadPlayerData(player)
 	local upgradeValues = getPlayerUpgradeValues(player)
 
+	-- Obtener cosmético equipado
+	local equippedCosmetic = data.EquippedCosmetic or "Default"
+	local cosmeticConfig = Config.FartCosmetics[equippedCosmetic]
+
 	-- Esperar un momento para que el cliente esté listo
 	task.wait(1)
 
@@ -598,6 +804,7 @@ Players.PlayerAdded:Connect(function(player)
 	Remotes.OnDataLoaded:FireClient(player, {
 		Data = data,
 		UpgradeValues = upgradeValues,
+		EquippedCosmeticConfig = cosmeticConfig,
 		Config = {
 			Fatness = Config.Fatness,
 			Rewards = Config.Rewards,

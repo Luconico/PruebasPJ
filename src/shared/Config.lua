@@ -173,53 +173,372 @@ Config.Rewards = {
 }
 
 -- ============================================
--- EFECTOS VISUALES
+-- COSMÉTICOS DE PEDO
 -- ============================================
-Config.Effects = {
-	-- Colores de pedo disponibles
-	FartColors = {
-		Default = {
-			Name = "Gas Natural",
-			Colors = {
-				Color3.fromRGB(140, 160, 80),
-				Color3.fromRGB(100, 120, 50),
-				Color3.fromRGB(80, 100, 40),
-			},
-			CostCoins = 0,
-			CostRobux = 0,
+Config.FartCosmetics = {
+	-- ==========================================
+	-- TIER: COMÚN (Baratos, colores simples)
+	-- ==========================================
+	Default = {
+		Name = "Gas Natural",
+		Description = "El clásico pedo verde",
+		Tier = "common",
+		Icon = "💨",
+		CostRobux = 0, -- Gratis, viene por defecto
+		Colors = {
+			Color3.fromRGB(140, 160, 80),
+			Color3.fromRGB(100, 120, 50),
+			Color3.fromRGB(80, 100, 40),
 		},
-		Toxic = {
-			Name = "Tóxico",
-			Colors = {
-				Color3.fromRGB(0, 255, 0),
-				Color3.fromRGB(0, 200, 50),
-				Color3.fromRGB(0, 150, 0),
-			},
-			CostCoins = 5000,
-			CostRobux = 75,
-		},
-		Fire = {
-			Name = "Fuego",
-			Colors = {
-				Color3.fromRGB(255, 150, 0),
-				Color3.fromRGB(255, 100, 0),
-				Color3.fromRGB(200, 50, 0),
-			},
-			CostCoins = 10000,
-			CostRobux = 150,
-		},
-		Rainbow = {
-			Name = "Arcoíris",
-			Colors = {
-				Color3.fromRGB(255, 0, 0),
-				Color3.fromRGB(0, 255, 0),
-				Color3.fromRGB(0, 0, 255),
-			},
-			CostCoins = 0,
-			CostRobux = 500,
-			RobuxOnly = true,
-		},
+		ParticleSize = {Min = 0.5, Max = 2},
+		Animated = false,
 	},
+
+	Blue = {
+		Name = "Brisa Azul",
+		Description = "Un pedo fresco y refrescante",
+		Tier = "common",
+		Icon = "🌀",
+		CostRobux = 25,
+		Colors = {
+			Color3.fromRGB(100, 150, 255),
+			Color3.fromRGB(50, 100, 200),
+			Color3.fromRGB(30, 80, 180),
+		},
+		ParticleSize = {Min = 0.5, Max = 2},
+		Animated = false,
+	},
+
+	Pink = {
+		Name = "Nube Rosa",
+		Description = "Adorable y apestoso",
+		Tier = "common",
+		Icon = "🌸",
+		CostRobux = 25,
+		Colors = {
+			Color3.fromRGB(255, 150, 200),
+			Color3.fromRGB(255, 100, 180),
+			Color3.fromRGB(220, 80, 150),
+		},
+		ParticleSize = {Min = 0.5, Max = 2},
+		Animated = false,
+	},
+
+	Purple = {
+		Name = "Vapor Místico",
+		Description = "Misterioso y maloliente",
+		Tier = "common",
+		Icon = "🔮",
+		CostRobux = 35,
+		Colors = {
+			Color3.fromRGB(180, 100, 255),
+			Color3.fromRGB(150, 50, 220),
+			Color3.fromRGB(120, 30, 180),
+		},
+		ParticleSize = {Min = 0.5, Max = 2},
+		Animated = false,
+	},
+
+	-- ==========================================
+	-- TIER: RARO (Efectos más llamativos)
+	-- ==========================================
+	Toxic = {
+		Name = "Tóxico Radioactivo",
+		Description = "¡Cuidado! Nivel de radiación: EXTREMO",
+		Tier = "rare",
+		Icon = "☢️",
+		CostRobux = 75,
+		Colors = {
+			Color3.fromRGB(0, 255, 0),
+			Color3.fromRGB(100, 255, 50),
+			Color3.fromRGB(0, 200, 0),
+		},
+		ParticleSize = {Min = 0.6, Max = 2.5},
+		Animated = false,
+		Glow = true,
+	},
+
+	Fire = {
+		Name = "Pedo de Fuego",
+		Description = "Picante en la entrada, explosivo en la salida",
+		Tier = "rare",
+		Icon = "🔥",
+		CostRobux = 99,
+		Colors = {
+			Color3.fromRGB(255, 200, 0),
+			Color3.fromRGB(255, 100, 0),
+			Color3.fromRGB(200, 50, 0),
+		},
+		ParticleSize = {Min = 0.6, Max = 2.5},
+		Animated = false,
+		Glow = true,
+	},
+
+	Ice = {
+		Name = "Ventisca Helada",
+		Description = "Tan frío que congela el aire",
+		Tier = "rare",
+		Icon = "❄️",
+		CostRobux = 99,
+		Colors = {
+			Color3.fromRGB(200, 240, 255),
+			Color3.fromRGB(150, 220, 255),
+			Color3.fromRGB(100, 200, 255),
+		},
+		ParticleSize = {Min = 0.6, Max = 2.5},
+		Animated = false,
+		Glow = true,
+		Sparkles = true,
+	},
+
+	Shadow = {
+		Name = "Sombra Oscura",
+		Description = "De las profundidades del abismo",
+		Tier = "rare",
+		Icon = "🖤",
+		CostRobux = 99,
+		Colors = {
+			Color3.fromRGB(50, 30, 60),
+			Color3.fromRGB(30, 20, 40),
+			Color3.fromRGB(20, 10, 30),
+		},
+		ParticleSize = {Min = 0.7, Max = 3},
+		Animated = false,
+		InvertedGlow = true,
+	},
+
+	-- ==========================================
+	-- TIER: ÉPICO (Animados y especiales)
+	-- ==========================================
+	Lava = {
+		Name = "Magma Volcánico",
+		Description = "Directamente del centro de la Tierra",
+		Tier = "epic",
+		Icon = "🌋",
+		CostRobux = 199,
+		Colors = {
+			Color3.fromRGB(255, 100, 0),
+			Color3.fromRGB(255, 50, 0),
+			Color3.fromRGB(200, 0, 0),
+		},
+		ParticleSize = {Min = 0.8, Max = 3},
+		Animated = true,
+		AnimationType = "pulse",
+		Glow = true,
+		Trail = true,
+	},
+
+	Electric = {
+		Name = "Tormenta Eléctrica",
+		Description = "10,000 voltios de pura potencia",
+		Tier = "epic",
+		Icon = "⚡",
+		CostRobux = 199,
+		Colors = {
+			Color3.fromRGB(255, 255, 100),
+			Color3.fromRGB(200, 200, 255),
+			Color3.fromRGB(100, 100, 255),
+		},
+		ParticleSize = {Min = 0.5, Max = 2.5},
+		Animated = true,
+		AnimationType = "flash",
+		Glow = true,
+		Sparkles = true,
+	},
+
+	Galaxy = {
+		Name = "Nebulosa Galáctica",
+		Description = "Un pedo de proporciones cósmicas",
+		Tier = "epic",
+		Icon = "🌌",
+		CostRobux = 249,
+		Colors = {
+			Color3.fromRGB(100, 50, 200),
+			Color3.fromRGB(200, 100, 255),
+			Color3.fromRGB(50, 100, 200),
+		},
+		ParticleSize = {Min = 0.8, Max = 3.5},
+		Animated = true,
+		AnimationType = "swirl",
+		Glow = true,
+		Sparkles = true,
+		Stars = true,
+	},
+
+	Neon = {
+		Name = "Neón Cyberpunk",
+		Description = "Bienvenido al futuro del gas",
+		Tier = "epic",
+		Icon = "💜",
+		CostRobux = 249,
+		Colors = {
+			Color3.fromRGB(255, 0, 255),
+			Color3.fromRGB(0, 255, 255),
+			Color3.fromRGB(255, 0, 100),
+		},
+		ParticleSize = {Min = 0.6, Max = 2.5},
+		Animated = true,
+		AnimationType = "colorCycle",
+		Glow = true,
+	},
+
+	-- ==========================================
+	-- TIER: LEGENDARIO (Los más premium)
+	-- ==========================================
+	Rainbow = {
+		Name = "Arcoíris Mágico",
+		Description = "Todos los colores, todo el olor",
+		Tier = "legendary",
+		Icon = "🌈",
+		CostRobux = 499,
+		Colors = {
+			Color3.fromRGB(255, 0, 0),
+			Color3.fromRGB(255, 127, 0),
+			Color3.fromRGB(255, 255, 0),
+			Color3.fromRGB(0, 255, 0),
+			Color3.fromRGB(0, 0, 255),
+			Color3.fromRGB(139, 0, 255),
+		},
+		ParticleSize = {Min = 0.8, Max = 3},
+		Animated = true,
+		AnimationType = "rainbow",
+		Glow = true,
+		Trail = true,
+	},
+
+	Golden = {
+		Name = "Pedo de Oro",
+		Description = "El gas más valioso del mundo",
+		Tier = "legendary",
+		Icon = "👑",
+		CostRobux = 599,
+		Colors = {
+			Color3.fromRGB(255, 215, 0),
+			Color3.fromRGB(255, 200, 50),
+			Color3.fromRGB(200, 150, 0),
+		},
+		ParticleSize = {Min = 1, Max = 3.5},
+		Animated = true,
+		AnimationType = "shimmer",
+		Glow = true,
+		Sparkles = true,
+		Trail = true,
+	},
+
+	Diamond = {
+		Name = "Diamante Brillante",
+		Description = "Puro lujo cristalizado",
+		Tier = "legendary",
+		Icon = "💎",
+		CostRobux = 699,
+		Colors = {
+			Color3.fromRGB(185, 242, 255),
+			Color3.fromRGB(200, 255, 255),
+			Color3.fromRGB(150, 200, 255),
+		},
+		ParticleSize = {Min = 0.8, Max = 3},
+		Animated = true,
+		AnimationType = "sparkle",
+		Glow = true,
+		Sparkles = true,
+		Reflective = true,
+	},
+
+	-- ==========================================
+	-- TIER: MÍTICO (Ultra exclusivos)
+	-- ==========================================
+	Void = {
+		Name = "Vacío Dimensional",
+		Description = "Abre portales a otras dimensiones",
+		Tier = "mythic",
+		Icon = "🕳️",
+		CostRobux = 999,
+		Colors = {
+			Color3.fromRGB(20, 0, 40),
+			Color3.fromRGB(50, 0, 100),
+			Color3.fromRGB(100, 0, 150),
+		},
+		ParticleSize = {Min = 1, Max = 4},
+		Animated = true,
+		AnimationType = "vortex",
+		Glow = true,
+		InvertedGlow = true,
+		DistortionEffect = true,
+	},
+
+	Chromatic = {
+		Name = "Cromático Infinito",
+		Description = "Cambia constantemente, nunca se repite",
+		Tier = "mythic",
+		Icon = "✨",
+		CostRobux = 1299,
+		Colors = {}, -- Generado dinámicamente
+		ParticleSize = {Min = 1, Max = 4},
+		Animated = true,
+		AnimationType = "chromatic",
+		Glow = true,
+		Sparkles = true,
+		Trail = true,
+		AllEffects = true, -- Combina todos los efectos
+	},
+
+	Legendary_Phoenix = {
+		Name = "Fénix Renacido",
+		Description = "De las cenizas surge el olor más poderoso",
+		Tier = "mythic",
+		Icon = "🦅",
+		CostRobux = 1499,
+		Colors = {
+			Color3.fromRGB(255, 100, 0),
+			Color3.fromRGB(255, 200, 50),
+			Color3.fromRGB(255, 50, 50),
+		},
+		ParticleSize = {Min = 1.2, Max = 5},
+		Animated = true,
+		AnimationType = "phoenix",
+		Glow = true,
+		Trail = true,
+		FireParticles = true,
+		WingEffect = true,
+	},
+}
+
+-- Colores de tier para UI
+Config.CosmeticTiers = {
+	common = {
+		Name = "Común",
+		Color = Color3.fromRGB(180, 180, 180),
+		GlowColor = Color3.fromRGB(150, 150, 150),
+	},
+	rare = {
+		Name = "Raro",
+		Color = Color3.fromRGB(100, 180, 255),
+		GlowColor = Color3.fromRGB(50, 150, 255),
+	},
+	epic = {
+		Name = "Épico",
+		Color = Color3.fromRGB(200, 100, 255),
+		GlowColor = Color3.fromRGB(180, 50, 255),
+	},
+	legendary = {
+		Name = "Legendario",
+		Color = Color3.fromRGB(255, 200, 50),
+		GlowColor = Color3.fromRGB(255, 180, 0),
+	},
+	mythic = {
+		Name = "Mítico",
+		Color = Color3.fromRGB(255, 100, 100),
+		GlowColor = Color3.fromRGB(255, 50, 50),
+	},
+}
+
+-- Orden de visualización (de más barato a más caro)
+Config.CosmeticOrder = {
+	"Default", "Blue", "Pink", "Purple",           -- Común
+	"Toxic", "Fire", "Ice", "Shadow",              -- Raro
+	"Lava", "Electric", "Galaxy", "Neon",          -- Épico
+	"Rainbow", "Golden", "Diamond",                 -- Legendario
+	"Void", "Chromatic", "Legendary_Phoenix",      -- Mítico
 }
 
 -- ============================================
@@ -257,10 +576,11 @@ Config.DefaultPlayerData = {
 		Salad = true, -- Siempre desbloqueada
 	},
 
-	-- Efectos desbloqueados
-	UnlockedEffects = {
-		FartColor = "Default",
+	-- Cosméticos de pedo
+	OwnedCosmetics = {
+		Default = true, -- El pedo básico siempre está desbloqueado
 	},
+	EquippedCosmetic = "Default", -- Cosmético actualmente equipado
 
 	-- Récords personales
 	Records = {

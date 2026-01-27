@@ -79,6 +79,9 @@ local upperTorso, lowerTorso
 -- Propulsión
 local bodyVelocity = nil
 
+-- Cosmético equipado
+local equippedCosmeticConfig = nil
+
 -- ============================================
 -- EFECTOS VISUALES (Solo cliente)
 -- ============================================
@@ -88,11 +91,30 @@ local function createFartParticles(parent)
 	particles.Name = "FartParticles"
 	particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
 
-	particles.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(140, 160, 80)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 120, 50)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 100, 40)),
-	})
+	-- Usar colores del cosmético equipado o colores por defecto
+	local colors = {
+		Color3.fromRGB(140, 160, 80),
+		Color3.fromRGB(100, 120, 50),
+		Color3.fromRGB(80, 100, 40),
+	}
+
+	if equippedCosmeticConfig and equippedCosmeticConfig.Colors and #equippedCosmeticConfig.Colors > 0 then
+		colors = equippedCosmeticConfig.Colors
+	end
+
+	-- Crear ColorSequence basado en los colores del cosmético
+	local colorKeypoints = {}
+	for i, color in ipairs(colors) do
+		local time = (i - 1) / math.max(#colors - 1, 1)
+		table.insert(colorKeypoints, ColorSequenceKeypoint.new(time, color))
+	end
+
+	-- Asegurar que haya al menos 2 keypoints
+	if #colorKeypoints == 1 then
+		table.insert(colorKeypoints, ColorSequenceKeypoint.new(1, colors[1]))
+	end
+
+	particles.Color = ColorSequence.new(colorKeypoints)
 
 	particles.Transparency = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 0),
@@ -101,10 +123,18 @@ local function createFartParticles(parent)
 		NumberSequenceKeypoint.new(1, 1),
 	})
 
+	-- Tamaño basado en cosmético
+	local sizeMin = 1.5
+	local sizeMax = 5
+	if equippedCosmeticConfig and equippedCosmeticConfig.ParticleSize then
+		sizeMin = equippedCosmeticConfig.ParticleSize.Min or 0.5
+		sizeMax = (equippedCosmeticConfig.ParticleSize.Max or 2) * 2.5
+	end
+
 	particles.Size = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 1.5),
-		NumberSequenceKeypoint.new(0.5, 3),
-		NumberSequenceKeypoint.new(1, 5),
+		NumberSequenceKeypoint.new(0, sizeMin),
+		NumberSequenceKeypoint.new(0.5, (sizeMin + sizeMax) / 2),
+		NumberSequenceKeypoint.new(1, sizeMax),
 	})
 
 	particles.Rate = 20
@@ -116,12 +146,52 @@ local function createFartParticles(parent)
 	particles.Acceleration = Vector3.new(0, 2, 0)
 	particles.Drag = 2
 	particles.EmissionDirection = Enum.NormalId.Back
-	particles.LightEmission = 0
+
+	-- Brillo para cosméticos con glow
+	if equippedCosmeticConfig and equippedCosmeticConfig.Glow then
+		particles.LightEmission = 0.5
+	else
+		particles.LightEmission = 0
+	end
 	particles.LightInfluence = 1
 	particles.Enabled = false
 
 	particles.Parent = parent
 	return particles
+end
+
+-- Actualizar colores de partículas cuando cambia el cosmético
+local function updateFartParticleColors()
+	if not fartParticles then return end
+
+	local colors = {
+		Color3.fromRGB(140, 160, 80),
+		Color3.fromRGB(100, 120, 50),
+		Color3.fromRGB(80, 100, 40),
+	}
+
+	if equippedCosmeticConfig and equippedCosmeticConfig.Colors and #equippedCosmeticConfig.Colors > 0 then
+		colors = equippedCosmeticConfig.Colors
+	end
+
+	local colorKeypoints = {}
+	for i, color in ipairs(colors) do
+		local time = (i - 1) / math.max(#colors - 1, 1)
+		table.insert(colorKeypoints, ColorSequenceKeypoint.new(time, color))
+	end
+
+	if #colorKeypoints == 1 then
+		table.insert(colorKeypoints, ColorSequenceKeypoint.new(1, colors[1]))
+	end
+
+	fartParticles.Color = ColorSequence.new(colorKeypoints)
+
+	-- Actualizar glow
+	if equippedCosmeticConfig and equippedCosmeticConfig.Glow then
+		fartParticles.LightEmission = 0.5
+	else
+		fartParticles.LightEmission = 0
+	end
 end
 
 local function createFartSound(parent)
@@ -541,6 +611,13 @@ local function onDataLoaded(data)
 		thinMultiplier = data.Config.Fatness.ThinMultiplier
 	end
 
+	-- Cargar cosmético equipado
+	if data.EquippedCosmeticConfig then
+		equippedCosmeticConfig = data.EquippedCosmeticConfig
+		updateFartParticleColors()
+		print("[FartController] Cosmético cargado:", equippedCosmeticConfig.Name or "Default")
+	end
+
 	isDataLoaded = true
 end
 
@@ -554,6 +631,16 @@ local function onDataUpdated(data)
 		playerStats.EatSpeed = result.UpgradeValues.EatSpeed
 		playerStats.PropulsionForce = result.UpgradeValues.PropulsionForce
 		playerStats.FuelEfficiency = result.UpgradeValues.FuelEfficiency
+	end
+
+	-- Actualizar cosmético si cambió
+	if result and result.EquippedCosmeticConfig then
+		local newCosmetic = result.EquippedCosmeticConfig
+		if not equippedCosmeticConfig or equippedCosmeticConfig.Name ~= newCosmetic.Name then
+			equippedCosmeticConfig = newCosmetic
+			updateFartParticleColors()
+			print("[FartController] Cosmético actualizado:", equippedCosmeticConfig.Name or "Default")
+		end
 	end
 end
 
