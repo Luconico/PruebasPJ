@@ -12,7 +12,7 @@ local Config = {}
 Config.Fatness = {
 	-- Multiplicadores de tamaño
 	ThinMultiplier = 0.5,      -- Tamaño mínimo (delgado)
-	DefaultMaxFatness = 3.0,   -- Gordura máxima inicial
+	DefaultMaxFatness = 1.5,   -- Gordura máxima inicial (sin upgrades)
 
 	-- Velocidades base (modificables por upgrades)
 	BaseGrowSpeed = 0.08,      -- Velocidad de engorde base
@@ -31,8 +31,8 @@ Config.Upgrades = {
 		Name = "Gordura Máxima",
 		Description = "Aumenta tu capacidad de almacenar grasa",
 		MaxLevel = 10,
-		BaseValue = 3.0,
-		IncrementPerLevel = 0.5, -- +0.5 por nivel
+		BaseValue = 1.5,
+		IncrementPerLevel = 0.25, -- +0.25 por nivel (máximo 4.0 a nivel 10)
 		CostCoins = { 100, 250, 500, 1000, 2000, 4000, 8000, 15000, 30000, 50000 },
 		CostRobux = { 10, 20, 35, 50, 75, 100, 150, 200, 300, 500 },
 	},
@@ -75,10 +75,10 @@ Config.Upgrades = {
 -- COMIDA
 -- ============================================
 Config.Food = {
-	-- Comida básica (gratis)
+	-- Comida básica (gratis) - muy lenta
 	Salad = {
 		Name = "Ensalada",
-		FatnessPerSecond = 0.02,
+		FatnessPerSecond = 0.00125,
 		RequiresUnlock = false,
 		CostCoins = 0,
 		CostRobux = 0,
@@ -87,7 +87,7 @@ Config.Food = {
 	-- Comida normal (monedas)
 	Burger = {
 		Name = "Hamburguesa",
-		FatnessPerSecond = 0.05,
+		FatnessPerSecond = 0.00375,
 		RequiresUnlock = true,
 		CostCoins = 500,
 		CostRobux = 25,
@@ -95,7 +95,7 @@ Config.Food = {
 
 	Pizza = {
 		Name = "Pizza",
-		FatnessPerSecond = 0.08,
+		FatnessPerSecond = 0.0075,
 		RequiresUnlock = true,
 		CostCoins = 1500,
 		CostRobux = 50,
@@ -104,7 +104,7 @@ Config.Food = {
 	-- Comida premium (robux o muy caro)
 	HotDog = {
 		Name = "Hot Dog Especial",
-		FatnessPerSecond = 0.12,
+		FatnessPerSecond = 0.0125,
 		RequiresUnlock = true,
 		CostCoins = 10000,
 		CostRobux = 100,
@@ -112,7 +112,7 @@ Config.Food = {
 
 	GoldenBurger = {
 		Name = "Hamburguesa Dorada",
-		FatnessPerSecond = 0.20,
+		FatnessPerSecond = 0.02,
 		RequiresUnlock = true,
 		CostCoins = 0, -- Solo robux
 		CostRobux = 250,

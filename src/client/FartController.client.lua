@@ -172,7 +172,7 @@ local function applyBodySize(multiplier)
 
 	-- Ajustar hombros y caderas según el tamaño
 	if multiplier < 1.0 then
-		-- Cuando está delgado: mover joints hacia adentro para que no se separen
+		-- Cuando está delgado: solo ajustar hombros (no caderas)
 		if upperTorso and originalLeftShoulderC0 and originalRightShoulderC0 then
 			local originalTorsoSize = originalSizes[upperTorso]
 			if originalTorsoSize then
@@ -187,20 +187,9 @@ local function applyBodySize(multiplier)
 			end
 		end
 
-		-- Caderas también hacia adentro cuando está delgado
-		if lowerTorso and originalLeftHipC0 and originalRightHipC0 then
-			local originalTorsoSize = originalSizes[lowerTorso]
-			if originalTorsoSize then
-				local xOffset = (originalTorsoSize.X / 2) * (1 - multiplier)
-
-				if leftHip then
-					leftHip.C0 = originalLeftHipC0 * CFrame.new(xOffset, 0, 0)
-				end
-				if rightHip then
-					rightHip.C0 = originalRightHipC0 * CFrame.new(-xOffset, 0, 0)
-				end
-			end
-		end
+		-- Caderas en posición original cuando está delgado
+		if leftHip and originalLeftHipC0 then leftHip.C0 = originalLeftHipC0 end
+		if rightHip and originalRightHipC0 then rightHip.C0 = originalRightHipC0 end
 	elseif multiplier > 1.0 then
 		-- Cuando está gordo: mover joints hacia afuera
 		if upperTorso and originalLeftShoulderC0 and originalRightShoulderC0 then
@@ -464,7 +453,7 @@ local function updateEating()
 
 	-- La comida determina la velocidad base
 	-- El upgrade EatSpeed del jugador da un bonus multiplicador
-	local baseSpeed = 0.02 -- Velocidad mínima (ensalada)
+	local baseSpeed = 0.00125 -- Velocidad mínima (ensalada)
 	if currentFoodConfig and currentFoodConfig.FatnessPerSecond then
 		baseSpeed = currentFoodConfig.FatnessPerSecond
 	end
