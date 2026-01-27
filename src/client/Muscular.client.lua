@@ -6,14 +6,16 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 -- Variables de estado
 local isGrowing = false
-local isShrinking = false
+local isPropelling = false
 local growSpeed = 0.08 -- Velocidad de crecimiento
-local shrinkSpeed = 0.06 -- Velocidad de adelgazamiento
+local shrinkSpeed = 0.04 -- Velocidad de adelgazamiento durante propulsión
+local propulsionForce = 50 -- Fuerza base de propulsión
 local thinMultiplier = 0.5 -- Multiplicador para estar delgado (50% del tamaño normal)
-local muscularMultiplier = 3.0 -- Multiplicador para estar musculoso (200% del tamaño normal)
+local muscularMultiplier = 3.0 -- Multiplicador para estar musculoso
 local currentGrowth = thinMultiplier -- Empieza delgado
 
 -- Partes del cuerpo y sus tamaños originales
@@ -26,6 +28,9 @@ local leftHip, rightHip
 local originalLeftShoulderC0, originalRightShoulderC0
 local originalLeftHipC0, originalRightHipC0
 local upperTorso, lowerTorso
+
+-- BodyVelocity para propulsión
+local bodyVelocity = nil
 
 -- Función para configurar las partes del cuerpo
 local function setupBody()
@@ -157,12 +162,18 @@ local function applyBodySize(multiplier)
 	end
 end
 
--- Función para iniciar el crecimiento
+-- Función para iniciar el crecimiento (botón izquierdo)
 local function startGrowing()
 	if isGrowing then return end
 
 	isGrowing = true
-	isShrinking = false -- Detener adelgazamiento si estaba en proceso
+	isPropelling = false -- Detener propulsión si estaba activa
+
+	-- Detener propulsión si existe
+	if bodyVelocity then
+		bodyVelocity:Destroy()
+		bodyVelocity = nil
+	end
 end
 
 -- Función para actualizar el crecimiento muscular
@@ -175,25 +186,74 @@ local function updateGrowth()
 	end
 end
 
--- Función para detener y comenzar a adelgazar gradualmente
+-- Función para detener el crecimiento (se queda gordo)
 local function stopGrowing()
 	if not isGrowing then return end
-
 	isGrowing = false
-	isShrinking = true
+	-- No adelgaza, se queda con el peso actual
 end
 
--- Función para actualizar el adelgazamiento gradual
-local function updateShrinking()
-	if not isShrinking then return end
+-- Función para iniciar propulsión (botón derecho)
+local function startPropelling()
+	if isPropelling then return end
+	if currentGrowth <= thinMultiplier then return end -- No puede propulsarse si ya está delgado
 
-	if currentGrowth > thinMultiplier then
-		currentGrowth = math.max(currentGrowth - shrinkSpeed, thinMultiplier)
-		applyBodySize(currentGrowth)
-	else
-		-- Llegó al tamaño delgado, dejar de adelgazar
-		isShrinking = false
+	isPropelling = true
+	isGrowing = false
+
+	-- Crear BodyVelocity para propulsión
+	if not bodyVelocity then
+		bodyVelocity = Instance.new("BodyVelocity")
+		bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0) -- Solo fuerza vertical
+		bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+		bodyVelocity.Parent = humanoidRootPart
+	end
+end
+
+-- Función para actualizar la propulsión
+local function updatePropulsion()
+	if not isPropelling then return end
+
+	-- Si ya está delgado, detener propulsión inmediatamente
+	if currentGrowth <= thinMultiplier then
 		currentGrowth = thinMultiplier
+		applyBodySize(currentGrowth)
+		stopPropelling()
+		return
+	end
+
+	-- Calcular la fuerza de propulsión basada en el peso actual
+	-- Más gordo = más fuerza de propulsión
+	local weightFactor = (currentGrowth - thinMultiplier) / (muscularMultiplier - thinMultiplier)
+	local currentForce = propulsionForce * weightFactor
+
+	-- Aplicar velocidad hacia arriba
+	if bodyVelocity then
+		bodyVelocity.Velocity = Vector3.new(0, currentForce, 0)
+	end
+
+	-- Perder peso gradualmente
+	currentGrowth = math.max(currentGrowth - shrinkSpeed, thinMultiplier)
+	applyBodySize(currentGrowth)
+end
+
+-- Función para detener propulsión (botón derecho soltado o llegó a delgado)
+local function stopPropelling()
+	isPropelling = false
+
+	-- Destruir BodyVelocity inmediatamente para que caiga naturalmente
+	if bodyVelocity then
+		bodyVelocity:Destroy()
+		bodyVelocity = nil
+	end
+
+	-- Buscar y eliminar cualquier BodyVelocity residual en el HumanoidRootPart
+	if humanoidRootPart then
+		for _, child in ipairs(humanoidRootPart:GetChildren()) do
+			if child:IsA("BodyVelocity") then
+				child:Destroy()
+			end
+		end
 	end
 end
 
@@ -202,22 +262,37 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		-- Botón izquierdo: engordar
 		startGrowing()
+	elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+		-- Botón derecho: propulsarse
+		startPropelling()
 	end
 end)
 
 UserInputService.InputEnded:Connect(function(input, gameProcessed)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		stopGrowing()
+	elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+		stopPropelling()
 	end
 end)
 
--- Loop para actualizar el crecimiento/adelgazamiento progresivamente
+-- Loop para actualizar el crecimiento/propulsión progresivamente
 RunService.RenderStepped:Connect(function()
 	if isGrowing then
 		updateGrowth()
-	elseif isShrinking then
-		updateShrinking()
+	end
+
+	if isPropelling then
+		updatePropulsion()
+	end
+
+	-- Verificación de seguridad: si está delgado y hay un bodyVelocity, eliminarlo
+	if currentGrowth <= thinMultiplier and bodyVelocity then
+		bodyVelocity:Destroy()
+		bodyVelocity = nil
+		isPropelling = false
 	end
 end)
 
@@ -225,10 +300,17 @@ end)
 player.CharacterAdded:Connect(function(newCharacter)
 	character = newCharacter
 	humanoid = character:WaitForChild("Humanoid")
+	humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 	isGrowing = false
-	isShrinking = false
+	isPropelling = false
 	currentGrowth = thinMultiplier
+
+	-- Limpiar bodyVelocity si existe
+	if bodyVelocity then
+		bodyVelocity:Destroy()
+		bodyVelocity = nil
+	end
 
 	task.wait(0.5)
 	setupBody()
