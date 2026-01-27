@@ -26,16 +26,23 @@ local Styles = {
 	-- Colores principales
 	Colors = {
 		Primary = Color3.fromRGB(255, 200, 50),     -- Amarillo dorado
-		Secondary = Color3.fromRGB(100, 200, 100),  -- Verde
+		Secondary = Color3.fromRGB(50, 200, 80),    -- Verde vibrante
 		Accent = Color3.fromRGB(255, 100, 100),     -- Rojo/Rosa
 		Background = Color3.fromRGB(40, 40, 60),    -- Azul oscuro
 		Text = Color3.fromRGB(255, 255, 255),       -- Blanco
 		Shadow = Color3.fromRGB(0, 0, 0),           -- Negro
+		-- Nuevos colores para contadores estilo cartoon
+		CounterBg = Color3.fromRGB(255, 255, 255),  -- Blanco para contenedores
+		CounterStroke = Color3.fromRGB(20, 20, 20), -- Borde oscuro
+		-- Colores por tipo de contador
+		CoinTextColor = Color3.fromRGB(50, 180, 80),      -- Verde para dinero
+		HeightTextColor = Color3.fromRGB(0, 150, 255),    -- Azul para altura actual
+		MaxHeightTextColor = Color3.fromRGB(255, 180, 0), -- Dorado/naranja para récord
 	},
 
 	-- Fuentes
 	Font = Enum.Font.FredokaOne,
-	FontBold = Enum.Font.GothamBold,
+	FontBold = Enum.Font.GothamBlack,
 
 	-- Tamaños base (se escalarán según dispositivo)
 	CornerRadius = UDim.new(0, 12),
@@ -52,31 +59,40 @@ local function getResponsiveSizes()
 	local isMobile = info.IsMobile
 
 	return {
-		-- Barra de gordura (más grande en móvil para fácil visibilidad)
-		FatnessBarWidth = isMobile and 200 or math.floor(250 * scale),
-		FatnessBarHeight = isMobile and 45 or math.floor(50 * scale),
+		-- ============================================
+		-- BARRA DE GAS/GORDURA (Estilo Cartoon) - GRANDE
+		-- ============================================
+		FatnessBarWidth = isMobile and 360 or math.floor(450 * scale), -- Doble de ancho
+		FatnessBarHeight = isMobile and 60 or math.floor(70 * scale), -- Más alto
 		FatnessBarMargin = isMobile and 12 or math.floor(20 * scale),
-		FatnessIconSize = isMobile and 35 or math.floor(40 * scale),
-		FatnessIconTextSize = isMobile and 26 or math.floor(28 * scale),
+		FatnessIconSize = isMobile and 80 or math.floor(95 * scale), -- Icono más grande
+		FatnessIconOverflow = isMobile and 22 or math.floor(28 * scale), -- Cuánto sobresale
+		FatnessIconTextSize = isMobile and 60 or math.floor(72 * scale), -- Emoji más grande
+		FatnessCornerRadius = isMobile and 30 or math.floor(35 * scale), -- Pill shape
+		FatnessProgressHeight = isMobile and 28 or math.floor(32 * scale), -- Barra interna más alta
 
-		-- Contadores (monedas, altura récord) - más anchos para el padding extra
-		CounterWidth = isMobile and 145 or math.floor(180 * scale),
-		CounterHeight = isMobile and 50 or math.floor(60 * scale),
-		CounterMargin = isMobile and 10 or math.floor(20 * scale),
-		CounterIconSize = isMobile and 38 or math.floor(50 * scale),
-		CounterIconTextSize = isMobile and 30 or math.floor(36 * scale),
-		CounterTextSize = isMobile and 24 or math.floor(32 * scale),
+		-- ============================================
+		-- NUEVOS CONTADORES ESTILO CARTOON (CENTRADOS)
+		-- ============================================
+		-- Contenedor más ancho (rectángulo blanco con esquinas redondeadas)
+		CounterWidth = isMobile and 160 or math.floor(200 * scale),
+		CounterHeight = isMobile and 55 or math.floor(65 * scale),
+		CounterMargin = isMobile and 10 or math.floor(15 * scale),
+		CounterSpacing = isMobile and 12 or math.floor(18 * scale), -- Espacio entre contadores
+		CounterCornerRadius = isMobile and 25 or math.floor(30 * scale), -- Muy redondeado (pill shape)
 
-		-- Max height counter (más ancho para el padding)
-		MaxHeightWidth = isMobile and 125 or math.floor(150 * scale),
-		MaxHeightTextSize = isMobile and 20 or math.floor(26 * scale),
-		MaxHeightIconTextSize = isMobile and 26 or math.floor(28 * scale),
+		-- Icono que sobresale (más grande que el contenedor)
+		CounterIconSize = isMobile and 70 or math.floor(85 * scale), -- Icono grande que sobresale
+		CounterIconOverflow = isMobile and 20 or math.floor(25 * scale), -- Cuánto sobresale
+		CounterIconTextSize = isMobile and 55 or math.floor(65 * scale), -- Emoji grande
 
-		-- Medidor de altura actual (más ancho para el padding)
-		HeightMeterWidth = isMobile and 110 or math.floor(120 * scale),
-		HeightMeterHeight = isMobile and 44 or math.floor(50 * scale),
-		HeightMeterIconSize = isMobile and 26 or math.floor(30 * scale),
-		HeightMeterTextSize = isMobile and 22 or math.floor(24 * scale),
+		-- Texto con efecto "wow"
+		CounterTextSize = isMobile and 30 or math.floor(38 * scale),
+		CounterTextStroke = isMobile and 3 or math.floor(4 * scale), -- Borde del texto
+
+		-- Medidor de altura actual (mismo estilo)
+		HeightMeterWidth = isMobile and 130 or math.floor(160 * scale),
+		HeightMeterHeight = isMobile and 55 or math.floor(65 * scale),
 
 		-- Milestone notification
 		MilestoneWidth = isMobile and 300 or math.floor(400 * scale),
@@ -84,10 +100,10 @@ local function getResponsiveSizes()
 		MilestoneMainTextSize = isMobile and 36 or math.floor(48 * scale),
 		MilestoneBonusTextSize = isMobile and 28 or math.floor(32 * scale),
 
-		-- Corner radius
+		-- Corner radius general
 		CornerRadius = isMobile and 10 or math.floor(12 * scale),
 
-		-- Stroke thickness
+		-- Stroke thickness general
 		StrokeThickness = isMobile and 3 or math.floor(4 * scale),
 	}
 end
@@ -154,226 +170,249 @@ end
 -- COMPONENTES DE UI
 -- ============================================
 
--- Barra de gordura
+-- ============================================
+-- BARRA DE GAS/GORDURA (Estilo Cartoon)
+-- ============================================
 local function createFatnessBar(parent)
+	-- Wrapper principal (incluye espacio para icono que sobresale)
+	local wrapper = Instance.new("Frame")
+	wrapper.Name = "FatnessBar"
+	wrapper.Size = UDim2.new(0, sizes.FatnessBarWidth + sizes.FatnessIconOverflow, 0, sizes.FatnessIconSize)
+	wrapper.Position = UDim2.new(0, sizes.FatnessBarMargin, 1, -(sizes.FatnessBarMargin + 10))
+	wrapper.AnchorPoint = Vector2.new(0, 1)
+	wrapper.BackgroundTransparency = 1
+	wrapper.Parent = parent
+
+	-- Contenedor blanco (el rectángulo visible)
 	local container = Instance.new("Frame")
-	container.Name = "FatnessBar"
+	container.Name = "Container"
 	container.Size = UDim2.new(0, sizes.FatnessBarWidth, 0, sizes.FatnessBarHeight)
-	container.Position = UDim2.new(0, sizes.FatnessBarMargin, 1, -(sizes.FatnessBarMargin + sizes.FatnessBarHeight + 10))
-	container.AnchorPoint = Vector2.new(0, 1)
-	container.BackgroundColor3 = Styles.Colors.Background
-	container.Parent = parent
+	container.Position = UDim2.new(0, sizes.FatnessIconOverflow, 0.5, 0)
+	container.AnchorPoint = Vector2.new(0, 0.5)
+	container.BackgroundColor3 = Styles.Colors.CounterBg
+	container.Parent = wrapper
 
-	createCorner(container)
-	createStroke(container, Styles.Colors.Primary)
+	-- Esquinas muy redondeadas (pill shape)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, sizes.FatnessCornerRadius)
+	corner.Parent = container
 
-	-- Icono de hamburguesa
-	local icon = Instance.new("TextLabel")
-	icon.Name = "Icon"
-	icon.Size = UDim2.new(0, sizes.FatnessIconSize, 0, sizes.FatnessIconSize)
-	icon.Position = UDim2.new(0, 5, 0.5, 0)
-	icon.AnchorPoint = Vector2.new(0, 0.5)
-	icon.BackgroundTransparency = 1
-	icon.Text = "🍔"
-	icon.TextSize = sizes.FatnessIconTextSize
-	icon.Parent = container
+	-- Borde grueso oscuro
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Styles.Colors.CounterStroke
+	stroke.Thickness = sizes.StrokeThickness + 1
+	stroke.Parent = container
 
-	-- Barra de fondo
+	-- Icono grande que sobresale por la izquierda
+	local iconFrame = Instance.new("Frame")
+	iconFrame.Name = "IconFrame"
+	iconFrame.Size = UDim2.new(0, sizes.FatnessIconSize, 0, sizes.FatnessIconSize)
+	iconFrame.Position = UDim2.new(0, 0, 0.5, 0)
+	iconFrame.AnchorPoint = Vector2.new(0, 0.5)
+	iconFrame.BackgroundTransparency = 1
+	iconFrame.ZIndex = 5
+	iconFrame.Parent = wrapper
+
+	local iconLabel = Instance.new("TextLabel")
+	iconLabel.Name = "Icon"
+	iconLabel.Size = UDim2.new(1, 0, 1, 0)
+	iconLabel.BackgroundTransparency = 1
+	iconLabel.Text = "🍔"
+	iconLabel.TextSize = sizes.FatnessIconTextSize
+	iconLabel.ZIndex = 5
+	iconLabel.Parent = iconFrame
+
+	-- Calcular offset de la barra para que no se tape con el icono
+	local iconOverlapInContainer = sizes.FatnessIconSize - sizes.FatnessIconOverflow
+	local barLeftPadding = iconOverlapInContainer + 5
+
+	-- Fondo de la barra de progreso (dentro del contenedor blanco)
 	local barBg = Instance.new("Frame")
 	barBg.Name = "BarBackground"
-	barBg.Size = UDim2.new(1, -(sizes.FatnessIconSize + 15), 0, math.floor(sizes.FatnessBarHeight * 0.5))
-	barBg.Position = UDim2.new(0, sizes.FatnessIconSize + 8, 0.5, 0)
+	barBg.Size = UDim2.new(1, -(barLeftPadding + 15), 0, sizes.FatnessProgressHeight)
+	barBg.Position = UDim2.new(0, barLeftPadding, 0.5, 0)
 	barBg.AnchorPoint = Vector2.new(0, 0.5)
-	barBg.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+	barBg.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
 	barBg.Parent = container
-	createCorner(barBg, UDim.new(0, math.floor(sizes.CornerRadius * 0.6)))
 
-	-- Barra de llenado
+	local barBgCorner = Instance.new("UICorner")
+	barBgCorner.CornerRadius = UDim.new(0, math.floor(sizes.FatnessProgressHeight / 2))
+	barBgCorner.Parent = barBg
+
+	-- Barra de llenado (verde gradiente)
 	local barFill = Instance.new("Frame")
 	barFill.Name = "BarFill"
 	barFill.Size = UDim2.new(0.5, 0, 1, 0)
-	barFill.BackgroundColor3 = Styles.Colors.Secondary
+	barFill.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
 	barFill.Parent = barBg
-	createCorner(barFill, UDim.new(0, math.floor(sizes.CornerRadius * 0.6)))
 
-	-- Gradiente
+	local barFillCorner = Instance.new("UICorner")
+	barFillCorner.CornerRadius = UDim.new(0, math.floor(sizes.FatnessProgressHeight / 2))
+	barFillCorner.Parent = barFill
+
+	-- Gradiente verde vibrante
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 255, 150)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 180, 80)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 220, 120)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 180, 80)),
 	})
 	gradient.Rotation = 90
 	gradient.Parent = barFill
 
-	return container, barFill
+	return wrapper, barFill
 end
 
--- Contador de monedas
-local function createCoinCounter(parent)
-	local info = ResponsiveUI.getViewportInfo()
-	local iconLeftMargin = 8
-	local iconTextGap = info.IsMobile and 12 or 14  -- Espacio ENTRE icono y texto
+-- ============================================
+-- NUEVO ESTILO: Contador Cartoon (icono sobresale)
+-- ============================================
+local function createCartoonCounter(parent, name, icon, textColor, position)
+	-- Contenedor principal (incluye espacio para icono que sobresale)
+	local wrapper = Instance.new("Frame")
+	wrapper.Name = name
+	wrapper.Size = UDim2.new(0, sizes.CounterWidth + sizes.CounterIconOverflow, 0, sizes.CounterHeight)
+	wrapper.Position = position
+	wrapper.AnchorPoint = Vector2.new(0, 0)
+	wrapper.BackgroundTransparency = 1
+	wrapper.Parent = parent
 
+	-- Contenedor blanco (el rectángulo visible)
 	local container = Instance.new("Frame")
-	container.Name = "CoinCounter"
+	container.Name = "Container"
 	container.Size = UDim2.new(0, sizes.CounterWidth, 0, sizes.CounterHeight)
-	container.Position = UDim2.new(1, -sizes.CounterMargin, 0, sizes.CounterMargin)
-	container.AnchorPoint = Vector2.new(1, 0)
-	container.BackgroundColor3 = Styles.Colors.Background
-	container.Parent = parent
+	container.Position = UDim2.new(0, sizes.CounterIconOverflow, 0, 0)
+	container.BackgroundColor3 = Styles.Colors.CounterBg
+	container.Parent = wrapper
 
-	createCorner(container)
-	createStroke(container, Styles.Colors.Primary)
+	-- Esquinas muy redondeadas (pill shape)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, sizes.CounterCornerRadius)
+	corner.Parent = container
 
-	-- Icono de moneda
-	local icon = Instance.new("TextLabel")
-	icon.Name = "Icon"
-	icon.Size = UDim2.new(0, sizes.CounterIconSize, 0, sizes.CounterIconSize)
-	icon.Position = UDim2.new(0, iconLeftMargin, 0.5, 0)
-	icon.AnchorPoint = Vector2.new(0, 0.5)
-	icon.BackgroundTransparency = 1
-	icon.Text = "💰"
-	icon.TextSize = sizes.CounterIconTextSize
-	icon.Parent = container
+	-- Borde grueso oscuro
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Styles.Colors.CounterStroke
+	stroke.Thickness = sizes.StrokeThickness + 1
+	stroke.Parent = container
 
-	-- Texto de cantidad (posición = margen + icono + gap)
-	local textStartX = iconLeftMargin + sizes.CounterIconSize + iconTextGap
+	-- Icono grande que sobresale por la izquierda
+	local iconFrame = Instance.new("Frame")
+	iconFrame.Name = "IconFrame"
+	iconFrame.Size = UDim2.new(0, sizes.CounterIconSize, 0, sizes.CounterIconSize)
+	iconFrame.Position = UDim2.new(0, 0, 0.5, 0)
+	iconFrame.AnchorPoint = Vector2.new(0, 0.5)
+	iconFrame.BackgroundTransparency = 1
+	iconFrame.ZIndex = 5
+	iconFrame.Parent = wrapper
+
+	local iconLabel = Instance.new("TextLabel")
+	iconLabel.Name = "Icon"
+	iconLabel.Size = UDim2.new(1, 0, 1, 0)
+	iconLabel.BackgroundTransparency = 1
+	iconLabel.Text = icon
+	iconLabel.TextSize = sizes.CounterIconTextSize
+	iconLabel.ZIndex = 5
+	iconLabel.Parent = iconFrame
+
+	-- Calcular offset del texto para que no se tape con el icono
+	-- El icono ocupa (CounterIconSize - CounterIconOverflow) dentro del container
+	local iconOverlapInContainer = sizes.CounterIconSize - sizes.CounterIconOverflow
+	local textLeftPadding = iconOverlapInContainer + 5 -- +5 de margen extra
+
+	-- Texto con efecto "wow" (stroke grueso usando UIStroke)
 	local amount = Instance.new("TextLabel")
 	amount.Name = "Amount"
-	amount.Size = UDim2.new(1, -(textStartX + 8), 1, 0)
-	amount.Position = UDim2.new(0, textStartX, 0, 0)
+	amount.Size = UDim2.new(1, -(textLeftPadding + 15), 1, 0)
+	amount.Position = UDim2.new(0, textLeftPadding, 0, 0)
 	amount.BackgroundTransparency = 1
 	amount.Text = "0"
-	amount.TextColor3 = Styles.Colors.Primary
+	amount.TextColor3 = textColor or Styles.Colors.Text
 	amount.TextSize = sizes.CounterTextSize
-	amount.Font = Styles.Font
-	amount.TextXAlignment = Enum.TextXAlignment.Left
+	amount.Font = Styles.FontBold
+	amount.TextXAlignment = Enum.TextXAlignment.Center
 	amount.TextScaled = true
 	amount.Parent = container
+
+	-- UIStroke para outline grueso del texto (mejor que TextStroke)
+	local textStroke = Instance.new("UIStroke")
+	textStroke.Color = Color3.new(0, 0, 0)
+	textStroke.Thickness = 3 -- Outline grueso
+	textStroke.Transparency = 0
+	textStroke.Parent = amount
 
 	-- Constraint para texto escalado
 	local textConstraint = Instance.new("UITextSizeConstraint")
 	textConstraint.MaxTextSize = sizes.CounterTextSize
-	textConstraint.MinTextSize = 14
+	textConstraint.MinTextSize = 16
 	textConstraint.Parent = amount
 
-	return container, amount
+	return wrapper, amount, container
 end
 
--- Contador de récord de altura (al lado de monedas)
-local function createMaxHeightCounter(parent)
-	local info = ResponsiveUI.getViewportInfo()
-	local spacing = info.IsMobile and 8 or 10
-	local iconLeftMargin = 8
-	local iconTextGap = info.IsMobile and 12 or 14  -- Espacio ENTRE icono y texto
+-- ============================================
+-- CREAR CONTENEDOR CENTRADO PARA LOS 3 CONTADORES
+-- ============================================
+local function createCenteredCountersContainer(parent)
+	local totalWidth = sizes.CounterWidth + sizes.CounterIconOverflow
+	local totalContainersWidth = (totalWidth * 3) + (sizes.CounterSpacing * 2)
 
 	local container = Instance.new("Frame")
-	container.Name = "MaxHeightCounter"
-	container.Size = UDim2.new(0, sizes.MaxHeightWidth, 0, sizes.CounterHeight)
-	-- Posición: a la izquierda del contador de monedas
-	container.Position = UDim2.new(1, -(sizes.CounterMargin + sizes.CounterWidth + spacing + sizes.MaxHeightWidth), 0, sizes.CounterMargin)
-	container.AnchorPoint = Vector2.new(0, 0)
-	container.BackgroundColor3 = Styles.Colors.Background
+	container.Name = "CountersContainer"
+	container.Size = UDim2.new(0, totalContainersWidth, 0, sizes.CounterHeight)
+	container.Position = UDim2.new(0.5, 0, 0, sizes.CounterMargin)
+	container.AnchorPoint = Vector2.new(0.5, 0)
+	container.BackgroundTransparency = 1
 	container.Parent = parent
 
-	createCorner(container)
-	createStroke(container, Styles.Colors.Secondary) -- Borde verde para diferenciarlo
-
-	-- Icono de trofeo/altura
-	local iconSize = math.floor(sizes.CounterHeight * 0.7)
-	local icon = Instance.new("TextLabel")
-	icon.Name = "Icon"
-	icon.Size = UDim2.new(0, iconSize, 0, iconSize)
-	icon.Position = UDim2.new(0, iconLeftMargin, 0.5, 0)
-	icon.AnchorPoint = Vector2.new(0, 0.5)
-	icon.BackgroundTransparency = 1
-	icon.Text = "🏆"
-	icon.TextSize = sizes.MaxHeightIconTextSize
-	icon.Parent = container
-
-	-- Texto de altura máxima (posición = margen + icono + gap)
-	local textStartX = iconLeftMargin + iconSize + iconTextGap
-	local amount = Instance.new("TextLabel")
-	amount.Name = "Amount"
-	amount.Size = UDim2.new(1, -(textStartX + 8), 1, 0)
-	amount.Position = UDim2.new(0, textStartX, 0, 0)
-	amount.BackgroundTransparency = 1
-	amount.Text = "0m"
-	amount.TextColor3 = Styles.Colors.Secondary
-	amount.TextSize = sizes.MaxHeightTextSize
-	amount.Font = Styles.Font
-	amount.TextXAlignment = Enum.TextXAlignment.Left
-	amount.TextScaled = true
-	amount.Parent = container
-
-	-- Constraint para texto escalado
-	local textConstraint = Instance.new("UITextSizeConstraint")
-	textConstraint.MaxTextSize = sizes.MaxHeightTextSize
-	textConstraint.MinTextSize = 12
-	textConstraint.Parent = amount
-
-	return container, amount
+	return container
 end
 
--- Medidor de altura
+-- Contador de altura actual (izquierda)
 local function createHeightMeter(parent)
-	local info = ResponsiveUI.getViewportInfo()
-	local iconLeftMargin = 8
-	local iconTextGap = info.IsMobile and 10 or 12  -- Espacio ENTRE icono y texto
+	local totalWidth = sizes.CounterWidth + sizes.CounterIconOverflow
 
-	local container = Instance.new("Frame")
-	container.Name = "HeightMeter"
-	container.Size = UDim2.new(0, sizes.HeightMeterWidth, 0, sizes.HeightMeterHeight)
+	local wrapper, height = createCartoonCounter(
+		parent,
+		"HeightMeter",
+		"📏",
+		Styles.Colors.HeightTextColor, -- Azul para altura actual
+		UDim2.new(0, 0, 0, 0) -- Primera posición (izquierda)
+	)
 
-	-- En móvil: posición más arriba y a la izquierda para evitar solapamiento
-	-- En PC: centrado arriba
-	if info.IsMobile then
-		container.Position = UDim2.new(0, sizes.CounterMargin, 0, sizes.CounterMargin)
-		container.AnchorPoint = Vector2.new(0, 0)
-	else
-		container.Position = UDim2.new(0.5, 0, 0, sizes.CounterMargin)
-		container.AnchorPoint = Vector2.new(0.5, 0)
-	end
-
-	container.BackgroundColor3 = Styles.Colors.Background
-	container.Parent = parent
-
-	createCorner(container)
-	createStroke(container, Styles.Colors.Secondary)
-
-	-- Icono
-	local icon = Instance.new("TextLabel")
-	icon.Name = "Icon"
-	icon.Size = UDim2.new(0, sizes.HeightMeterIconSize, 0, sizes.HeightMeterIconSize)
-	icon.Position = UDim2.new(0, iconLeftMargin, 0.5, 0)
-	icon.AnchorPoint = Vector2.new(0, 0.5)
-	icon.BackgroundTransparency = 1
-	icon.Text = "📏"
-	icon.TextSize = math.floor(sizes.HeightMeterIconSize * 0.85)
-	icon.Parent = container
-
-	-- Altura actual (posición = margen + icono + gap)
-	local textStartX = iconLeftMargin + sizes.HeightMeterIconSize + iconTextGap
-	local height = Instance.new("TextLabel")
-	height.Name = "Height"
-	height.Size = UDim2.new(1, -(textStartX + 6), 1, 0)
-	height.Position = UDim2.new(0, textStartX, 0, 0)
-	height.BackgroundTransparency = 1
 	height.Text = "0m"
-	height.TextColor3 = Styles.Colors.Text
-	height.TextSize = sizes.HeightMeterTextSize
-	height.Font = Styles.Font
-	height.TextXAlignment = Enum.TextXAlignment.Center
-	height.TextScaled = true
-	height.Parent = container
 
-	-- Constraint para texto escalado
-	local textConstraint = Instance.new("UITextSizeConstraint")
-	textConstraint.MaxTextSize = sizes.HeightMeterTextSize
-	textConstraint.MinTextSize = 12
-	textConstraint.Parent = height
+	return wrapper, height
+end
 
-	return container, height
+-- Contador de récord de altura (centro)
+local function createMaxHeightCounter(parent)
+	local totalWidth = sizes.CounterWidth + sizes.CounterIconOverflow
+
+	local wrapper, amount = createCartoonCounter(
+		parent,
+		"MaxHeightCounter",
+		"🏆",
+		Styles.Colors.MaxHeightTextColor, -- Dorado/naranja para récord
+		UDim2.new(0, totalWidth + sizes.CounterSpacing, 0, 0) -- Segunda posición (centro)
+	)
+
+	amount.Text = "0m"
+
+	return wrapper, amount
+end
+
+-- Contador de monedas (derecha)
+local function createCoinCounter(parent)
+	local totalWidth = sizes.CounterWidth + sizes.CounterIconOverflow
+
+	local wrapper, amount = createCartoonCounter(
+		parent,
+		"CoinCounter",
+		"💰",
+		Styles.Colors.CoinTextColor, -- Verde para monedas
+		UDim2.new(0, (totalWidth + sizes.CounterSpacing) * 2, 0, 0) -- Tercera posición (derecha)
+	)
+
+	return wrapper, amount
 end
 
 -- Notificación de hito
@@ -457,9 +496,15 @@ end
 
 local screenGui = createScreenGui()
 local fatnessContainer, fatnessBar = createFatnessBar(screenGui)
-local coinContainer, coinText = createCoinCounter(screenGui)
-local maxHeightContainer, maxHeightText = createMaxHeightCounter(screenGui)
-local heightContainer, heightText = createHeightMeter(screenGui)
+
+-- Crear contenedor centrado para los 3 contadores
+local countersContainer = createCenteredCountersContainer(screenGui)
+
+-- Crear contadores dentro del contenedor centrado
+local heightContainer, heightText = createHeightMeter(countersContainer)
+local maxHeightContainer, maxHeightText = createMaxHeightCounter(countersContainer)
+local coinContainer, coinText = createCoinCounter(countersContainer)
+
 local milestoneContainer, milestoneMain, milestoneBonus = createMilestoneNotification(screenGui)
 local floatingNumberTemplate = createFloatingNumber(screenGui)
 
@@ -684,31 +729,27 @@ local function rebuildUI()
 	-- Actualizar tamaños responsive
 	sizes = getResponsiveSizes()
 
-	-- Recrear UI con nuevos tamaños (simplificado: solo actualizar posiciones clave)
-	local info = ResponsiveUI.getViewportInfo()
+	-- Actualizar barra de gordura (wrapper)
+	fatnessContainer.Size = UDim2.new(0, sizes.FatnessBarWidth + sizes.FatnessIconOverflow, 0, sizes.FatnessIconSize)
+	fatnessContainer.Position = UDim2.new(0, sizes.FatnessBarMargin, 1, -(sizes.FatnessBarMargin + 10))
 
-	-- Actualizar barra de gordura
-	fatnessContainer.Size = UDim2.new(0, sizes.FatnessBarWidth, 0, sizes.FatnessBarHeight)
-	fatnessContainer.Position = UDim2.new(0, sizes.FatnessBarMargin, 1, -(sizes.FatnessBarMargin + sizes.FatnessBarHeight + 10))
+	-- Calcular ancho total del contenedor centrado
+	local totalWidth = sizes.CounterWidth + sizes.CounterIconOverflow
+	local totalContainersWidth = (totalWidth * 3) + (sizes.CounterSpacing * 2)
 
-	-- Actualizar contador de monedas
-	coinContainer.Size = UDim2.new(0, sizes.CounterWidth, 0, sizes.CounterHeight)
-	coinContainer.Position = UDim2.new(1, -sizes.CounterMargin, 0, sizes.CounterMargin)
+	-- Actualizar contenedor centrado
+	countersContainer.Size = UDim2.new(0, totalContainersWidth, 0, sizes.CounterHeight)
+	countersContainer.Position = UDim2.new(0.5, 0, 0, sizes.CounterMargin)
 
-	-- Actualizar contador de altura máxima
-	local spacing = info.IsMobile and 8 or 10
-	maxHeightContainer.Size = UDim2.new(0, sizes.MaxHeightWidth, 0, sizes.CounterHeight)
-	maxHeightContainer.Position = UDim2.new(1, -(sizes.CounterMargin + sizes.CounterWidth + spacing + sizes.MaxHeightWidth), 0, sizes.CounterMargin)
+	-- Actualizar posiciones de los contadores dentro del contenedor
+	heightContainer.Size = UDim2.new(0, totalWidth, 0, sizes.CounterHeight)
+	heightContainer.Position = UDim2.new(0, 0, 0, 0)
 
-	-- Actualizar medidor de altura (posición diferente en móvil)
-	heightContainer.Size = UDim2.new(0, sizes.HeightMeterWidth, 0, sizes.HeightMeterHeight)
-	if info.IsMobile then
-		heightContainer.Position = UDim2.new(0, sizes.CounterMargin, 0, sizes.CounterMargin)
-		heightContainer.AnchorPoint = Vector2.new(0, 0)
-	else
-		heightContainer.Position = UDim2.new(0.5, 0, 0, sizes.CounterMargin)
-		heightContainer.AnchorPoint = Vector2.new(0.5, 0)
-	end
+	maxHeightContainer.Size = UDim2.new(0, totalWidth, 0, sizes.CounterHeight)
+	maxHeightContainer.Position = UDim2.new(0, totalWidth + sizes.CounterSpacing, 0, 0)
+
+	coinContainer.Size = UDim2.new(0, totalWidth, 0, sizes.CounterHeight)
+	coinContainer.Position = UDim2.new(0, (totalWidth + sizes.CounterSpacing) * 2, 0, 0)
 
 	-- Actualizar milestone
 	milestoneContainer.Size = UDim2.new(0, sizes.MilestoneWidth, 0, sizes.MilestoneHeight)
