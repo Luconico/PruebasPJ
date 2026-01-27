@@ -32,7 +32,7 @@ local isPropelling = false  -- Si está propulsándose
 
 -- Valores del servidor (se actualizan al cargar datos)
 local playerStats = {
-	MaxFatness = 3.0,
+	MaxFatness = 1.5,      -- Base sin upgrades (máximo 4.0 con upgrades)
 	EatSpeed = 0.08,
 	PropulsionForce = 50,
 	FuelEfficiency = 0.04,

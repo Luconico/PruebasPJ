@@ -48,24 +48,26 @@ Config.Upgrades = {
 		CostRobux = { 10, 15, 25, 40, 60, 80, 120, 175, 250, 400 },
 	},
 
-	-- Fuerza de propulsión
+	-- Fuerza de propulsión (EXPONENCIAL)
 	PropulsionForce = {
 		Name = "Potencia de Pedo",
 		Description = "Pedos más potentes te impulsan más alto",
 		MaxLevel = 10,
 		BaseValue = 50,
-		IncrementPerLevel = 10, -- +10 por nivel
+		-- Progresión exponencial: 50 -> 275 (5.5x más potente a nivel 10)
+		ValuesPerLevel = { 58, 68, 80, 95, 115, 140, 170, 210, 260, 320 },
 		CostCoins = { 150, 350, 700, 1400, 2800, 5500, 11000, 22000, 45000, 75000 },
 		CostRobux = { 15, 25, 40, 60, 90, 130, 180, 250, 350, 600 },
 	},
 
-	-- Eficiencia de combustible
+	-- Eficiencia de combustible (EXPONENCIAL)
 	FuelEfficiency = {
 		Name = "Eficiencia de Gas",
 		Description = "Pierdes menos grasa al propulsarte",
 		MaxLevel = 10,
 		BaseValue = 0.04,
-		IncrementPerLevel = -0.003, -- Reduce la pérdida
+		-- Progresión exponencial: 0.04 -> 0.004 (10x más eficiente a nivel 10)
+		ValuesPerLevel = { 0.032, 0.025, 0.019, 0.014, 0.010, 0.0075, 0.0055, 0.0045, 0.0038, 0.0032 },
 		CostCoins = { 200, 500, 1000, 2000, 4000, 8000, 16000, 32000, 60000, 100000 },
 		CostRobux = { 20, 35, 55, 80, 120, 170, 230, 320, 450, 750 },
 	},
@@ -127,15 +129,43 @@ Config.Rewards = {
 	-- Monedas en el aire
 	CoinValue = 10,           -- Valor base de cada moneda
 
-	-- Bonus por hitos de altura
+	-- Bonus por hitos de altura (tramos pequeños para engagement temprano)
 	HeightMilestones = {
-		{ Height = 50,   Bonus = 25,   Message = "50 METROS!" },
-		{ Height = 100,  Bonus = 50,   Message = "100 METROS!" },
-		{ Height = 200,  Bonus = 100,  Message = "200 METROS!" },
-		{ Height = 500,  Bonus = 300,  Message = "500 METROS!" },
-		{ Height = 1000, Bonus = 750,  Message = "1000 METROS!" },
-		{ Height = 2000, Bonus = 2000, Message = "2 KILOMETROS!" },
-		{ Height = 5000, Bonus = 5000, Message = "5 KILOMETROS!" },
+		-- Tramos iniciales (frecuentes, pequeñas recompensas)
+		{ Height = 5,    Bonus = 2,     Message = "5m", Tier = "common" },
+		{ Height = 10,   Bonus = 5,     Message = "10m", Tier = "common" },
+		{ Height = 15,   Bonus = 5,     Message = "15m", Tier = "common" },
+		{ Height = 20,   Bonus = 8,     Message = "20m", Tier = "common" },
+		{ Height = 25,   Bonus = 8,     Message = "25m", Tier = "common" },
+		{ Height = 30,   Bonus = 10,    Message = "30m", Tier = "common" },
+		{ Height = 40,   Bonus = 12,    Message = "40m", Tier = "common" },
+		{ Height = 50,   Bonus = 15,    Message = "50m!", Tier = "uncommon" },
+		{ Height = 60,   Bonus = 15,    Message = "60m", Tier = "common" },
+		{ Height = 75,   Bonus = 20,    Message = "75m!", Tier = "uncommon" },
+		{ Height = 100,  Bonus = 30,    Message = "100m!!", Tier = "rare" },
+		{ Height = 125,  Bonus = 25,    Message = "125m", Tier = "uncommon" },
+		{ Height = 150,  Bonus = 35,    Message = "150m!", Tier = "uncommon" },
+		{ Height = 200,  Bonus = 50,    Message = "200m!!", Tier = "rare" },
+		{ Height = 250,  Bonus = 40,    Message = "250m", Tier = "uncommon" },
+		{ Height = 300,  Bonus = 60,    Message = "300m!!", Tier = "rare" },
+		{ Height = 400,  Bonus = 80,    Message = "400m!!", Tier = "rare" },
+		{ Height = 500,  Bonus = 100,   Message = "500m!!!", Tier = "epic" },
+		{ Height = 750,  Bonus = 150,   Message = "750m!!!", Tier = "epic" },
+		{ Height = 1000, Bonus = 250,   Message = "1 KILOMETRO!!!!", Tier = "legendary" },
+		{ Height = 1500, Bonus = 400,   Message = "1.5 KM!!!!", Tier = "legendary" },
+		{ Height = 2000, Bonus = 600,   Message = "2 KILOMETROS!!!!!", Tier = "mythic" },
+		{ Height = 3000, Bonus = 1000,  Message = "3 KM!!!!!", Tier = "mythic" },
+		{ Height = 5000, Bonus = 2000,  Message = "5 KILOMETROS!!!!!!", Tier = "mythic" },
+	},
+
+	-- Colores y efectos por tier de recompensa
+	TierEffects = {
+		common =    { Color = Color3.fromRGB(255, 255, 255), Scale = 1.0, Duration = 0.8 },
+		uncommon =  { Color = Color3.fromRGB(100, 255, 100), Scale = 1.2, Duration = 1.0 },
+		rare =      { Color = Color3.fromRGB(100, 150, 255), Scale = 1.4, Duration = 1.2 },
+		epic =      { Color = Color3.fromRGB(200, 100, 255), Scale = 1.6, Duration = 1.5 },
+		legendary = { Color = Color3.fromRGB(255, 200, 50),  Scale = 2.0, Duration = 2.0 },
+		mythic =    { Color = Color3.fromRGB(255, 100, 100), Scale = 2.5, Duration = 2.5 },
 	},
 
 	-- Bonus por tiempo en el aire
