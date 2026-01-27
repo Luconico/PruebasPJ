@@ -193,6 +193,46 @@ local function createCoinCounter(parent)
 	return container, amount
 end
 
+-- Contador de récord de altura (al lado de monedas)
+local function createMaxHeightCounter(parent)
+	local container = Instance.new("Frame")
+	container.Name = "MaxHeightCounter"
+	container.Size = UDim2.new(0, 150, 0, 60)
+	container.Position = UDim2.new(1, -210, 0, 20) -- A la izquierda del contador de monedas
+	container.AnchorPoint = Vector2.new(1, 0)
+	container.BackgroundColor3 = Styles.Colors.Background
+	container.Parent = parent
+
+	createCorner(container)
+	createStroke(container, Styles.Colors.Secondary, 4) -- Borde verde para diferenciarlo
+
+	-- Icono de trofeo/altura
+	local icon = Instance.new("TextLabel")
+	icon.Name = "Icon"
+	icon.Size = UDim2.new(0, 40, 0, 40)
+	icon.Position = UDim2.new(0, 5, 0.5, 0)
+	icon.AnchorPoint = Vector2.new(0, 0.5)
+	icon.BackgroundTransparency = 1
+	icon.Text = "🏆"
+	icon.TextSize = 28
+	icon.Parent = container
+
+	-- Texto de altura máxima
+	local amount = Instance.new("TextLabel")
+	amount.Name = "Amount"
+	amount.Size = UDim2.new(1, -50, 1, 0)
+	amount.Position = UDim2.new(0, 45, 0, 0)
+	amount.BackgroundTransparency = 1
+	amount.Text = "0m"
+	amount.TextColor3 = Styles.Colors.Secondary
+	amount.TextSize = 26
+	amount.Font = Styles.Font
+	amount.TextXAlignment = Enum.TextXAlignment.Left
+	amount.Parent = container
+
+	return container, amount
+end
+
 -- Medidor de altura
 local function createHeightMeter(parent)
 	local container = Instance.new("Frame")
@@ -300,6 +340,7 @@ end
 local screenGui = createScreenGui()
 local fatnessContainer, fatnessBar = createFatnessBar(screenGui)
 local coinContainer, coinText = createCoinCounter(screenGui)
+local maxHeightContainer, maxHeightText = createMaxHeightCounter(screenGui)
 local heightContainer, heightText = createHeightMeter(screenGui)
 local milestoneContainer, milestoneMain, milestoneBonus = createMilestoneNotification(screenGui)
 local floatingNumberTemplate = createFloatingNumber(screenGui)
@@ -331,6 +372,34 @@ end
 
 local function updateHeight(height)
 	heightText.Text = math.floor(height) .. "m"
+end
+
+local function updateMaxHeight(maxHeight)
+	-- Formatear altura (metros o km)
+	local displayText
+	if maxHeight >= 1000 then
+		displayText = string.format("%.1fkm", maxHeight / 1000)
+	else
+		displayText = math.floor(maxHeight) .. "m"
+	end
+
+	-- Solo animar si cambió el récord
+	if maxHeight > playerData.MaxHeight then
+		playerData.MaxHeight = maxHeight
+
+		-- Animación de "pop" cuando se supera el récord
+		maxHeightText.Text = displayText
+		local tween = TweenService:Create(maxHeightText, TweenInfo.new(0.1), {
+			TextSize = 34
+		})
+		tween:Play()
+		tween.Completed:Wait()
+		TweenService:Create(maxHeightText, TweenInfo.new(0.1), {
+			TextSize = 26
+		}):Play()
+	else
+		maxHeightText.Text = displayText
+	end
 end
 
 local function showMilestone(milestone)
@@ -401,6 +470,11 @@ if Remotes then
 				playerData.Coins = data.Data.Coins or 0
 				playerData.MaxFatness = data.UpgradeValues and data.UpgradeValues.MaxFatness or 3.0
 				updateCoins(playerData.Coins)
+
+				-- Actualizar récord de altura
+				if data.Data.Records and data.Data.Records.MaxHeight then
+					updateMaxHeight(data.Data.Records.MaxHeight)
+				end
 			end
 		end)
 	end
@@ -412,6 +486,11 @@ if Remotes then
 			if data then
 				playerData.Coins = data.Coins or playerData.Coins
 				updateCoins(playerData.Coins)
+
+				-- Actualizar récord de altura si hay nuevos datos
+				if data.Records and data.Records.MaxHeight then
+					updateMaxHeight(data.Records.MaxHeight)
+				end
 			end
 		end)
 	end
