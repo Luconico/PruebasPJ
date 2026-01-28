@@ -544,23 +544,49 @@ local function updateEating()
 end
 
 -- ============================================
--- INPUT
+-- INPUT (Keyboard, Console, Mobile)
 -- ============================================
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
+-- Helper to check if input is a jump/fart button
+local function isFartInput(input)
+	return input.KeyCode == Enum.KeyCode.Space          -- Keyboard
+		or input.KeyCode == Enum.KeyCode.ButtonA        -- Xbox / Generic gamepad (also PlayStation X)
+end
 
-	-- Click derecho: propulsarse con pedos
-	if input.UserInputType == Enum.UserInputType.MouseButton2 then
+-- Keyboard & Gamepad: Listen to jump buttons
+-- NOTE: We intentionally DON'T check gameProcessed because we want to
+-- catch the jump input even when Roblox processes it for jumping
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if isFartInput(input) then
 		startPropelling()
 	end
 end)
 
 UserInputService.InputEnded:Connect(function(input, gameProcessed)
-	if input.UserInputType == Enum.UserInputType.MouseButton2 then
+	if isFartInput(input) then
 		stopPropelling()
 	end
 end)
+
+-- Mobile: Touch anywhere on screen to fart (hold to propel)
+local isTouchDevice = UserInputService.TouchEnabled
+
+if isTouchDevice then
+	local touchHolding = false
+
+	UserInputService.TouchStarted:Connect(function(touch, gameProcessed)
+		if gameProcessed then return end
+		touchHolding = true
+		startPropelling()
+	end)
+
+	UserInputService.TouchEnded:Connect(function(touch, gameProcessed)
+		if touchHolding then
+			touchHolding = false
+			stopPropelling()
+		end
+	end)
+end
 
 -- ============================================
 -- GAME LOOP
@@ -574,10 +600,15 @@ RunService.RenderStepped:Connect(function()
 		updatePropulsion()
 	end
 
-	-- Seguridad: eliminar bodyVelocity si está delgado
-	if currentFatness <= thinMultiplier and bodyVelocity then
-		bodyVelocity:Destroy()
-		bodyVelocity = nil
+	-- Seguridad: si está delgado, asegurar que todo esté desactivado
+	if currentFatness <= thinMultiplier then
+		if bodyVelocity then
+			bodyVelocity:Destroy()
+			bodyVelocity = nil
+		end
+		if fartParticles and fartParticles.Enabled then
+			fartParticles.Enabled = false
+		end
 		isPropelling = false
 	end
 
