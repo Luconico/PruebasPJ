@@ -303,7 +303,7 @@ local function createShopUI()
 	title.Size = UDim2.new(1, -(sizes.CloseButtonSize + sizes.CoinsDisplayWidth + 40), 1, 0)
 	title.Position = UDim2.new(0, sizes.Padding, 0, 0)
 	title.BackgroundTransparency = 1
-	title.Text = "🛒 TIENDA 🛒"
+	title.Text = "🛒 SHOP 🛒"
 	title.TextColor3 = Styles.Colors.TextDark
 	title.TextSize = sizes.TitleSize
 	title.Font = Styles.Fonts.Title
@@ -531,7 +531,7 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	valueLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 20 or 25)
 	valueLabel.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 68 or 95)
 	valueLabel.BackgroundTransparency = 1
-	valueLabel.Text = "Valor: 3.0 → 3.5"
+	valueLabel.Text = "Value: 3.0 → 3.5"
 	valueLabel.TextColor3 = Styles.Colors.Text
 	valueLabel.TextSize = sizes.ValueTextSize
 	valueLabel.Font = Styles.Fonts.Body

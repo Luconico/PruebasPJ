@@ -34,35 +34,35 @@ local WHEEL_PRIZES = {
 		Color = Color3.fromRGB(180, 100, 255), -- Morado
 	},
 	{
-		Name = "Mega Premio",
+		Name = "Mega Prize",
 		Icon = "🍕",
 		Gold = 5000,
 		Chance = 5,
 		Color = Color3.fromRGB(255, 180, 100), -- Naranja
 	},
 	{
-		Name = "Gran Premio",
+		Name = "Grand Prize",
 		Icon = "🌈",
 		Gold = 2500,
 		Chance = 9.99,
 		Color = Color3.fromRGB(255, 150, 200), -- Rosa
 	},
 	{
-		Name = "Premio Mayor",
+		Name = "Major Prize",
 		Icon = "🍔",
 		Gold = 1000,
 		Chance = 35,
 		Color = Color3.fromRGB(255, 200, 100), -- Amarillo
 	},
 	{
-		Name = "Premio Medio",
+		Name = "Medium Prize",
 		Icon = "💨",
 		Gold = 500,
 		Chance = 45,
 		Color = Color3.fromRGB(255, 150, 200), -- Rosa claro
 	},
 	{
-		Name = "Premio Menor",
+		Name = "Minor Prize",
 		Icon = "🍣",
 		Gold = 250,
 		Chance = 5,

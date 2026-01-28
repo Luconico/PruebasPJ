@@ -1,72 +1,72 @@
 --[[
 	Config.lua
-	Configuración compartida del juego Fart Tycoon
-	Usado tanto por cliente como servidor
+	Shared configuration for Fart Tycoon game
+	Used by both client and server
 ]]
 
 local Config = {}
 
 -- ============================================
--- GORDURA Y PROPULSION
+-- FATNESS AND PROPULSION
 -- ============================================
 Config.Fatness = {
-	-- Multiplicadores de tamaño
-	ThinMultiplier = 0.5,      -- Tamaño mínimo (delgado)
-	DefaultMaxFatness = 1.5,   -- Gordura máxima inicial (sin upgrades)
+	-- Size multipliers
+	ThinMultiplier = 0.5,      -- Minimum size (thin)
+	DefaultMaxFatness = 1.5,   -- Initial max fatness (without upgrades)
 
-	-- Velocidades base (modificables por upgrades)
-	BaseGrowSpeed = 0.08,      -- Velocidad de engorde base
-	BaseShrinkSpeed = 0.04,    -- Velocidad de pérdida de grasa al propulsarse
+	-- Base speeds (modifiable by upgrades)
+	BaseGrowSpeed = 0.08,      -- Base fattening speed
+	BaseShrinkSpeed = 0.04,    -- Fat loss speed when propelling
 
-	-- Propulsión
-	BasePropulsionForce = 50,  -- Fuerza base de propulsión
+	-- Propulsion
+	BasePropulsionForce = 50,  -- Base propulsion force
 }
 
 -- ============================================
 -- UPGRADES
 -- ============================================
 Config.Upgrades = {
-	-- Gordura máxima
+	-- Maximum fatness
 	MaxFatness = {
-		Name = "Gordura Máxima",
-		Description = "Aumenta tu capacidad de almacenar grasa",
+		Name = "Max Fatness",
+		Description = "Increase your fat storage capacity",
 		MaxLevel = 10,
 		BaseValue = 1.5,
-		IncrementPerLevel = 0.25, -- +0.25 por nivel (máximo 4.0 a nivel 10)
+		IncrementPerLevel = 0.25, -- +0.25 per level (max 4.0 at level 10)
 		CostCoins = { 100, 250, 500, 1000, 2000, 4000, 8000, 15000, 30000, 50000 },
 		CostRobux = { 10, 20, 35, 50, 75, 100, 150, 200, 300, 500 },
 	},
 
-	-- Velocidad de engorde
+	-- Eating speed
 	EatSpeed = {
-		Name = "Velocidad de Engorde",
-		Description = "Come más rápido",
+		Name = "Eating Speed",
+		Description = "Eat faster",
 		MaxLevel = 10,
 		BaseValue = 0.08,
-		IncrementPerLevel = 0.02, -- +0.02 por nivel
+		IncrementPerLevel = 0.02, -- +0.02 per level
 		CostCoins = { 75, 200, 400, 800, 1500, 3000, 6000, 12000, 25000, 40000 },
 		CostRobux = { 10, 15, 25, 40, 60, 80, 120, 175, 250, 400 },
 	},
 
-	-- Fuerza de propulsión (EXPONENCIAL)
+	-- Propulsion force (EXPONENTIAL)
 	PropulsionForce = {
-		Name = "Potencia de Pedo",
-		Description = "Pedos más potentes te impulsan más alto",
+		Name = "Fart Power",
+		Description = "More powerful farts push you higher",
 		MaxLevel = 10,
 		BaseValue = 50,
-		-- Progresión exponencial: 50 -> 275 (5.5x más potente a nivel 10)
+		-- Exponential progression: 50 -> 275 (5.5x more powerful at level 10)
 		ValuesPerLevel = { 58, 68, 80, 95, 115, 140, 170, 210, 260, 320 },
 		CostCoins = { 150, 350, 700, 1400, 2800, 5500, 11000, 22000, 45000, 75000 },
 		CostRobux = { 15, 25, 40, 60, 90, 130, 180, 250, 350, 600 },
 	},
 
-	-- Eficiencia de combustible (EXPONENCIAL)
+	-- Fuel efficiency (EXPONENTIAL)
 	FuelEfficiency = {
-		Name = "Eficiencia de Gas",
-		Description = "Pierdes menos grasa al propulsarte",
+		Name = "Gas Efficiency",
+		Description = "Lose less fat when propelling",
 		MaxLevel = 10,
 		BaseValue = 0.04,
-		-- Progresión exponencial: 0.04 -> 0.004 (10x más eficiente a nivel 10)
+		-- Exponential progression: 0.04 -> 0.004 (10x more efficient at level 10)
 		ValuesPerLevel = { 0.032, 0.025, 0.019, 0.014, 0.010, 0.0075, 0.0055, 0.0045, 0.0038, 0.0032 },
 		CostCoins = { 200, 500, 1000, 2000, 4000, 8000, 16000, 32000, 60000, 100000 },
 		CostRobux = { 20, 35, 55, 80, 120, 170, 230, 320, 450, 750 },
@@ -74,21 +74,21 @@ Config.Upgrades = {
 }
 
 -- ============================================
--- COMIDA
+-- FOOD
 -- ============================================
 Config.Food = {
-	-- Comida básica (gratis) - muy lenta
+	-- Basic food (free) - very slow
 	Salad = {
-		Name = "Ensalada",
+		Name = "Salad",
 		FatnessPerSecond = 0.00125,
 		RequiresUnlock = false,
 		CostCoins = 0,
 		CostRobux = 0,
 	},
 
-	-- Comida normal (monedas)
+	-- Normal food (coins)
 	Burger = {
-		Name = "Hamburguesa",
+		Name = "Burger",
 		FatnessPerSecond = 0.00375,
 		RequiresUnlock = true,
 		CostCoins = 500,
@@ -103,9 +103,9 @@ Config.Food = {
 		CostRobux = 50,
 	},
 
-	-- Comida premium (robux o muy caro)
+	-- Premium food (robux or very expensive)
 	HotDog = {
-		Name = "Hot Dog Especial",
+		Name = "Special Hot Dog",
 		FatnessPerSecond = 0.0125,
 		RequiresUnlock = true,
 		CostCoins = 10000,
@@ -113,25 +113,25 @@ Config.Food = {
 	},
 
 	GoldenBurger = {
-		Name = "Hamburguesa Dorada",
+		Name = "Golden Burger",
 		FatnessPerSecond = 0.02,
 		RequiresUnlock = true,
-		CostCoins = 0, -- Solo robux
+		CostCoins = 0, -- Robux only
 		CostRobux = 250,
 		RobuxOnly = true,
 	},
 }
 
 -- ============================================
--- MONEDAS Y RECOMPENSAS
+-- COINS AND REWARDS
 -- ============================================
 Config.Rewards = {
-	-- Monedas en el aire
-	CoinValue = 10,           -- Valor base de cada moneda
+	-- Coins in the air
+	CoinValue = 10,           -- Base value of each coin
 
-	-- Bonus por hitos de altura (tramos pequeños para engagement temprano)
+	-- Height milestone bonuses (small intervals for early engagement)
 	HeightMilestones = {
-		-- Tramos iniciales (frecuentes, pequeñas recompensas)
+		-- Initial intervals (frequent, small rewards)
 		{ Height = 5,    Bonus = 2,     Message = "5m", Tier = "common" },
 		{ Height = 10,   Bonus = 5,     Message = "10m", Tier = "common" },
 		{ Height = 15,   Bonus = 5,     Message = "15m", Tier = "common" },
@@ -151,14 +151,14 @@ Config.Rewards = {
 		{ Height = 400,  Bonus = 80,    Message = "400m!!", Tier = "rare" },
 		{ Height = 500,  Bonus = 100,   Message = "500m!!!", Tier = "epic" },
 		{ Height = 750,  Bonus = 150,   Message = "750m!!!", Tier = "epic" },
-		{ Height = 1000, Bonus = 250,   Message = "1 KILOMETRO!!!!", Tier = "legendary" },
+		{ Height = 1000, Bonus = 250,   Message = "1 KILOMETER!!!!", Tier = "legendary" },
 		{ Height = 1500, Bonus = 400,   Message = "1.5 KM!!!!", Tier = "legendary" },
-		{ Height = 2000, Bonus = 600,   Message = "2 KILOMETROS!!!!!", Tier = "mythic" },
+		{ Height = 2000, Bonus = 600,   Message = "2 KILOMETERS!!!!!", Tier = "mythic" },
 		{ Height = 3000, Bonus = 1000,  Message = "3 KM!!!!!", Tier = "mythic" },
-		{ Height = 5000, Bonus = 2000,  Message = "5 KILOMETROS!!!!!!", Tier = "mythic" },
+		{ Height = 5000, Bonus = 2000,  Message = "5 KILOMETERS!!!!!!", Tier = "mythic" },
 	},
 
-	-- Colores y efectos por tier de recompensa
+	-- Colors and effects per reward tier
 	TierEffects = {
 		common =    { Color = Color3.fromRGB(255, 255, 255), Scale = 1.0, Duration = 0.8 },
 		uncommon =  { Color = Color3.fromRGB(100, 255, 100), Scale = 1.2, Duration = 1.0 },
@@ -168,23 +168,23 @@ Config.Rewards = {
 		mythic =    { Color = Color3.fromRGB(255, 100, 100), Scale = 2.5, Duration = 2.5 },
 	},
 
-	-- Bonus por tiempo en el aire
-	AirTimeBonus = 1, -- Monedas extra por segundo en el aire
+	-- Airtime bonus
+	AirTimeBonus = 1, -- Extra coins per second in the air
 }
 
 -- ============================================
--- COSMÉTICOS DE PEDO
+-- FART COSMETICS
 -- ============================================
 Config.FartCosmetics = {
 	-- ==========================================
-	-- TIER: COMÚN (Baratos, colores simples)
+	-- TIER: COMMON (Cheap, simple colors)
 	-- ==========================================
 	Default = {
-		Name = "Gas Natural",
-		Description = "El clásico pedo verde",
+		Name = "Natural Gas",
+		Description = "The classic green fart",
 		Tier = "common",
 		Icon = "💨",
-		CostRobux = 0, -- Gratis, viene por defecto
+		CostRobux = 0, -- Free, comes by default
 		Colors = {
 			Color3.fromRGB(140, 160, 80),
 			Color3.fromRGB(100, 120, 50),
@@ -195,8 +195,8 @@ Config.FartCosmetics = {
 	},
 
 	Blue = {
-		Name = "Brisa Azul",
-		Description = "Un pedo fresco y refrescante",
+		Name = "Blue Breeze",
+		Description = "A fresh and refreshing fart",
 		Tier = "common",
 		Icon = "🌀",
 		CostRobux = 25,
@@ -210,8 +210,8 @@ Config.FartCosmetics = {
 	},
 
 	Pink = {
-		Name = "Nube Rosa",
-		Description = "Adorable y apestoso",
+		Name = "Pink Cloud",
+		Description = "Adorable and stinky",
 		Tier = "common",
 		Icon = "🌸",
 		CostRobux = 25,
@@ -225,8 +225,8 @@ Config.FartCosmetics = {
 	},
 
 	Purple = {
-		Name = "Vapor Místico",
-		Description = "Misterioso y maloliente",
+		Name = "Mystic Vapor",
+		Description = "Mysterious and smelly",
 		Tier = "common",
 		Icon = "🔮",
 		CostRobux = 35,
@@ -240,11 +240,11 @@ Config.FartCosmetics = {
 	},
 
 	-- ==========================================
-	-- TIER: RARO (Efectos más llamativos)
+	-- TIER: RARE (More eye-catching effects)
 	-- ==========================================
 	Toxic = {
-		Name = "Tóxico Radioactivo",
-		Description = "¡Cuidado! Nivel de radiación: EXTREMO",
+		Name = "Radioactive Toxic",
+		Description = "Warning! Radiation level: EXTREME",
 		Tier = "rare",
 		Icon = "☢️",
 		CostRobux = 75,
@@ -259,8 +259,8 @@ Config.FartCosmetics = {
 	},
 
 	Fire = {
-		Name = "Pedo de Fuego",
-		Description = "Picante en la entrada, explosivo en la salida",
+		Name = "Fire Fart",
+		Description = "Spicy going in, explosive going out",
 		Tier = "rare",
 		Icon = "🔥",
 		CostRobux = 99,
@@ -275,8 +275,8 @@ Config.FartCosmetics = {
 	},
 
 	Ice = {
-		Name = "Ventisca Helada",
-		Description = "Tan frío que congela el aire",
+		Name = "Frozen Blizzard",
+		Description = "So cold it freezes the air",
 		Tier = "rare",
 		Icon = "❄️",
 		CostRobux = 99,
@@ -292,8 +292,8 @@ Config.FartCosmetics = {
 	},
 
 	Shadow = {
-		Name = "Sombra Oscura",
-		Description = "De las profundidades del abismo",
+		Name = "Dark Shadow",
+		Description = "From the depths of the abyss",
 		Tier = "rare",
 		Icon = "🖤",
 		CostRobux = 99,
@@ -308,11 +308,11 @@ Config.FartCosmetics = {
 	},
 
 	-- ==========================================
-	-- TIER: ÉPICO (Animados y especiales)
+	-- TIER: EPIC (Animated and special)
 	-- ==========================================
 	Lava = {
-		Name = "Magma Volcánico",
-		Description = "Directamente del centro de la Tierra",
+		Name = "Volcanic Magma",
+		Description = "Straight from the Earth's core",
 		Tier = "epic",
 		Icon = "🌋",
 		CostRobux = 199,
@@ -329,8 +329,8 @@ Config.FartCosmetics = {
 	},
 
 	Electric = {
-		Name = "Tormenta Eléctrica",
-		Description = "10,000 voltios de pura potencia",
+		Name = "Electric Storm",
+		Description = "10,000 volts of pure power",
 		Tier = "epic",
 		Icon = "⚡",
 		CostRobux = 199,
@@ -347,8 +347,8 @@ Config.FartCosmetics = {
 	},
 
 	Galaxy = {
-		Name = "Nebulosa Galáctica",
-		Description = "Un pedo de proporciones cósmicas",
+		Name = "Galactic Nebula",
+		Description = "A fart of cosmic proportions",
 		Tier = "epic",
 		Icon = "🌌",
 		CostRobux = 249,
@@ -366,8 +366,8 @@ Config.FartCosmetics = {
 	},
 
 	Neon = {
-		Name = "Neón Cyberpunk",
-		Description = "Bienvenido al futuro del gas",
+		Name = "Cyberpunk Neon",
+		Description = "Welcome to the future of gas",
 		Tier = "epic",
 		Icon = "💜",
 		CostRobux = 249,
@@ -383,11 +383,11 @@ Config.FartCosmetics = {
 	},
 
 	-- ==========================================
-	-- TIER: LEGENDARIO (Los más premium)
+	-- TIER: LEGENDARY (The most premium)
 	-- ==========================================
 	Rainbow = {
-		Name = "Arcoíris Mágico",
-		Description = "Todos los colores, todo el olor",
+		Name = "Magic Rainbow",
+		Description = "All the colors, all the smell",
 		Tier = "legendary",
 		Icon = "🌈",
 		CostRobux = 499,
@@ -407,8 +407,8 @@ Config.FartCosmetics = {
 	},
 
 	Golden = {
-		Name = "Pedo de Oro",
-		Description = "El gas más valioso del mundo",
+		Name = "Golden Fart",
+		Description = "The most valuable gas in the world",
 		Tier = "legendary",
 		Icon = "👑",
 		CostRobux = 599,
@@ -426,8 +426,8 @@ Config.FartCosmetics = {
 	},
 
 	Diamond = {
-		Name = "Diamante Brillante",
-		Description = "Puro lujo cristalizado",
+		Name = "Brilliant Diamond",
+		Description = "Pure crystallized luxury",
 		Tier = "legendary",
 		Icon = "💎",
 		CostRobux = 699,
@@ -445,11 +445,11 @@ Config.FartCosmetics = {
 	},
 
 	-- ==========================================
-	-- TIER: MÍTICO (Ultra exclusivos)
+	-- TIER: MYTHIC (Ultra exclusive)
 	-- ==========================================
 	Void = {
-		Name = "Vacío Dimensional",
-		Description = "Abre portales a otras dimensiones",
+		Name = "Dimensional Void",
+		Description = "Opens portals to other dimensions",
 		Tier = "mythic",
 		Icon = "🕳️",
 		CostRobux = 999,
@@ -467,24 +467,24 @@ Config.FartCosmetics = {
 	},
 
 	Chromatic = {
-		Name = "Cromático Infinito",
-		Description = "Cambia constantemente, nunca se repite",
+		Name = "Infinite Chromatic",
+		Description = "Constantly changing, never repeats",
 		Tier = "mythic",
 		Icon = "✨",
 		CostRobux = 1299,
-		Colors = {}, -- Generado dinámicamente
+		Colors = {}, -- Dynamically generated
 		ParticleSize = {Min = 1, Max = 4},
 		Animated = true,
 		AnimationType = "chromatic",
 		Glow = true,
 		Sparkles = true,
 		Trail = true,
-		AllEffects = true, -- Combina todos los efectos
+		AllEffects = true, -- Combines all effects
 	},
 
 	Legendary_Phoenix = {
-		Name = "Fénix Renacido",
-		Description = "De las cenizas surge el olor más poderoso",
+		Name = "Reborn Phoenix",
+		Description = "From the ashes rises the most powerful smell",
 		Tier = "mythic",
 		Icon = "🦅",
 		CostRobux = 1499,
@@ -503,52 +503,52 @@ Config.FartCosmetics = {
 	},
 }
 
--- Colores de tier para UI
+-- Tier colors for UI
 Config.CosmeticTiers = {
 	common = {
-		Name = "Común",
+		Name = "Common",
 		Color = Color3.fromRGB(180, 180, 180),
 		GlowColor = Color3.fromRGB(150, 150, 150),
 	},
 	rare = {
-		Name = "Raro",
+		Name = "Rare",
 		Color = Color3.fromRGB(100, 180, 255),
 		GlowColor = Color3.fromRGB(50, 150, 255),
 	},
 	epic = {
-		Name = "Épico",
+		Name = "Epic",
 		Color = Color3.fromRGB(200, 100, 255),
 		GlowColor = Color3.fromRGB(180, 50, 255),
 	},
 	legendary = {
-		Name = "Legendario",
+		Name = "Legendary",
 		Color = Color3.fromRGB(255, 200, 50),
 		GlowColor = Color3.fromRGB(255, 180, 0),
 	},
 	mythic = {
-		Name = "Mítico",
+		Name = "Mythic",
 		Color = Color3.fromRGB(255, 100, 100),
 		GlowColor = Color3.fromRGB(255, 50, 50),
 	},
 }
 
--- Orden de visualización (de más barato a más caro)
+-- Display order (from cheapest to most expensive)
 Config.CosmeticOrder = {
-	"Default", "Blue", "Pink", "Purple",           -- Común
-	"Toxic", "Fire", "Ice", "Shadow",              -- Raro
-	"Lava", "Electric", "Galaxy", "Neon",          -- Épico
-	"Rainbow", "Golden", "Diamond",                 -- Legendario
-	"Void", "Chromatic", "Legendary_Phoenix",      -- Mítico
+	"Default", "Blue", "Pink", "Purple",           -- Common
+	"Toxic", "Fire", "Ice", "Shadow",              -- Rare
+	"Lava", "Electric", "Galaxy", "Neon",          -- Epic
+	"Rainbow", "Golden", "Diamond",                 -- Legendary
+	"Void", "Chromatic", "Legendary_Phoenix",      -- Mythic
 }
 
 -- ============================================
--- ZONAS DEL JUEGO
+-- GAME ZONES
 -- ============================================
 Config.Zones = {
-	-- Altura base del suelo de la zona de juego
+	-- Base ground height of the game zone
 	GameZoneBaseHeight = 0,
 
-	-- Límites del lobby (para detectar cuándo el jugador entra a la zona de juego)
+	-- Lobby bounds (to detect when player enters game zone)
 	LobbyBounds = {
 		MinX = -50,
 		MaxX = 50,
@@ -558,12 +558,12 @@ Config.Zones = {
 }
 
 -- ============================================
--- DATOS INICIALES DEL JUGADOR
+-- DEFAULT PLAYER DATA
 -- ============================================
 Config.DefaultPlayerData = {
 	Coins = 0,
 
-	-- Niveles de upgrades (0 = no comprado, usa valor base)
+	-- Upgrade levels (0 = not purchased, uses base value)
 	Upgrades = {
 		MaxFatness = 0,
 		EatSpeed = 0,
@@ -571,18 +571,18 @@ Config.DefaultPlayerData = {
 		FuelEfficiency = 0,
 	},
 
-	-- Comidas desbloqueadas
+	-- Unlocked food
 	UnlockedFood = {
-		Salad = true, -- Siempre desbloqueada
+		Salad = true, -- Always unlocked
 	},
 
-	-- Cosméticos de pedo
+	-- Fart cosmetics
 	OwnedCosmetics = {
-		Default = true, -- El pedo básico siempre está desbloqueado
+		Default = true, -- Basic fart is always unlocked
 	},
-	EquippedCosmetic = "Default", -- Cosmético actualmente equipado
+	EquippedCosmetic = "Default", -- Currently equipped cosmetic
 
-	-- Récords personales
+	-- Personal records
 	Records = {
 		MaxHeight = 0,
 		TotalCoinsEarned = 0,

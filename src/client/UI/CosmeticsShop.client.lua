@@ -193,7 +193,7 @@ local function createShopUI()
 	title.Size = UDim2.new(1, -(sizes.CloseButtonSize + 30), 1, 0)
 	title.Position = UDim2.new(0, 20, 0, 0)
 	title.BackgroundTransparency = 1
-	title.Text = "✨ COSMÉTICOS DE PEDO ✨"
+	title.Text = "✨ FART COSMETICS ✨"
 	title.TextColor3 = Styles.Colors.Primary
 	title.TextSize = sizes.TitleSize
 	title.Font = Styles.Fonts.Title
@@ -414,17 +414,17 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 		isEquipped = playerData and playerData.EquippedCosmetic == cosmeticId
 
 		if isEquipped then
-			actionButton.Text = "✓ EQUIPADO"
+			actionButton.Text = "✓ EQUIPPED"
 			actionButton.BackgroundColor3 = Styles.Colors.Equipped
 			actionButton.TextColor3 = Styles.Colors.TextDark
 			cardStroke.Color = Styles.Colors.Equipped
 		elseif isOwned then
-			actionButton.Text = "EQUIPAR"
+			actionButton.Text = "EQUIP"
 			actionButton.BackgroundColor3 = Styles.Colors.Success
 			actionButton.TextColor3 = Styles.Colors.Text
 			cardStroke.Color = tierData.Color
 		elseif isFree then
-			actionButton.Text = "GRATIS"
+			actionButton.Text = "FREE"
 			actionButton.BackgroundColor3 = Styles.Colors.Success
 			actionButton.TextColor3 = Styles.Colors.Text
 			cardStroke.Color = tierData.Color

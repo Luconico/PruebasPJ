@@ -1,7 +1,7 @@
 --[[
 	PlayerData.server.lua
-	Sistema de gestión de datos del jugador
-	Autoridad del servidor para evitar cheats
+	Player data management system
+	Server authority to prevent cheats
 ]]
 
 local Players = game:GetService("Players")
@@ -9,22 +9,22 @@ local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- Esperar a que exista Shared
+-- Wait for Shared to exist
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 
 -- ============================================
--- DEVELOPER PRODUCTS PARA ROBUX
+-- DEVELOPER PRODUCTS FOR ROBUX
 -- ============================================
--- IMPORTANTE: Debes crear estos productos en Roblox Studio:
+-- IMPORTANT: You must create these products in Roblox Studio:
 -- Game Settings > Monetization > Developer Products
--- Luego reemplaza estos IDs con los reales
+-- Then replace these IDs with the real ones
 
 local DeveloperProducts = {
-	-- Cada upgrade tiene 10 niveles, cada nivel es un producto diferente
-	-- Formato: UpgradeName_Level = ProductId
+	-- Each upgrade has 10 levels, each level is a different product
+	-- Format: UpgradeName_Level = ProductId
 
-	-- MaxFatness (ejemplo de IDs - REEMPLAZAR con los reales)
+	-- MaxFatness (example IDs - REPLACE with real ones)
 	MaxFatness_1 = 0, -- 10 Robux
 	MaxFatness_2 = 0, -- 20 Robux
 	MaxFatness_3 = 0, -- etc.
