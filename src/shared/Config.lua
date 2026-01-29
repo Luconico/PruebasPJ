@@ -576,6 +576,9 @@ Config.DefaultPlayerData = {
 		Salad = true, -- Always unlocked
 	},
 
+	-- Unlocked zones
+	UnlockedZones = {},
+
 	-- Fart cosmetics
 	OwnedCosmetics = {
 		Default = true, -- Basic fart is always unlocked

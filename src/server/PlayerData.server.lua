@@ -835,4 +835,78 @@ game:BindToClose(function()
 	end
 end)
 
+-- ============================================
+-- BINDABLE FUNCTIONS PARA OTROS SCRIPTS DEL SERVIDOR
+-- ============================================
+local serverFolder = Instance.new("Folder")
+serverFolder.Name = "ServerFunctions"
+serverFolder.Parent = ReplicatedStorage
+
+local getDataBindable = Instance.new("BindableFunction")
+getDataBindable.Name = "GetPlayerDataServer"
+getDataBindable.Parent = serverFolder
+
+local modifyCoinsBindable = Instance.new("BindableFunction")
+modifyCoinsBindable.Name = "ModifyCoinsServer"
+modifyCoinsBindable.Parent = serverFolder
+
+local unlockZoneBindable = Instance.new("BindableFunction")
+unlockZoneBindable.Name = "UnlockZoneServer"
+unlockZoneBindable.Parent = serverFolder
+
+-- Obtener datos del jugador (para otros scripts del servidor)
+getDataBindable.OnInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data then return nil end
+	return {
+		Data = data,
+		UpgradeValues = getPlayerUpgradeValues(player),
+	}
+end
+
+-- Modificar monedas del jugador (para otros scripts del servidor)
+modifyCoinsBindable.OnInvoke = function(player, amount)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	-- Verificar si tiene suficientes monedas (si es negativo)
+	if amount < 0 and data.Coins < math.abs(amount) then
+		return false, "Monedas insuficientes"
+	end
+
+	data.Coins = data.Coins + amount
+
+	updatePlayerData(player, {
+		Coins = data.Coins
+	})
+
+	return true, data.Coins
+end
+
+-- Desbloquear zona del jugador (para otros scripts del servidor)
+unlockZoneBindable.OnInvoke = function(player, zoneName)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	-- Inicializar si no existe
+	if not data.UnlockedZones then
+		data.UnlockedZones = {}
+	end
+
+	-- Verificar si ya está desbloqueada
+	if data.UnlockedZones[zoneName] then
+		return true, "Ya desbloqueada"
+	end
+
+	-- Desbloquear
+	data.UnlockedZones[zoneName] = true
+
+	updatePlayerData(player, {
+		UnlockedZones = data.UnlockedZones
+	})
+
+	print("[PlayerData] Zona desbloqueada:", player.Name, "->", zoneName)
+	return true, "Desbloqueada"
+end
+
 print("[PlayerData] Sistema de datos inicializado")
