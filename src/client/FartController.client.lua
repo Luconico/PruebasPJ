@@ -49,6 +49,10 @@ local isInGameZone = false
 local currentFoodZone = nil
 local currentFoodConfig = nil
 
+-- Zona física donde está el jugador (incluso si está bloqueada)
+local currentPhysicalZone = nil
+local currentPhysicalConfig = nil
+
 -- IDs de sonidos de pedo
 local fartSoundIds = {
 	"rbxassetid://357613509",
@@ -682,13 +686,32 @@ Remotes.OnDataUpdated.OnClientEvent:Connect(onDataUpdated)
 -- SISTEMA DE ZONAS DE COMIDA
 -- ============================================
 
-local function onFoodZoneEnter(foodType, foodConfig)
-	currentFoodZone = foodType
-	currentFoodConfig = foodConfig
-	print("[FartController] Entrando a zona de comida:", foodType)
+local function onFoodZoneEnter(foodType, foodConfig, isUnlocked)
+	-- Siempre guardar la zona física donde está el jugador
+	currentPhysicalZone = foodType
+	currentPhysicalConfig = foodConfig
+
+	-- Solo permitir comer si la comida está desbloqueada
+	if isUnlocked then
+		currentFoodZone = foodType
+		currentFoodConfig = foodConfig
+		print("[FartController] Entrando a zona de comida (desbloqueada):", foodType)
+	else
+		-- No establecer la zona activa si no está desbloqueada
+		currentFoodZone = nil
+		currentFoodConfig = nil
+		print("[FartController] Zona de comida bloqueada:", foodType)
+	end
 end
 
 local function onFoodZoneExit(foodType)
+	-- Limpiar zona física
+	if currentPhysicalZone == foodType then
+		currentPhysicalZone = nil
+		currentPhysicalConfig = nil
+	end
+
+	-- Limpiar zona activa si corresponde
 	if currentFoodZone == foodType then
 		currentFoodZone = nil
 		currentFoodConfig = nil
@@ -697,16 +720,30 @@ local function onFoodZoneExit(foodType)
 	print("[FartController] Saliendo de zona de comida:", foodType)
 end
 
+-- Cuando el jugador compra una comida mientras está parado en esa zona
+local function onFoodPurchased(foodType, success)
+	if success and currentPhysicalZone == foodType and currentPhysicalConfig then
+		-- Ahora puede comer en esta zona
+		currentFoodZone = foodType
+		currentFoodConfig = currentPhysicalConfig
+		print("[FartController] Comida comprada, ahora puedes comer:", foodType)
+	end
+end
+
 -- Esperar a que existan los eventos de comida
 task.spawn(function()
 	local OnFoodZoneEnter = Remotes:WaitForChild("OnFoodZoneEnter", 10)
 	local OnFoodZoneExit = Remotes:WaitForChild("OnFoodZoneExit", 10)
+	local OnFoodPurchased = Remotes:WaitForChild("OnFoodPurchased", 10)
 
 	if OnFoodZoneEnter then
 		OnFoodZoneEnter.OnClientEvent:Connect(onFoodZoneEnter)
 	end
 	if OnFoodZoneExit then
 		OnFoodZoneExit.OnClientEvent:Connect(onFoodZoneExit)
+	end
+	if OnFoodPurchased then
+		OnFoodPurchased.OnClientEvent:Connect(onFoodPurchased)
 	end
 end)
 

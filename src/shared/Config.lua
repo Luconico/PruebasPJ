@@ -77,48 +77,59 @@ Config.Upgrades = {
 -- FOOD
 -- ============================================
 Config.Food = {
-	-- Basic food (free) - very slow
+	-- Basic food (free) - x1 speed
 	Salad = {
 		Name = "Salad",
 		FatnessPerSecond = 0.00125,
+		SpeedMultiplier = 1,
 		RequiresUnlock = false,
-		CostCoins = 0,
 		CostRobux = 0,
+		Color = Color3.fromRGB(120, 200, 80), -- Verde
+		Icon = "🥗",
 	},
 
-	-- Normal food (coins)
+	-- x3 speed
 	Burger = {
 		Name = "Burger",
 		FatnessPerSecond = 0.00375,
+		SpeedMultiplier = 3,
 		RequiresUnlock = true,
-		CostCoins = 500,
-		CostRobux = 25,
+		CostRobux = 15,
+		Color = Color3.fromRGB(210, 140, 60), -- Naranja/marrón
+		Icon = "🍔",
 	},
 
+	-- x6 speed
 	Pizza = {
 		Name = "Pizza",
 		FatnessPerSecond = 0.0075,
+		SpeedMultiplier = 6,
 		RequiresUnlock = true,
-		CostCoins = 1500,
-		CostRobux = 50,
+		CostRobux = 35,
+		Color = Color3.fromRGB(230, 180, 80), -- Amarillo/queso
+		Icon = "🍕",
 	},
 
-	-- Premium food (robux or very expensive)
+	-- x10 speed
 	HotDog = {
-		Name = "Special Hot Dog",
+		Name = "Hot Dog",
 		FatnessPerSecond = 0.0125,
+		SpeedMultiplier = 10,
 		RequiresUnlock = true,
-		CostCoins = 10000,
-		CostRobux = 100,
+		CostRobux = 65,
+		Color = Color3.fromRGB(200, 100, 80), -- Rojo/salchicha
+		Icon = "🌭",
 	},
 
+	-- x16 speed (premium)
 	GoldenBurger = {
 		Name = "Golden Burger",
 		FatnessPerSecond = 0.02,
+		SpeedMultiplier = 16,
 		RequiresUnlock = true,
-		CostCoins = 0, -- Robux only
-		CostRobux = 250,
-		RobuxOnly = true,
+		CostRobux = 99,
+		Color = Color3.fromRGB(130, 80, 180), -- Morado royal (corona dorada visible)
+		Icon = "👑",
 	},
 }
 

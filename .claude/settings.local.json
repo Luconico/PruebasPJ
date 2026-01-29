@@ -7,7 +7,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(powershell -Command:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "WebFetch(domain:devforum.roblox.com)",
+      "WebFetch(domain:gist.github.com)"
     ]
   }
 }

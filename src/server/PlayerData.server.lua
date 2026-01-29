@@ -854,6 +854,14 @@ local unlockZoneBindable = Instance.new("BindableFunction")
 unlockZoneBindable.Name = "UnlockZoneServer"
 unlockZoneBindable.Parent = serverFolder
 
+local unlockFoodBindable = Instance.new("BindableFunction")
+unlockFoodBindable.Name = "UnlockFoodServer"
+unlockFoodBindable.Parent = serverFolder
+
+local hasFoodBindable = Instance.new("BindableFunction")
+hasFoodBindable.Name = "HasFoodUnlocked"
+hasFoodBindable.Parent = serverFolder
+
 -- Obtener datos del jugador (para otros scripts del servidor)
 getDataBindable.OnInvoke = function(player)
 	local data = getPlayerData(player)
@@ -906,6 +914,52 @@ unlockZoneBindable.OnInvoke = function(player, zoneName)
 	})
 
 	print("[PlayerData] Zona desbloqueada:", player.Name, "->", zoneName)
+	return true, "Desbloqueada"
+end
+
+-- Verificar si el jugador tiene una comida desbloqueada
+hasFoodBindable.OnInvoke = function(player, foodType)
+	-- Salad siempre está desbloqueada
+	if foodType == "Salad" then return true end
+
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	if not data.UnlockedFood then
+		data.UnlockedFood = { Salad = true }
+	end
+
+	return data.UnlockedFood[foodType] or false
+end
+
+-- Desbloquear comida del jugador
+unlockFoodBindable.OnInvoke = function(player, foodType)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	-- Salad siempre está desbloqueada
+	if foodType == "Salad" then
+		return true, "Siempre desbloqueada"
+	end
+
+	-- Inicializar si no existe
+	if not data.UnlockedFood then
+		data.UnlockedFood = { Salad = true }
+	end
+
+	-- Verificar si ya está desbloqueada
+	if data.UnlockedFood[foodType] then
+		return true, "Ya desbloqueada"
+	end
+
+	-- Desbloquear
+	data.UnlockedFood[foodType] = true
+
+	updatePlayerData(player, {
+		UnlockedFood = data.UnlockedFood
+	})
+
+	print("[PlayerData] Comida desbloqueada:", player.Name, "->", foodType)
 	return true, "Desbloqueada"
 end
 
