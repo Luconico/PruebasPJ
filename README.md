@@ -48,3 +48,6 @@ Unregister-ScheduledTask -TaskName "AutoPull-PruebasPJ" -Confirm:$false
 ### Notas
 - El script solo hace pull si **no hay cambios locales sin commitear**
 - Si tienes cambios pendientes, el pull se salta para evitar conflictos
+
+hola
+capullino
