@@ -225,51 +225,83 @@ function showCollectionEffect(position, parcelType, gasBonus, coinsBonus)
 		screenGui.Parent = playerGui
 	end
 
+	-- Usar la posicion de la cabeza del jugador
+	local character = player.Character
+	local headPos = position
+	if character then
+		local head = character:FindFirstChild("Head")
+		if head then
+			headPos = head.Position + Vector3.new(0, 2, 0) -- Un poco arriba de la cabeza
+		end
+	end
+
 	local camera = workspace.CurrentCamera
-	local screenPos, onScreen = camera:WorldToScreenPoint(position)
+	local screenPos, onScreen = camera:WorldToScreenPoint(headPos)
 	if not onScreen then return end
 
-	-- Texto flotante de gas
-	local gasFloater = Instance.new("TextLabel")
-	gasFloater.Size = UDim2.new(0, 150, 0, 40)
-	gasFloater.Position = UDim2.new(0, screenPos.X - 75, 0, screenPos.Y - 20)
-	gasFloater.BackgroundTransparency = 1
-	gasFloater.Text = string.format("+%.0f%% Gas", gasBonus * 100)
-	gasFloater.TextColor3 = Color3.fromRGB(100, 255, 100)
-	gasFloater.TextScaled = true
-	gasFloater.Font = Enum.Font.FredokaOne
-	gasFloater.TextStrokeTransparency = 0
-	gasFloater.TextStrokeColor3 = Color3.new(0, 0, 0)
-	gasFloater.Parent = screenGui
+	-- Posicion aleatoria para ambos textos (comparten X, coins debajo de gas)
+	local randomOffsetX = (math.random() - 0.5) * 160 -- -80 a +80 px (izq, centro, der)
+	local randomOffsetY = (math.random() - 0.5) * 60  -- -30 a +30 px (arriba/abajo)
+	local baseRotation = (math.random() - 0.5) * 30   -- -15 a +15 grados
 
-	-- Texto flotante de monedas
-	local coinsFloater = Instance.new("TextLabel")
-	coinsFloater.Size = UDim2.new(0, 150, 0, 40)
-	coinsFloater.Position = UDim2.new(0, screenPos.X - 75, 0, screenPos.Y + 15)
-	coinsFloater.BackgroundTransparency = 1
-	coinsFloater.Text = string.format("+%d Coins", coinsBonus)
-	coinsFloater.TextColor3 = Color3.fromRGB(255, 215, 0)
-	coinsFloater.TextScaled = true
-	coinsFloater.Font = Enum.Font.FredokaOne
-	coinsFloater.TextStrokeTransparency = 0
-	coinsFloater.TextStrokeColor3 = Color3.new(0, 0, 0)
-	coinsFloater.Parent = screenGui
+	-- Funcion para crear texto flotante
+	local function createFloatingText(text, color, yOffset, delay)
+		local floater = Instance.new("TextLabel")
+		floater.Size = UDim2.new(0, 150, 0, 40)
+		floater.Position = UDim2.new(0, screenPos.X + randomOffsetX, 0, screenPos.Y - 40 + randomOffsetY + yOffset)
+		floater.AnchorPoint = Vector2.new(0.5, 0.5)
+		floater.BackgroundTransparency = 1
+		floater.Text = text
+		floater.TextColor3 = color
+		floater.TextScaled = true
+		floater.Font = Enum.Font.FredokaOne
+		floater.TextStrokeTransparency = 0
+		floater.TextStrokeColor3 = Color3.new(0, 0, 0)
+		floater.Rotation = baseRotation + (math.random() - 0.5) * 10 -- Variacion extra
+		floater.Parent = screenGui
 
-	-- Animacion hacia arriba + fade (gas)
-	TweenService:Create(gasFloater, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Position = UDim2.new(0, screenPos.X - 75, 0, screenPos.Y - 80),
-		TextTransparency = 1,
-		TextStrokeTransparency = 1
-	}):Play()
+		-- Direccion de movimiento aleatorio
+		local moveDistance = 100 + math.random() * 50
+		local horizontalDrift = (math.random() - 0.5) * 60 -- Deriva aleatoria
+		local endX = screenPos.X + randomOffsetX + horizontalDrift
+		local endY = screenPos.Y - 40 + randomOffsetY + yOffset - moveDistance
 
-	-- Animacion hacia arriba + fade (coins)
-	TweenService:Create(coinsFloater, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Position = UDim2.new(0, screenPos.X - 75, 0, screenPos.Y - 45),
-		TextTransparency = 1,
-		TextStrokeTransparency = 1
-	}):Play()
+		-- Pequeño delay para efecto escalonado
+		task.delay(delay, function()
+			-- Animacion de escala inicial (pop)
+			floater.TextTransparency = 0.3
+			TweenService:Create(floater, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				TextTransparency = 0
+			}):Play()
 
-	-- Particulas en el mundo
+			-- Animacion principal hacia arriba + fade + rotacion
+			TweenService:Create(floater, TweenInfo.new(1.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Position = UDim2.new(0, endX, 0, endY),
+				TextTransparency = 1,
+				TextStrokeTransparency = 1,
+				Rotation = baseRotation + (math.random() - 0.5) * 15
+			}):Play()
+		end)
+
+		return floater
+	end
+
+	-- Crear textos juntos: Gas arriba, Coins debajo
+	local gasFloater = createFloatingText(
+		string.format("+%.0f%% Gas", gasBonus * 100),
+		Color3.fromRGB(100, 255, 100),
+		0,    -- Sin offset vertical (arriba)
+		0     -- Sin delay
+	)
+
+	local coinsFloater = createFloatingText(
+		string.format("+%d Coins", coinsBonus),
+		Color3.fromRGB(255, 215, 0),
+		35,   -- 35px más abajo
+		0.05  -- Pequeño delay
+	)
+
+	-- Particulas en el mundo (en la posicion del item)
 	local particleAnchor = Instance.new("Part")
 	particleAnchor.Size = Vector3.new(0.1, 0.1, 0.1)
 	particleAnchor.Position = position
