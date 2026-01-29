@@ -16,4 +16,35 @@ rojo serve
 ```
 
 For more help, check out [the Rojo documentation](https://rojo.space/docs).
-hola
+
+## Auto Pull (Sincronización automática)
+
+Este proyecto incluye un script para hacer pull automático de `master` cada 1 minuto.
+
+### Configuración
+
+Ejecutar en PowerShell como **administrador**:
+
+```powershell
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File d:\GITHUB\RobloxV2\PruebasPJ\auto-pull.ps1"
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1)
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+
+Register-ScheduledTask -TaskName "AutoPull-PruebasPJ" -Action $action -Trigger $trigger -Settings $settings -Description "Auto pull para PruebasPJ cada 1 min" -Force
+```
+
+### Verificar estado
+
+```powershell
+Get-ScheduledTask -TaskName "AutoPull-PruebasPJ"
+```
+
+### Desactivar
+
+```powershell
+Unregister-ScheduledTask -TaskName "AutoPull-PruebasPJ" -Confirm:$false
+```
+
+### Notas
+- El script solo hace pull si **no hay cambios locales sin commitear**
+- Si tienes cambios pendientes, el pull se salta para evitar conflictos
