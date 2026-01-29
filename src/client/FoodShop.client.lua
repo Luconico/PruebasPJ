@@ -7,13 +7,13 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
-local SoundService = game:GetService("SoundService")
 
 local player = Players.LocalPlayer
 
 -- Esperar dependencias
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local SoundManager = require(Shared:WaitForChild("SoundManager"))
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 
 local BuyFoodFromSign = Remotes:WaitForChild("BuyFoodFromSign", 10)
@@ -37,32 +37,6 @@ local currentPopupFoodType = nil
 -- IDs de imágenes
 local SHINING_IMAGE = "rbxassetid://18113508685"
 local ROBUX_ICON = "rbxassetid://18113165803"
-
--- IDs de sonidos (verificados de Roblox)
-local SOUNDS = {
-	PopupOpen = "rbxassetid://2235655773",      -- Swoosh Sound Effect
-	PopupClose = "rbxassetid://231731980",      -- Whoosh
-	ButtonHover = "rbxassetid://6324801967",    -- Button hover (cartoony)
-	ButtonClick = "rbxassetid://4307186075",    -- Click sound (cartoony/bubble)
-	PurchaseSuccess = "rbxassetid://1837507072", -- Final Fantasy VII - Victory Fanfare
-	CashRegister = "rbxassetid://7112275565",   -- Cash Register (Kaching)
-	Sparkle = "rbxassetid://3292075199",        -- Sparkle Noise - Sound Effect
-	Error = "rbxassetid://5852470908",          -- Cartoon bubble button Sound
-}
-
--- Función para reproducir sonidos
-local function playSound(soundId, volume, pitch)
-	local sound = Instance.new("Sound")
-	sound.SoundId = soundId
-	sound.Volume = volume or 0.5
-	sound.PlaybackSpeed = pitch or 1
-	sound.Parent = SoundService
-	sound:Play()
-	sound.Ended:Connect(function()
-		sound:Destroy()
-	end)
-	return sound
-end
 
 -- Contador para nombres únicos
 local signCounter = 0
@@ -311,15 +285,15 @@ local function createFoodSign(zonePart, foodType, isOwned)
 
 			-- Click para comprar (Activated funciona mejor en BillboardGui)
 			buyButton.Activated:Connect(function()
-				playSound(SOUNDS.ButtonClick, 0.5, 1.0)
-				playSound(SOUNDS.CashRegister, 0.3, 1.1)
+				SoundManager.play("ButtonClick", 0.5, 1.0)
+				SoundManager.play("CashRegister", 0.3, 1.1)
 				print("[FoodShop] Comprando:", foodType)
 				BuyFoodFromSign:FireServer(foodType)
 			end)
 
 			-- Efecto hover
 			buyButton.MouseEnter:Connect(function()
-				playSound(SOUNDS.ButtonHover, 0.2, 1.1)
+				SoundManager.play("ButtonHover", 0.2, 1.1)
 				TweenService:Create(buyButton, TweenInfo.new(0.2), {
 					BackgroundColor3 = Color3.fromRGB(0, 255, 130),
 					Size = UDim2.new(0.9, 0, 0.24, 0)
@@ -408,7 +382,7 @@ end
 local function closePurchasePopup()
 	if currentPopup then
 		-- Sonido de cierre (whoosh reverso)
-		playSound(SOUNDS.PopupClose, 0.3, 1.3)
+		SoundManager.play("PopupClose", 0.3, 1.3)
 
 		-- Animación de cierre
 		local mainFrame = currentPopup:FindFirstChild("MainFrame")
@@ -442,9 +416,9 @@ local function showPurchasePopup(foodType, foodConfig)
 	currentPopupFoodType = foodType
 
 	-- Sonidos de apertura (whoosh + sparkle)
-	playSound(SOUNDS.PopupOpen, 0.4, 0.9)
+	SoundManager.play("PopupOpen", 0.4, 0.9)
 	task.delay(0.15, function()
-		playSound(SOUNDS.Sparkle, 0.3, 1.2)
+		SoundManager.play("Sparkle", 0.3, 1.2)
 	end)
 
 	-- Fondo semi-transparente
@@ -542,13 +516,13 @@ local function showPurchasePopup(foodType, foodConfig)
 	closeStroke.Parent = closeButton
 
 	closeButton.MouseButton1Click:Connect(function()
-		playSound(SOUNDS.ButtonClick, 0.4, 1.1)
+		SoundManager.play("ButtonClick", 0.4, 1.1)
 		closePurchasePopup()
 	end)
 
 	-- Hover effect para X
 	closeButton.MouseEnter:Connect(function()
-		playSound(SOUNDS.ButtonHover, 0.2, 1.2)
+		SoundManager.play("ButtonHover", 0.2, 1.2)
 		TweenService:Create(closeButton, TweenInfo.new(0.15), {
 			BackgroundColor3 = Color3.fromRGB(255, 80, 80),
 			Size = UDim2.new(0, 55, 0, 55)
@@ -718,15 +692,15 @@ local function showPurchasePopup(foodType, foodConfig)
 
 	-- Click para comprar
 	buyButton.MouseButton1Click:Connect(function()
-		playSound(SOUNDS.ButtonClick, 0.5, 1.0)
-		playSound(SOUNDS.CashRegister, 0.4, 1.0)
+		SoundManager.play("ButtonClick", 0.5, 1.0)
+		SoundManager.play("CashRegister", 0.4, 1.0)
 		print("[FoodShop] Comprando desde popup:", foodType)
 		BuyFoodFromSign:FireServer(foodType)
 	end)
 
 	-- Hover del botón de compra
 	buyButton.MouseEnter:Connect(function()
-		playSound(SOUNDS.ButtonHover, 0.25, 1.0)
+		SoundManager.play("ButtonHover", 0.25, 1.0)
 		TweenService:Create(buyButton, TweenInfo.new(0.2), {
 			BackgroundColor3 = Color3.fromRGB(0, 255, 130),
 			Size = UDim2.new(0.9, 0, 0, 70)
@@ -794,15 +768,15 @@ if OnFoodPurchased then
 			print("[FoodShop] Compra exitosa:", foodType)
 
 			-- 🎉 Sonidos de celebración mágicos
-			playSound(SOUNDS.PurchaseSuccess, 0.6, 1.0)  -- Fanfarria principal
+			SoundManager.play("PurchaseSuccess", 0.6, 1.0)  -- Fanfarria principal
 			task.delay(0.1, function()
-				playSound(SOUNDS.CashRegister, 0.5, 1.1) -- Ka-ching!
+				SoundManager.play("CashRegister", 0.5, 1.1) -- Ka-ching!
 			end)
 			task.delay(0.3, function()
-				playSound(SOUNDS.Sparkle, 0.5, 0.9)      -- Brillo mágico
+				SoundManager.play("Sparkle", 0.5, 0.9)      -- Brillo mágico
 			end)
 			task.delay(0.6, function()
-				playSound(SOUNDS.Sparkle, 0.4, 1.3)      -- Segundo brillo más agudo
+				SoundManager.play("Sparkle", 0.4, 1.3)      -- Segundo brillo más agudo
 			end)
 
 			-- Cerrar popup si existe

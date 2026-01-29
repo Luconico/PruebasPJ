@@ -275,6 +275,8 @@ local function createDebugUI()
 		{ name = "playReward('mythic')", func = function() SoundManager.playReward("mythic") end, desc = "Recompensa mítica" },
 		{ name = "playWin(false)", func = function() SoundManager.playWin(false) end, desc = "Victoria pequeña" },
 		{ name = "playWin(true)", func = function() SoundManager.playWin(true) end, desc = "Victoria grande" },
+		{ name = "playFart()", func = function() SoundManager.playFart() end, desc = "Sonido de pedo" },
+		{ name = "playEat()", func = function() SoundManager.playEat() end, desc = "Sonido de comer" },
 	}
 
 	for i, funcData in ipairs(specialFunctions) do

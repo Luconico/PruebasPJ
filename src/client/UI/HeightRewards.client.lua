@@ -16,6 +16,7 @@ local player = Players.LocalPlayer
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
+local SoundManager = require(Shared:WaitForChild("SoundManager"))
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 
 -- ============================================
@@ -53,17 +54,6 @@ end
 local sizes = getResponsiveSizes()
 
 -- ============================================
--- CONFIGURACIÓN VISUAL
--- ============================================
-
-local SOUNDS = {
-	coin_small = "rbxassetid://7112275565",     -- Cash Register (Kaching) - pequeño
-	coin_medium = "rbxassetid://4307186075",    -- Click sound (cartoony) - medio
-	coin_big = "rbxassetid://1837507072",       -- Final Fantasy Victory - grande
-	sparkle = "rbxassetid://3292075199",        -- Sparkle Noise
-}
-
--- ============================================
 -- CREAR UI PRINCIPAL
 -- ============================================
 
@@ -80,78 +70,6 @@ notificationContainer.Size = UDim2.new(1, 0, 0.5, 0)
 notificationContainer.Position = UDim2.new(0, 0, 0.1, 0)
 notificationContainer.BackgroundTransparency = 1
 notificationContainer.Parent = screenGui
-
--- ============================================
--- EFECTOS DE SONIDO
--- ============================================
-
-local sounds = {}
-
--- Volúmenes por tier (más bajo = más suave)
-local VOLUME_BY_TIER = {
-	common = 0.15,
-	uncommon = 0.2,
-	rare = 0.25,
-	epic = 0.3,
-	legendary = 0.4,
-	mythic = 0.5,
-}
-
-local function createSound(name, soundId)
-	local sound = Instance.new("Sound")
-	sound.Name = name
-	sound.SoundId = soundId
-	sound.Volume = 0.2 -- Volumen base bajo
-	sound.Parent = screenGui
-	sounds[name] = sound
-	return sound
-end
-
-for name, id in pairs(SOUNDS) do
-	createSound(name, id)
-end
-
-local function playSound(tier)
-	local soundName = "coin_small"
-	if tier == "rare" or tier == "epic" then
-		soundName = "coin_medium"
-	elseif tier == "legendary" or tier == "mythic" then
-		soundName = "coin_big"
-	end
-
-	if sounds[soundName] then
-		local sound = sounds[soundName]
-		-- Volumen según tier
-		sound.Volume = VOLUME_BY_TIER[tier] or 0.2
-		-- Pitch aleatorio para variedad (0.9 a 1.15)
-		sound.PlaybackSpeed = 0.9 + math.random() * 0.25
-		sound:Play()
-	end
-
-	-- Agregar sparkle para tiers épico o superior
-	if tier == "epic" or tier == "legendary" or tier == "mythic" then
-		task.delay(0.2, function()
-			if sounds["sparkle"] then
-				local sparkle = sounds["sparkle"]
-				sparkle.Volume = VOLUME_BY_TIER[tier] or 0.3
-				sparkle.PlaybackSpeed = 0.9 + math.random() * 0.3
-				sparkle:Play()
-			end
-		end)
-	end
-
-	-- Doble sparkle para mítico
-	if tier == "mythic" then
-		task.delay(0.5, function()
-			if sounds["sparkle"] then
-				local sparkle = sounds["sparkle"]
-				sparkle.Volume = 0.4
-				sparkle.PlaybackSpeed = 1.2 + math.random() * 0.2
-				sparkle:Play()
-			end
-		end)
-	end
-end
 
 -- ============================================
 -- CREAR PARTÍCULAS DE MONEDAS
@@ -391,7 +309,7 @@ local function showRewardNotification(milestone)
 	createCoinParticles(notification, tier)
 
 	-- Reproducir sonido
-	playSound(tier)
+	SoundManager.playReward(tier)
 
 	-- Animación de salida
 	task.delay(tierConfig.Duration, function()

@@ -9,7 +9,8 @@
       "Bash(powershell -Command:*)",
       "Bash(powershell:*)",
       "WebFetch(domain:devforum.roblox.com)",
-      "WebFetch(domain:gist.github.com)"
+      "WebFetch(domain:gist.github.com)",
+      "Bash(git checkout:*)"
     ]
   }
 }

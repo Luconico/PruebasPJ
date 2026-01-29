@@ -21,9 +21,9 @@ SoundManager.Sounds = {
 	ButtonClick = "rbxassetid://4307186075",    -- Click sound (cartoony/bubble)
 
 	-- Compras y Éxito
-	PurchaseSuccess = "rbxassetid://1837507072", -- Victory sound
+	PurchaseSuccess = "rbxassetid://4307186075", -- Victory sound
 	CashRegister = "rbxassetid://7112275565",   -- Cash Register (Kaching)
-	Sparkle = "rbxassetid://3292075199",        -- Sparkle Noise
+	Sparkle = "rbxassetid://9125402735",        -- Sparkle/Chime (corto)
 
 	-- Acciones
 	Equip = "rbxassetid://6042053626",          -- Equip/Action sound
@@ -36,7 +36,11 @@ SoundManager.Sounds = {
 	-- Recompensas por tier
 	RewardSmall = "rbxassetid://7112275565",    -- Cash Register - pequeño
 	RewardMedium = "rbxassetid://4307186075",   -- Click cartoony - medio
-	RewardBig = "rbxassetid://1837507072",      -- Victory - grande
+	RewardBig = "rbxassetid://7112275565",      -- Cash Register (mismo que pequeño)
+
+	-- Gameplay (Pedos y comer)
+	Fart = "rbxassetid://357613509",            -- Sonido de pedo principal
+	Eat = "rbxassetid://6748255118",            -- Sonido de comer
 }
 
 -- Alias para compatibilidad
@@ -186,6 +190,20 @@ function SoundManager.playWin(isBigPrize)
 			SoundManager.play("Sparkle", 0.4, 1.1)
 		end)
 	end
+end
+
+-- ============================================
+-- SONIDOS DE GAMEPLAY
+-- ============================================
+
+-- Reproduce sonido de pedo (con pitch variable para variedad)
+function SoundManager.playFart(volume, pitch)
+	return SoundManager.play("Fart", volume or 0.5, pitch or (0.8 + math.random() * 0.4))
+end
+
+-- Reproduce sonido de comer
+function SoundManager.playEat(volume)
+	return SoundManager.play("Eat", volume or 0.4, 1.0)
 end
 
 return SoundManager

@@ -10,43 +10,14 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local SoundService = game:GetService("SoundService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- ============================================
--- SISTEMA DE SONIDOS (IDs verificados de Roblox)
--- ============================================
-local SOUNDS = {
-	WheelOpen = "rbxassetid://2235655773",       -- Swoosh Sound Effect
-	WheelClose = "rbxassetid://231731980",       -- Whoosh
-	ButtonHover = "rbxassetid://6324801967",     -- Button hover (cartoony)
-	ButtonClick = "rbxassetid://4307186075",     -- Click sound (cartoony/bubble)
-	SpinStart = "rbxassetid://6042053626",       -- Spin start sound
-	SpinTick = "rbxassetid://9119713951",        -- Tick sound for spinning
-	WinSmall = "rbxassetid://7112275565",        -- Cash Register (Kaching)
-	WinBig = "rbxassetid://1837507072",          -- Final Fantasy VII - Victory Fanfare
-	Sparkle = "rbxassetid://3292075199",         -- Sparkle Noise
-	Error = "rbxassetid://5852470908",           -- Cartoon bubble button Sound
-}
-
-local function playSound(soundId, volume, pitch)
-	local sound = Instance.new("Sound")
-	sound.SoundId = soundId
-	sound.Volume = volume or 0.5
-	sound.PlaybackSpeed = pitch or 1
-	sound.Parent = SoundService
-	sound:Play()
-	sound.Ended:Connect(function()
-		sound:Destroy()
-	end)
-	return sound
-end
-
 -- Esperar módulos
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
+local SoundManager = require(Shared:WaitForChild("SoundManager"))
 
 -- Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -365,12 +336,12 @@ local function createPersistentButton()
 
 	-- Conectar click para abrir la ruleta
 	persistentButton.MouseButton1Click:Connect(function()
-		playSound(SOUNDS.ButtonClick, 0.4, 1.0)
+		SoundManager.play("ButtonClick", 0.4, 1.0)
 		toggleWheel(true)
 	end)
 
 	persistentButton.MouseEnter:Connect(function()
-		playSound(SOUNDS.ButtonHover, 0.2, 1.1)
+		SoundManager.play("ButtonHover", 0.2, 1.1)
 	end)
 
 	return buttonGui
@@ -925,12 +896,12 @@ local function createWheelUI()
 	createCorner(closeButton, UDim.new(0, 10))
 
 	closeButton.MouseButton1Click:Connect(function()
-		playSound(SOUNDS.ButtonClick, 0.4, 1.1)
+		SoundManager.play("ButtonClick", 0.4, 1.1)
 		toggleWheel(false)
 	end)
 
 	closeButton.MouseEnter:Connect(function()
-		playSound(SOUNDS.ButtonHover, 0.2, 1.2)
+		SoundManager.play("ButtonHover", 0.2, 1.2)
 	end)
 
 	-- Conectar botón de spin
@@ -938,7 +909,7 @@ local function createWheelUI()
 		if not isSpinning and availableSpins > 0 then
 			spinWheel()
 		elseif availableSpins <= 0 then
-			playSound(SOUNDS.Error, 0.4, 0.8)
+			SoundManager.play("Error", 0.4, 0.8)
 			local originalColor = spinButton.BackgroundColor3
 			spinButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
 			task.delay(0.3, function()
@@ -949,7 +920,7 @@ local function createWheelUI()
 
 	spinButton.MouseEnter:Connect(function()
 		if not isSpinning then
-			playSound(SOUNDS.ButtonHover, 0.2, 1.0)
+			SoundManager.play("ButtonHover", 0.2, 1.0)
 		end
 	end)
 
@@ -1043,8 +1014,8 @@ spinWheel = function()
 	if isSpinning or availableSpins <= 0 then return end
 
 	-- 🔊 Sonido de inicio de giro
-	playSound(SOUNDS.SpinStart, 0.5, 1.0)
-	playSound(SOUNDS.ButtonClick, 0.4, 1.0)
+	SoundManager.play("SpinStart", 0.5, 1.0)
+	SoundManager.play("ButtonClick", 0.4, 1.0)
 
 	isSpinning = true
 	availableSpins = availableSpins - 1
@@ -1099,21 +1070,21 @@ spinWheel = function()
 		-- 🔊 Sonidos de victoria según el premio
 		if prize.Gold >= 5000 then
 			-- Gran premio: fanfarria completa
-			playSound(SOUNDS.WinBig, 0.6, 1.0)
+			SoundManager.play("WinBig", 0.6, 1.0)
 			task.delay(0.2, function()
-				playSound(SOUNDS.WinSmall, 0.5, 1.1)
+				SoundManager.play("WinSmall", 0.5, 1.1)
 			end)
 			task.delay(0.4, function()
-				playSound(SOUNDS.Sparkle, 0.5, 0.9)
+				SoundManager.play("Sparkle", 0.5, 0.9)
 			end)
 			task.delay(0.7, function()
-				playSound(SOUNDS.Sparkle, 0.4, 1.3)
+				SoundManager.play("Sparkle", 0.4, 1.3)
 			end)
 		else
 			-- Premio normal: cash register y sparkle
-			playSound(SOUNDS.WinSmall, 0.5, 1.0)
+			SoundManager.play("WinSmall", 0.5, 1.0)
 			task.delay(0.2, function()
-				playSound(SOUNDS.Sparkle, 0.4, 1.1)
+				SoundManager.play("Sparkle", 0.4, 1.1)
 			end)
 		end
 
@@ -1139,12 +1110,12 @@ toggleWheel = function(open)
 
 	-- 🔊 Sonidos de abrir/cerrar
 	if open and not isWheelOpen then
-		playSound(SOUNDS.WheelOpen, 0.4, 0.9)
+		SoundManager.play("WheelOpen", 0.4, 0.9)
 		task.delay(0.15, function()
-			playSound(SOUNDS.Sparkle, 0.3, 1.2)
+			SoundManager.play("Sparkle", 0.3, 1.2)
 		end)
 	elseif not open and isWheelOpen then
-		playSound(SOUNDS.WheelClose, 0.3, 1.3)
+		SoundManager.play("WheelClose", 0.3, 1.3)
 	end
 
 	isWheelOpen = open

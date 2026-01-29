@@ -18,6 +18,10 @@ if not Remotes then
 	return
 end
 
+-- Cargar módulo de sonidos
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local SoundManager = require(Shared:WaitForChild("SoundManager"))
+
 -- ============================================
 -- VARIABLES DE ESTADO
 -- ============================================
@@ -53,13 +57,6 @@ local currentFoodConfig = nil
 local currentPhysicalZone = nil
 local currentPhysicalConfig = nil
 
--- IDs de sonidos de pedo
-local fartSoundIds = {
-	"rbxassetid://357613509",
-	-- "rbxassetid://4761049714",
-	-- "rbxassetid://2663775994",
-	-- "rbxassetid://4792693549",
-}
 
 -- Efectos
 local fartSound = nil
@@ -69,7 +66,6 @@ local fartInterval = 0.3
 
 -- Sonido de comer
 local eatSound = nil
-local eatSoundId = "rbxassetid://6748255118"
 
 -- Partes del cuerpo
 local bodyParts = {}
@@ -210,7 +206,7 @@ end
 local function createEatSound(parent)
 	local sound = Instance.new("Sound")
 	sound.Name = "EatSound"
-	sound.SoundId = eatSoundId
+	sound.SoundId = SoundManager.Sounds.Eat
 	sound.Volume = 0.8
 	sound.Looped = true
 	sound.RollOffMaxDistance = 30
@@ -221,7 +217,7 @@ end
 local function playRandomFart()
 	if not fartSound then return end
 
-	local randomId = fartSoundIds[math.random(1, #fartSoundIds)]
+	local randomId = SoundManager.Sounds.Fart
 	fartSound.SoundId = randomId
 	fartSound.PlaybackSpeed = math.random(80, 120) / 100
 	fartSound:Play()

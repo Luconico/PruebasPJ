@@ -1,37 +1,13 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
-local SoundService = game:GetService("SoundService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- ============================================
--- SISTEMA DE SONIDOS (IDs verificados de Roblox)
--- ============================================
-local SOUNDS = {
-	PopupOpen = "rbxassetid://2235655773",      -- Swoosh Sound Effect
-	PopupClose = "rbxassetid://231731980",      -- Whoosh
-	ButtonHover = "rbxassetid://6324801967",    -- Button hover (cartoony)
-	ButtonClick = "rbxassetid://4307186075",    -- Click sound (cartoony/bubble)
-	PurchaseSuccess = "rbxassetid://1837507072", -- Final Fantasy VII - Victory Fanfare
-	CashRegister = "rbxassetid://7112275565",   -- Cash Register (Kaching)
-	Sparkle = "rbxassetid://3292075199",        -- Sparkle Noise
-	UnlockZone = "rbxassetid://6042053626",     -- Button Click (unlock sound)
-}
-
-local function playSound(soundId, volume, pitch)
-	local sound = Instance.new("Sound")
-	sound.SoundId = soundId
-	sound.Volume = volume or 0.5
-	sound.PlaybackSpeed = pitch or 1
-	sound.Parent = SoundService
-	sound:Play()
-	sound.Ended:Connect(function()
-		sound:Destroy()
-	end)
-	return sound
-end
+-- Cargar módulo de sonidos
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local SoundManager = require(Shared:WaitForChild("SoundManager"))
 
 -- Esperar a la carpeta Remotes que ya existe
 local remotesFolder = ReplicatedStorage:WaitForChild("Remotes", 30)
@@ -197,7 +173,7 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 	local hoverTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 	coinsButton.MouseEnter:Connect(function()
-		playSound(SOUNDS.ButtonHover, 0.2, 1.1)
+		SoundManager.play("ButtonHover", 0.2, 1.1)
 		local tween = TweenService:Create(coinsButton, hoverTweenInfo, {
 			BackgroundColor3 = Color3.fromRGB(192, 192, 192) -- Plateado
 		})
@@ -213,7 +189,7 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 
 	-- Efecto hover para botón de Robux (mismo plateado)
 	robuxButton.MouseEnter:Connect(function()
-		playSound(SOUNDS.ButtonHover, 0.2, 1.1)
+		SoundManager.play("ButtonHover", 0.2, 1.1)
 		local tween = TweenService:Create(robuxButton, hoverTweenInfo, {
 			BackgroundColor3 = Color3.fromRGB(192, 192, 192) -- Plateado
 		})
@@ -229,32 +205,32 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 
 	-- Eventos de click
 	coinsButton.MouseButton1Click:Connect(function()
-		playSound(SOUNDS.ButtonClick, 0.5, 1.0)
-		playSound(SOUNDS.CashRegister, 0.4, 1.1)
+		SoundManager.play("ButtonClick", 0.5, 1.0)
+		SoundManager.play("CashRegister", 0.4, 1.1)
 		-- Enviar al servidor para desbloquear con monedas
 		unlockZoneRemote:FireServer(currentZoneName, "coins")
-		playSound(SOUNDS.PopupClose, 0.3, 1.3)
+		SoundManager.play("PopupClose", 0.3, 1.3)
 		screenGui:Destroy()
 		currentZoneUI = nil
 	end)
 
 	robuxButton.MouseButton1Click:Connect(function()
-		playSound(SOUNDS.ButtonClick, 0.5, 1.0)
-		playSound(SOUNDS.CashRegister, 0.4, 1.1)
+		SoundManager.play("ButtonClick", 0.5, 1.0)
+		SoundManager.play("CashRegister", 0.4, 1.1)
 		-- Enviar al servidor para desbloquear con Robux
 		unlockZoneRemote:FireServer(currentZoneName, "robux")
-		playSound(SOUNDS.PopupClose, 0.3, 1.3)
+		SoundManager.play("PopupClose", 0.3, 1.3)
 		screenGui:Destroy()
 		currentZoneUI = nil
 	end)
 
 	closeButton.MouseEnter:Connect(function()
-		playSound(SOUNDS.ButtonHover, 0.2, 1.2)
+		SoundManager.play("ButtonHover", 0.2, 1.2)
 	end)
 
 	closeButton.MouseButton1Click:Connect(function()
-		playSound(SOUNDS.ButtonClick, 0.4, 1.1)
-		playSound(SOUNDS.PopupClose, 0.3, 1.3)
+		SoundManager.play("ButtonClick", 0.4, 1.1)
+		SoundManager.play("PopupClose", 0.3, 1.3)
 		screenGui:Destroy()
 		currentZoneUI = nil
 	end)
@@ -268,9 +244,9 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 	end)
 
 	-- 🔊 Sonido de apertura del popup
-	playSound(SOUNDS.PopupOpen, 0.4, 0.9)
+	SoundManager.play("PopupOpen", 0.4, 0.9)
 	task.delay(0.15, function()
-		playSound(SOUNDS.Sparkle, 0.3, 1.2)
+		SoundManager.play("Sparkle", 0.3, 1.2)
 	end)
 
 	-- Animación de entrada
@@ -308,15 +284,15 @@ end
 if makeInvisibleRemote then
 	makeInvisibleRemote.OnClientEvent:Connect(function(zoneName)
 		-- 🔊 Sonidos de celebración al desbloquear zona
-		playSound(SOUNDS.PurchaseSuccess, 0.6, 1.0)
+		SoundManager.play("PurchaseSuccess", 0.6, 1.0)
 		task.delay(0.1, function()
-			playSound(SOUNDS.CashRegister, 0.5, 1.1)
+			SoundManager.play("CashRegister", 0.5, 1.1)
 		end)
 		task.delay(0.3, function()
-			playSound(SOUNDS.Sparkle, 0.5, 0.9)
+			SoundManager.play("Sparkle", 0.5, 0.9)
 		end)
 		task.delay(0.6, function()
-			playSound(SOUNDS.Sparkle, 0.4, 1.3)
+			SoundManager.play("Sparkle", 0.4, 1.3)
 		end)
 		print("👻 Haciendo " .. zoneName .. " invisible localmente")
 
