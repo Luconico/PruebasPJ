@@ -9,9 +9,37 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local SoundService = game:GetService("SoundService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+
+-- ============================================
+-- SISTEMA DE SONIDOS (IDs verificados de Roblox)
+-- ============================================
+local SOUNDS = {
+	ShopOpen = "rbxassetid://2235655773",       -- Swoosh Sound Effect
+	ShopClose = "rbxassetid://231731980",       -- Whoosh
+	ButtonHover = "rbxassetid://6324801967",    -- Button hover (cartoony)
+	ButtonClick = "rbxassetid://4307186075",    -- Click sound (cartoony/bubble)
+	PurchaseSuccess = "rbxassetid://1837507072", -- Final Fantasy VII - Victory Fanfare
+	CashRegister = "rbxassetid://7112275565",   -- Cash Register (Kaching)
+	Sparkle = "rbxassetid://3292075199",        -- Sparkle Noise
+	Error = "rbxassetid://5852470908",          -- Cartoon bubble button Sound
+}
+
+local function playSound(soundId, volume, pitch)
+	local sound = Instance.new("Sound")
+	sound.SoundId = soundId
+	sound.Volume = volume or 0.5
+	sound.PlaybackSpeed = pitch or 1
+	sound.Parent = SoundService
+	sound:Play()
+	sound.Ended:Connect(function()
+		sound:Destroy()
+	end)
+	return sound
+end
 
 -- Esperar Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -774,6 +802,19 @@ end
 local function showPurchaseNotification(success, message)
 	if not shopGui then return end
 
+	-- 🔊 Sonidos según resultado
+	if success then
+		playSound(SOUNDS.PurchaseSuccess, 0.5, 1.0)
+		task.delay(0.1, function()
+			playSound(SOUNDS.CashRegister, 0.4, 1.1)
+		end)
+		task.delay(0.3, function()
+			playSound(SOUNDS.Sparkle, 0.4, 1.0)
+		end)
+	else
+		playSound(SOUNDS.Error, 0.5, 0.8)
+	end
+
 	local notifWidth = sizes.IsMobile and 280 or 400
 	local notifHeight = sizes.IsMobile and 45 or 60
 	local notifTextSize = sizes.IsMobile and 16 or 24
@@ -831,6 +872,12 @@ local function openShop()
 	if isShopOpen then return end
 	isShopOpen = true
 
+	-- 🔊 Sonido de apertura
+	playSound(SOUNDS.ShopOpen, 0.4, 0.9)
+	task.delay(0.15, function()
+		playSound(SOUNDS.Sparkle, 0.3, 1.2)
+	end)
+
 	-- Actualizar tamaños responsive
 	sizes = getResponsiveSizes()
 
@@ -882,6 +929,9 @@ end
 local function closeShop()
 	if not isShopOpen then return end
 
+	-- 🔊 Sonido de cierre
+	playSound(SOUNDS.ShopClose, 0.3, 1.3)
+
 	local mainContainer = shopGui:FindFirstChild("MainContainer")
 	if mainContainer then
 		local tween = TweenService:Create(mainContainer, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
@@ -914,6 +964,8 @@ local function initialize()
 
 		-- Conectar botones
 		cardData.CoinButton.MouseButton1Click:Connect(function()
+			playSound(SOUNDS.ButtonClick, 0.5, 1.0)
+			playSound(SOUNDS.CashRegister, 0.3, 1.1)
 			animateButtonPress(cardData.CoinButton)
 			local result = purchaseUpgrade(upgradeName, false)
 			if result then
@@ -922,6 +974,8 @@ local function initialize()
 		end)
 
 		cardData.RobuxButton.MouseButton1Click:Connect(function()
+			playSound(SOUNDS.ButtonClick, 0.5, 1.0)
+			playSound(SOUNDS.CashRegister, 0.3, 1.1)
 			animateButtonPress(cardData.RobuxButton)
 			local result = purchaseUpgrade(upgradeName, true)
 			if result then
@@ -932,6 +986,7 @@ local function initialize()
 		-- Efectos hover (solo en PC, no en móvil)
 		if not sizes.IsMobile then
 			cardData.CoinButton.MouseEnter:Connect(function()
+				playSound(SOUNDS.ButtonHover, 0.2, 1.1)
 				TweenService:Create(cardData.CoinButton, TweenInfo.new(0.1), {
 					Size = UDim2.new(1, 4, 0, sizes.ButtonHeight + 4)
 				}):Play()
@@ -944,6 +999,7 @@ local function initialize()
 			end)
 
 			cardData.RobuxButton.MouseEnter:Connect(function()
+				playSound(SOUNDS.ButtonHover, 0.2, 1.1)
 				TweenService:Create(cardData.RobuxButton, TweenInfo.new(0.1), {
 					Size = UDim2.new(1, 4, 0, sizes.ButtonHeight + 4)
 				}):Play()
@@ -959,8 +1015,13 @@ local function initialize()
 
 	-- Botón de cerrar
 	closeButton.MouseButton1Click:Connect(function()
+		playSound(SOUNDS.ButtonClick, 0.4, 1.1)
 		animateButtonPress(closeButton)
 		closeShop()
+	end)
+
+	closeButton.MouseEnter:Connect(function()
+		playSound(SOUNDS.ButtonHover, 0.2, 1.2)
 	end)
 
 	-- Click/tap en backdrop cierra (soporte para mouse y touch)

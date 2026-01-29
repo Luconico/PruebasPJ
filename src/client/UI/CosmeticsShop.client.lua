@@ -9,9 +9,38 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local SoundService = game:GetService("SoundService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+
+-- ============================================
+-- SISTEMA DE SONIDOS (IDs verificados de Roblox)
+-- ============================================
+local SOUNDS = {
+	ShopOpen = "rbxassetid://2235655773",       -- Swoosh Sound Effect
+	ShopClose = "rbxassetid://231731980",       -- Whoosh
+	ButtonHover = "rbxassetid://6324801967",    -- Button hover (cartoony)
+	ButtonClick = "rbxassetid://4307186075",    -- Click sound (cartoony/bubble)
+	PurchaseSuccess = "rbxassetid://1837507072", -- Final Fantasy VII - Victory Fanfare
+	CashRegister = "rbxassetid://7112275565",   -- Cash Register (Kaching)
+	Sparkle = "rbxassetid://3292075199",        -- Sparkle Noise
+	Equip = "rbxassetid://6042053626",          -- Button Click (equip sound)
+	Error = "rbxassetid://5852470908",          -- Cartoon bubble button Sound
+}
+
+local function playSound(soundId, volume, pitch)
+	local sound = Instance.new("Sound")
+	sound.SoundId = soundId
+	sound.Volume = volume or 0.5
+	sound.PlaybackSpeed = pitch or 1
+	sound.Parent = SoundService
+	sound:Play()
+	sound.Ended:Connect(function()
+		sound:Destroy()
+	end)
+	return sound
+end
 
 -- Esperar módulos
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -223,7 +252,12 @@ local function createShopUI()
 	createCorner(closeButton)
 
 	closeButton.MouseButton1Click:Connect(function()
+		playSound(SOUNDS.ButtonClick, 0.4, 1.1)
 		toggleShop(false)
+	end)
+
+	closeButton.MouseEnter:Connect(function()
+		playSound(SOUNDS.ButtonHover, 0.2, 1.2)
 	end)
 
 	-- Área de scroll para cosméticos
@@ -442,18 +476,24 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	actionButton.MouseButton1Click:Connect(function()
 		if isEquipped then
 			-- Ya equipado, no hacer nada
+			playSound(SOUNDS.Error, 0.3, 1.0)
 			return
 		elseif isOwned then
 			-- Equipar
+			playSound(SOUNDS.Equip, 0.5, 1.0)
+			playSound(SOUNDS.Sparkle, 0.3, 1.1)
 			equipCosmetic(cosmeticId)
 		else
 			-- Comprar
+			playSound(SOUNDS.ButtonClick, 0.5, 1.0)
+			playSound(SOUNDS.CashRegister, 0.3, 1.1)
 			purchaseCosmetic(cosmeticId, cosmeticData)
 		end
 	end)
 
 	-- Hover effect
 	card.MouseEnter:Connect(function()
+		playSound(SOUNDS.ButtonHover, 0.15, 1.1)
 		TweenService:Create(card, TweenInfo.new(0.15), {
 			BackgroundColor3 = Styles.Colors.CardHover
 		}):Play()
@@ -499,6 +539,8 @@ equipCosmetic = function(cosmeticId)
 	if EquipCosmetic then
 		local success = EquipCosmetic:InvokeServer(cosmeticId)
 		if success then
+			-- 🔊 Sonido de equipar exitoso
+			playSound(SOUNDS.PurchaseSuccess, 0.4, 1.2)
 			-- Actualizar UI
 			updateAllCards()
 		end
@@ -546,6 +588,12 @@ toggleShop = function(open)
 	screenGui.Enabled = shopOpen
 
 	if shopOpen then
+		-- 🔊 Sonido de apertura
+		playSound(SOUNDS.ShopOpen, 0.4, 0.9)
+		task.delay(0.15, function()
+			playSound(SOUNDS.Sparkle, 0.3, 1.2)
+		end)
+
 		-- Animar entrada
 		mainContainer.Size = UDim2.new(0, 0, 0, 0)
 		local targetSize
@@ -561,6 +609,9 @@ toggleShop = function(open)
 
 		-- Actualizar estados de las cards
 		updateAllCards()
+	else
+		-- 🔊 Sonido de cierre
+		playSound(SOUNDS.ShopClose, 0.3, 1.3)
 	end
 end
 

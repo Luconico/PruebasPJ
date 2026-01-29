@@ -57,9 +57,10 @@ local sizes = getResponsiveSizes()
 -- ============================================
 
 local SOUNDS = {
-	coin_small = "rbxassetid://9119713951",     -- Tic suave (pop/click)
-	coin_medium = "rbxassetid://9119713951",    -- Tic medio
-	coin_big = "rbxassetid://9119713951",       -- Tic para tiers altos
+	coin_small = "rbxassetid://7112275565",     -- Cash Register (Kaching) - pequeño
+	coin_medium = "rbxassetid://4307186075",    -- Click sound (cartoony) - medio
+	coin_big = "rbxassetid://1837507072",       -- Final Fantasy Victory - grande
+	sparkle = "rbxassetid://3292075199",        -- Sparkle Noise
 }
 
 -- ============================================
@@ -125,6 +126,30 @@ local function playSound(tier)
 		-- Pitch aleatorio para variedad (0.9 a 1.15)
 		sound.PlaybackSpeed = 0.9 + math.random() * 0.25
 		sound:Play()
+	end
+
+	-- Agregar sparkle para tiers épico o superior
+	if tier == "epic" or tier == "legendary" or tier == "mythic" then
+		task.delay(0.2, function()
+			if sounds["sparkle"] then
+				local sparkle = sounds["sparkle"]
+				sparkle.Volume = VOLUME_BY_TIER[tier] or 0.3
+				sparkle.PlaybackSpeed = 0.9 + math.random() * 0.3
+				sparkle:Play()
+			end
+		end)
+	end
+
+	-- Doble sparkle para mítico
+	if tier == "mythic" then
+		task.delay(0.5, function()
+			if sounds["sparkle"] then
+				local sparkle = sounds["sparkle"]
+				sparkle.Volume = 0.4
+				sparkle.PlaybackSpeed = 1.2 + math.random() * 0.2
+				sparkle:Play()
+			end
+		end)
 	end
 end
 
