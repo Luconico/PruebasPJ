@@ -52,9 +52,9 @@ local currentFoodConfig = nil
 -- IDs de sonidos de pedo
 local fartSoundIds = {
 	"rbxassetid://357613509",
-	"rbxassetid://4761049714",
-	"rbxassetid://2663775994",
-	"rbxassetid://4792693549",
+	-- "rbxassetid://4761049714",
+	-- "rbxassetid://2663775994",
+	-- "rbxassetid://4792693549",
 }
 
 -- Efectos
