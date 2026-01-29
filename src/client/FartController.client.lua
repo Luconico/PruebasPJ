@@ -786,4 +786,26 @@ if player.Character then
 	onCharacterAdded(player.Character)
 end
 
+-- ============================================
+-- FOOD PARCELS INTEGRATION
+-- ============================================
+
+-- Funcion llamada cuando se recoge un item de parcela
+local function applyFoodParcelGasBonus(gasBonus)
+	if not isDataLoaded then return end
+
+	-- Calcular el bonus real (porcentaje del max fatness)
+	local actualBonus = gasBonus * playerStats.MaxFatness
+
+	-- Aplicar gas (sin exceder el maximo)
+	currentFatness = math.min(currentFatness + actualBonus, playerStats.MaxFatness)
+	applyBodySize(currentFatness)
+
+	-- Efecto de sonido de comer rapido
+	SoundManager.playEat(0.3)
+end
+
+-- Registrar la funcion globalmente para que FoodParcelsClient pueda llamarla
+_G.FoodParcelGasBonus = applyFoodParcelGasBonus
+
 print("[FartController] Controlador inicializado")

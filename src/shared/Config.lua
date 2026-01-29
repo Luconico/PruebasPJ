@@ -134,6 +134,98 @@ Config.Food = {
 }
 
 -- ============================================
+-- FOOD PARCELS (Minijuego de recoleccion)
+-- ============================================
+Config.FoodParcels = {
+	-- Configuracion global
+	GlobalSettings = {
+		RespawnTime = 5,           -- Segundos para que reaparezca un item
+		CollectionRadius = 4,      -- Distancia para recoger (studs)
+		ItemFloatHeight = 2,       -- Altura sobre el suelo
+		ItemBobSpeed = 2,          -- Velocidad de animacion de flotacion
+		ItemBobAmount = 0.5,       -- Amplitud de flotacion
+		SpawnInterval = 3,         -- Segundos entre spawns de nuevos items
+	},
+
+	-- Tipos de parcelas
+	ParcelTypes = {
+		Lettuce = {
+			Name = "Lettuce Patch",
+			Icon = "🥬",
+			GasBonus = 0.017,      -- +1.7% del max fatness
+			CoinsBonus = 1,        -- +1 moneda
+			MaxItems = 8,          -- Maximo items simultaneos
+			Color = Color3.fromRGB(120, 200, 80),   -- Verde lechuga
+			Rarity = "common",
+		},
+
+		Burger = {
+			Name = "Burger Field",
+			Icon = "🍔",
+			GasBonus = 0.033,      -- +3.3% del max fatness
+			CoinsBonus = 2,        -- +2 monedas
+			MaxItems = 6,
+			Color = Color3.fromRGB(210, 140, 60),   -- Naranja burger
+			Rarity = "uncommon",
+		},
+
+		Pizza = {
+			Name = "Pizza Paradise",
+			Icon = "🍕",
+			GasBonus = 0.05,       -- +5% del max fatness
+			CoinsBonus = 3,        -- +3 monedas
+			MaxItems = 5,
+			Color = Color3.fromRGB(230, 180, 80),   -- Amarillo queso
+			Rarity = "rare",
+		},
+
+		HotDog = {
+			Name = "Hot Dog Haven",
+			Icon = "🌭",
+			GasBonus = 0.067,      -- +6.7% del max fatness
+			CoinsBonus = 4,        -- +4 monedas
+			MaxItems = 4,
+			Color = Color3.fromRGB(200, 100, 80),   -- Rojo salchicha
+			Rarity = "epic",
+		},
+
+		GoldenBurger = {
+			Name = "Golden Feast",
+			Icon = "👑",
+			GasBonus = 0.12,       -- +12% del max fatness
+			CoinsBonus = 8,        -- +8 monedas
+			MaxItems = 3,
+			Color = Color3.fromRGB(255, 215, 0),    -- Dorado
+			Rarity = "legendary",
+		},
+	},
+
+	-- Efectos visuales por rareza
+	RarityEffects = {
+		common = {
+			ParticleColor = Color3.fromRGB(255, 255, 255),
+			GlowIntensity = 0,
+		},
+		uncommon = {
+			ParticleColor = Color3.fromRGB(100, 255, 100),
+			GlowIntensity = 0.3,
+		},
+		rare = {
+			ParticleColor = Color3.fromRGB(100, 150, 255),
+			GlowIntensity = 0.5,
+		},
+		epic = {
+			ParticleColor = Color3.fromRGB(200, 100, 255),
+			GlowIntensity = 0.7,
+		},
+		legendary = {
+			ParticleColor = Color3.fromRGB(255, 200, 50),
+			GlowIntensity = 1.0,
+		},
+	},
+}
+
+-- ============================================
 -- COINS AND REWARDS
 -- ============================================
 Config.Rewards = {
