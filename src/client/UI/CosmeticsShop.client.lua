@@ -283,10 +283,58 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	card.Name = "Card_" .. cosmeticId
 	card.BackgroundColor3 = Styles.Colors.CardBackground
 	card.LayoutOrder = layoutOrder
+	card.ClipsDescendants = true -- Necesario para el efecto shine
 	card.Parent = parent
 
 	createCorner(card)
 	local cardStroke = createStroke(card, tierData.Color, sizes.StrokeThickness)
+
+	-- ========== EFECTO SHINE ==========
+	-- Contenedor que recorta el shine
+	local shineContainer = Instance.new("Frame")
+	shineContainer.Name = "ShineContainer"
+	shineContainer.Size = UDim2.new(1, 0, 1, 0)
+	shineContainer.BackgroundTransparency = 1
+	shineContainer.ClipsDescendants = true
+	shineContainer.ZIndex = 2
+	shineContainer.Parent = card
+	createCorner(shineContainer)
+
+	local shine = Instance.new("Frame")
+	shine.Name = "Shine"
+	shine.Size = UDim2.new(0, 20, 1, 0)
+	shine.Position = UDim2.new(-0.1, 0, 0.5, 0)
+	shine.AnchorPoint = Vector2.new(0.5, 0.5)
+	shine.BackgroundColor3 = Color3.new(1, 1, 1)
+	shine.BackgroundTransparency = 0.7
+	shine.BorderSizePixel = 0
+	shine.Rotation = 15
+	shine.Parent = shineContainer
+
+	local shineGradient = Instance.new("UIGradient")
+	shineGradient.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.3, 0.7),
+		NumberSequenceKeypoint.new(0.5, 0.5),
+		NumberSequenceKeypoint.new(0.7, 0.7),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	shineGradient.Parent = shine
+
+	-- Animación del shine
+	local shineDelay = 2 + math.random() * 3
+	task.spawn(function()
+		task.wait(math.random() * 2)
+		while shineContainer.Parent do
+			shine.Position = UDim2.new(-0.1, 0, 0.5, 0)
+			local shineTween = TweenService:Create(shine, TweenInfo.new(0.4, Enum.EasingStyle.Linear), {
+				Position = UDim2.new(1.1, 0, 0.5, 0)
+			})
+			shineTween:Play()
+			shineTween.Completed:Wait()
+			task.wait(shineDelay)
+		end
+	end)
 
 	-- Efecto de brillo para tier (opcional)
 	if cosmeticData.Tier == "legendary" or cosmeticData.Tier == "mythic" then
@@ -369,6 +417,24 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	iconLabel.Text = cosmeticData.Icon or "💨"
 	iconLabel.TextSize = sizes.IconTextSize
 	iconLabel.Parent = iconContainer
+
+	-- ========== EFECTO PULSE EN ICONO ==========
+	local pulseDelay = 1.5 + math.random() * 1.5
+	local baseFontSize = sizes.IconTextSize
+	task.spawn(function()
+		task.wait(math.random() * 1.5)
+		while iconLabel.Parent do
+			TweenService:Create(iconLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				TextSize = baseFontSize * 1.15
+			}):Play()
+			task.wait(0.3)
+			TweenService:Create(iconLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				TextSize = baseFontSize
+			}):Play()
+			task.wait(0.3)
+			task.wait(pulseDelay)
+		end
+	end)
 
 	-- Nombre
 	local nameLabel = Instance.new("TextLabel")
