@@ -536,9 +536,10 @@ local function updateEating()
 		currentFatness = math.min(currentFatness + eatSpeed, playerStats.MaxFatness)
 		applyBodySize(currentFatness)
 
-		-- Ejecutar animacion de comer en loop mientras come
+		-- Ejecutar animacion de comer en loop mientras come (con icono de la comida)
 		if _G.PlayEatingAnimation then
-			_G.PlayEatingAnimation() -- Misma animacion que Parcels, en loop
+			local foodIcon = currentFoodConfig and currentFoodConfig.Icon or "🍔"
+			_G.PlayEatingAnimation(nil, foodIcon)
 		end
 	else
 		-- Ya está lleno, detener sonido

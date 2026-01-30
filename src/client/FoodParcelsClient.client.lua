@@ -74,7 +74,36 @@ end
 
 local isEatingAnimationPlaying = false
 
-local function playEatingAnimation(numCycles)
+-- Crear BillboardGui con icono de comida en la mano
+local function createFoodInHand(hand, foodIcon)
+	-- Limpiar icono anterior si existe
+	local existing = hand:FindFirstChild("FoodInHand")
+	if existing then existing:Destroy() end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "FoodInHand"
+	billboard.Size = UDim2.new(1.5, 0, 1.5, 0)
+	billboard.StudsOffset = Vector3.new(0, 0.3, 0)
+	billboard.AlwaysOnTop = false
+	billboard.Parent = hand
+
+	local label = Instance.new("TextLabel")
+	label.Name = "Icon"
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = foodIcon or "🍔"
+	label.TextScaled = true
+	label.Parent = billboard
+
+	return billboard
+end
+
+local function removeFoodFromHand(hand)
+	local existing = hand:FindFirstChild("FoodInHand")
+	if existing then existing:Destroy() end
+end
+
+local function playEatingAnimation(numCycles, foodIcon)
 	-- Evitar animaciones superpuestas
 	if isEatingAnimationPlaying then return end
 
@@ -92,12 +121,17 @@ local function playEatingAnimation(numCycles)
 	local cycles = numCycles or 4
 	local armSpeed = 0.08
 
+	-- Icono por defecto si no se especifica
+	local icon = foodIcon or "🍔"
+
 	if isR15 then
 		-- R15: Mover hombro Y codo para llevar mano a la boca
 		local rightUpperArm = character:FindFirstChild("RightUpperArm")
 		local leftUpperArm = character:FindFirstChild("LeftUpperArm")
 		local rightLowerArm = character:FindFirstChild("RightLowerArm")
 		local leftLowerArm = character:FindFirstChild("LeftLowerArm")
+		local rightHand = character:FindFirstChild("RightHand")
+		local leftHand = character:FindFirstChild("LeftHand")
 
 		if not rightUpperArm or not leftUpperArm then
 			isEatingAnimationPlaying = false
@@ -121,7 +155,6 @@ local function playEatingAnimation(numCycles)
 		local origLeftElbowC0 = leftElbow and leftElbow.C0
 
 		-- Posicion "comiendo" - brazo levantado hacia la cara
-		-- Hombro: rotar hacia adelante y arriba, y hacia adentro
 		local rightShoulderEat = origRightShoulderC0 * CFrame.Angles(math.rad(70), math.rad(30), math.rad(-20))
 		local leftShoulderEat = origLeftShoulderC0 * CFrame.Angles(math.rad(70), math.rad(-30), math.rad(20))
 
@@ -131,7 +164,11 @@ local function playEatingAnimation(numCycles)
 
 		task.spawn(function()
 			for i = 1, cycles do
-				-- Mano derecha a la boca
+				-- === MANO DERECHA ===
+				-- Coger comida (mostrar icono)
+				if rightHand then createFoodInHand(rightHand, icon) end
+
+				-- Mano derecha sube a la boca
 				TweenService:Create(rightShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 					C0 = rightShoulderEat
 				}):Play()
@@ -142,7 +179,10 @@ local function playEatingAnimation(numCycles)
 				end
 				task.wait(armSpeed)
 
-				-- Mano derecha baja
+				-- Llega a la boca: "come" (quitar icono)
+				if rightHand then removeFoodFromHand(rightHand) end
+
+				-- Mano derecha baja (sin comida)
 				TweenService:Create(rightShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 					C0 = origRightShoulderC0
 				}):Play()
@@ -152,7 +192,11 @@ local function playEatingAnimation(numCycles)
 					}):Play()
 				end
 
-				-- Mano izquierda a la boca (empieza mientras la derecha baja)
+				-- === MANO IZQUIERDA ===
+				-- Coger comida (mostrar icono)
+				if leftHand then createFoodInHand(leftHand, icon) end
+
+				-- Mano izquierda sube a la boca
 				TweenService:Create(leftShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 					C0 = leftShoulderEat
 				}):Play()
@@ -163,7 +207,10 @@ local function playEatingAnimation(numCycles)
 				end
 				task.wait(armSpeed)
 
-				-- Mano izquierda baja
+				-- Llega a la boca: "come" (quitar icono)
+				if leftHand then removeFoodFromHand(leftHand) end
+
+				-- Mano izquierda baja (sin comida)
 				TweenService:Create(leftShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 					C0 = origLeftShoulderC0
 				}):Play()
@@ -175,18 +222,23 @@ local function playEatingAnimation(numCycles)
 				task.wait(armSpeed * 0.5)
 			end
 
-			-- Restaurar posiciones originales
+			-- Restaurar posiciones originales y limpiar
 			task.wait(armSpeed)
 			rightShoulder.C0 = origRightShoulderC0
 			leftShoulder.C0 = origLeftShoulderC0
 			if rightElbow and origRightElbowC0 then rightElbow.C0 = origRightElbowC0 end
 			if leftElbow and origLeftElbowC0 then leftElbow.C0 = origLeftElbowC0 end
+			if rightHand then removeFoodFromHand(rightHand) end
+			if leftHand then removeFoodFromHand(leftHand) end
 
 			isEatingAnimationPlaying = false
 		end)
 	else
 		-- R6: Solo hombros disponibles
 		local torso = character:FindFirstChild("Torso")
+		local rightArm = character:FindFirstChild("Right Arm")
+		local leftArm = character:FindFirstChild("Left Arm")
+
 		if not torso then
 			isEatingAnimationPlaying = false
 			return
@@ -209,19 +261,31 @@ local function playEatingAnimation(numCycles)
 
 		task.spawn(function()
 			for i = 1, cycles do
+				-- Mano derecha coge comida
+				if rightArm then createFoodInHand(rightArm, icon) end
+
 				TweenService:Create(rightShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 					C0 = rightEat
 				}):Play()
 				task.wait(armSpeed)
 
+				-- Come (quitar icono)
+				if rightArm then removeFoodFromHand(rightArm) end
+
 				TweenService:Create(rightShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 					C0 = origRightC0
 				}):Play()
+
+				-- Mano izquierda coge comida
+				if leftArm then createFoodInHand(leftArm, icon) end
 
 				TweenService:Create(leftShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 					C0 = leftEat
 				}):Play()
 				task.wait(armSpeed)
+
+				-- Come (quitar icono)
+				if leftArm then removeFoodFromHand(leftArm) end
 
 				TweenService:Create(leftShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 					C0 = origLeftC0
@@ -232,6 +296,8 @@ local function playEatingAnimation(numCycles)
 			task.wait(armSpeed)
 			rightShoulder.C0 = origRightC0
 			leftShoulder.C0 = origLeftC0
+			if rightArm then removeFoodFromHand(rightArm) end
+			if leftArm then removeFoodFromHand(leftArm) end
 
 			isEatingAnimationPlaying = false
 		end)
@@ -343,8 +409,8 @@ function collectItem(itemPart)
 		_G.FoodParcelGasBonus(typeConfig.GasBonus)
 	end
 
-	-- Animacion de comer
-	playEatingAnimation()
+	-- Animacion de comer (con el icono de la comida)
+	playEatingAnimation(nil, typeConfig.Icon)
 
 	-- Efectos visuales
 	showCollectionEffect(position, itemData.ParcelType, typeConfig.GasBonus, typeConfig.CoinsBonus)
