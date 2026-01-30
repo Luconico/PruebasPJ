@@ -74,7 +74,7 @@ end
 
 local isEatingAnimationPlaying = false
 
-local function playEatingAnimation()
+local function playEatingAnimation(numCycles)
 	-- Evitar animaciones superpuestas
 	if isEatingAnimationPlaying then return end
 
@@ -89,7 +89,7 @@ local function playEatingAnimation()
 
 	isEatingAnimationPlaying = true
 
-	local cycles = 4
+	local cycles = numCycles or 4
 	local armSpeed = 0.08
 
 	if isR15 then
@@ -645,3 +645,9 @@ task.spawn(spawnLoop)
 
 -- Inicializar sistema
 task.spawn(initialize)
+
+-- ============================================
+-- EXPONER ANIMACION GLOBALMENTE
+-- ============================================
+-- Para que FartController pueda llamar la animacion cuando come en FoodZones
+_G.PlayEatingAnimation = playEatingAnimation
