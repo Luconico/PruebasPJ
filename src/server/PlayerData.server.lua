@@ -862,6 +862,14 @@ local hasFoodBindable = Instance.new("BindableFunction")
 hasFoodBindable.Name = "HasFoodUnlocked"
 hasFoodBindable.Parent = serverFolder
 
+local unlockBaseBindable = Instance.new("BindableFunction")
+unlockBaseBindable.Name = "UnlockBaseServer"
+unlockBaseBindable.Parent = serverFolder
+
+local hasBaseBindable = Instance.new("BindableFunction")
+hasBaseBindable.Name = "HasBaseUnlocked"
+hasBaseBindable.Parent = serverFolder
+
 -- Obtener datos del jugador (para otros scripts del servidor)
 getDataBindable.OnInvoke = function(player)
 	local data = getPlayerData(player)
@@ -960,6 +968,44 @@ unlockFoodBindable.OnInvoke = function(player, foodType)
 	})
 
 	print("[PlayerData] Comida desbloqueada:", player.Name, "->", foodType)
+	return true, "Desbloqueada"
+end
+
+-- Verificar si el jugador tiene una base desbloqueada
+hasBaseBindable.OnInvoke = function(player, baseName)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	if not data.UnlockedBases then
+		data.UnlockedBases = {}
+	end
+
+	return data.UnlockedBases[baseName] or false
+end
+
+-- Desbloquear base del jugador
+unlockBaseBindable.OnInvoke = function(player, baseName)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	-- Inicializar si no existe
+	if not data.UnlockedBases then
+		data.UnlockedBases = {}
+	end
+
+	-- Verificar si ya está desbloqueada
+	if data.UnlockedBases[baseName] then
+		return true, "Ya desbloqueada"
+	end
+
+	-- Desbloquear
+	data.UnlockedBases[baseName] = true
+
+	updatePlayerData(player, {
+		UnlockedBases = data.UnlockedBases
+	})
+
+	print("[PlayerData] Base desbloqueada:", player.Name, "->", baseName)
 	return true, "Desbloqueada"
 end
 
