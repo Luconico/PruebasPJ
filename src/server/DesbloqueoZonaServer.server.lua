@@ -10,6 +10,7 @@ print("[Zonas] Iniciando sistema de zonas desbloqueables...")
 
 -- ========== CONFIGURACIÓN DE ZONAS ==========
 local ZONES_CONFIG = {
+	-- Zonas normales (monedas o Robux)
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona1",
@@ -40,6 +41,34 @@ local ZONES_CONFIG = {
 		CoinsCost = 50000,
 		RobuxCost = 100,
 	},
+
+	-- ========== ZONAS VIP (Solo Robux) ==========
+	-- VIPOnly = true hace que solo aparezca el botón de Robux
+	{
+		ZonePath = "Zonas",
+		ZoneName = "VIP1",
+		RobuxCost = 50,      -- Cambia este valor
+		VIPOnly = true,
+	},
+	{
+		ZonePath = "Zonas",
+		ZoneName = "VIP2",
+		RobuxCost = 100,     -- Cambia este valor
+		VIPOnly = true,
+	},
+	{
+		ZonePath = "Zonas",
+		ZoneName = "VIP3",
+		RobuxCost = 150,     -- Cambia este valor
+		VIPOnly = true,
+	},
+	-- Agrega más zonas VIP aquí:
+	-- {
+	-- 	ZonePath = "Zonas",
+	-- 	ZoneName = "VIP4",
+	-- 	RobuxCost = 200,
+	-- 	VIPOnly = true,
+	-- },
 }
 -- ============================================
 
@@ -89,6 +118,13 @@ if not makeInvisibleRemote then
 	makeInvisibleRemote = Instance.new("RemoteEvent")
 	makeInvisibleRemote.Name = "MakeZoneInvisible"
 	makeInvisibleRemote.Parent = remotesFolder
+end
+
+local insufficientFundsRemote = remotesFolder:FindFirstChild("ZoneInsufficientFunds")
+if not insufficientFundsRemote then
+	insufficientFundsRemote = Instance.new("RemoteEvent")
+	insufficientFundsRemote.Name = "ZoneInsufficientFunds"
+	insufficientFundsRemote.Parent = remotesFolder
 end
 
 -- Cache local para evitar consultas repetidas (sincronizado con persistencia)
@@ -222,8 +258,8 @@ for _, config in ipairs(ZONES_CONFIG) do
 			return
 		end
 
-		-- Enviar UI al cliente
-		showZoneUIRemote:FireClient(player, config.ZoneName, config.CoinsCost, config.RobuxCost)
+		-- Enviar UI al cliente (incluye VIPOnly para zonas que solo aceptan Robux)
+		showZoneUIRemote:FireClient(player, config.ZoneName, config.CoinsCost or 0, config.RobuxCost, config.VIPOnly or false)
 	end)
 
 	zonesConfigured = zonesConfigured + 1
@@ -258,6 +294,12 @@ unlockZoneRemote.OnServerEvent:Connect(function(player, zoneName, paymentType)
 
 	-- PROCESAR PAGO
 	if paymentType == "coins" then
+		-- Verificar que no sea zona VIP (solo Robux)
+		if config.VIPOnly then
+			warn("[Zonas] " .. zoneName .. " es VIP, solo acepta Robux")
+			return
+		end
+
 		-- Obtener datos del jugador
 		local playerInfo = getPlayerDataServer:Invoke(player)
 		if not playerInfo or not playerInfo.Data then
@@ -271,6 +313,8 @@ unlockZoneRemote.OnServerEvent:Connect(function(player, zoneName, paymentType)
 		-- Verificar que tenga suficientes monedas
 		if currentCoins < config.CoinsCost then
 			warn("[Zonas] Monedas insuficientes: " .. currentCoins .. "/" .. config.CoinsCost)
+			-- Enviar notificación al cliente
+			insufficientFundsRemote:FireClient(player, zoneName, config.CoinsCost, currentCoins)
 			return
 		end
 
@@ -289,7 +333,11 @@ unlockZoneRemote.OnServerEvent:Connect(function(player, zoneName, paymentType)
 
 	elseif paymentType == "robux" then
 		-- TODO: Implementar pago con Robux usando MarketplaceService
-		warn("[Zonas] Pago con Robux no implementado - desbloqueando gratis para testing")
+		if config.VIPOnly then
+			warn("[Zonas VIP] Pago con Robux para " .. zoneName .. " - desbloqueando gratis para testing")
+		else
+			warn("[Zonas] Pago con Robux no implementado - desbloqueando gratis para testing")
+		end
 		unlockZone(player, zoneName)
 		makeZonePassable(player, zoneName)
 	end

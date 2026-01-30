@@ -12,11 +12,11 @@ local SoundManager = require(Shared:WaitForChild("SoundManager"))
 -- Esperar a la carpeta Remotes que ya existe
 local remotesFolder = ReplicatedStorage:WaitForChild("Remotes", 30)
 if not remotesFolder then
-	warn("❌ No se encontró la carpeta Remotes")
+	warn("[ZonasClient] No se encontró la carpeta Remotes")
 	return
 end
 
-print("🔄 Esperando RemoteEvents del servidor...")
+print("[ZonasClient] Esperando RemoteEvents del servidor...")
 
 -- Intentar encontrar los RemoteEvents con reintentos
 local showZoneUIRemote = nil
@@ -31,7 +31,7 @@ while attempt < maxAttempts do
 	unlockZoneRemote = remotesFolder:FindFirstChild("UnlockZoneRemote")
 
 	if showZoneUIRemote and unlockZoneRemote then
-		print("✅ Cliente de zonas: RemoteEvents encontrados (intento " .. attempt .. ")")
+		print("[ZonasClient] RemoteEvents encontrados (intento " .. attempt .. ")")
 		break
 	end
 
@@ -39,8 +39,8 @@ while attempt < maxAttempts do
 end
 
 if not showZoneUIRemote or not unlockZoneRemote then
-	warn("❌ No se encontraron los RemoteEvents de zonas después de " .. maxAttempts .. " intentos.")
-	warn("❌ Verifica que DesbloqueoZonasServer esté en ServerScriptService y se esté ejecutando.")
+	warn("[ZonasClient] No se encontraron los RemoteEvents de zonas después de " .. maxAttempts .. " intentos.")
+	warn("[ZonasClient] Verifica que DesbloqueoZonasServer esté en ServerScriptService y se esté ejecutando.")
 	return
 end
 
@@ -48,15 +48,87 @@ end
 local currentZoneUI = nil
 local currentZoneName = nil
 
+-- Función para formatear números con separadores
+local function formatNumber(num)
+	local formatted = tostring(num)
+	local k
+	while true do
+		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", "%1,%2")
+		if k == 0 then break end
+	end
+	return formatted
+end
+
+-- Función para mostrar notificación
+local function showNotification(success, message)
+	-- Sonidos según resultado
+	if success then
+		SoundManager.play("PurchaseSuccess", 0.5, 1.0)
+		task.delay(0.1, function()
+			SoundManager.play("CashRegister", 0.4, 1.1)
+		end)
+	else
+		SoundManager.play("Error", 0.5, 0.8)
+	end
+
+	local notification = Instance.new("ScreenGui")
+	notification.Name = "ZoneNotification"
+	notification.ResetOnSpawn = false
+	notification.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	notification.DisplayOrder = 100
+	notification.Parent = playerGui
+
+	local notifFrame = Instance.new("Frame")
+	notifFrame.Size = UDim2.new(0, 400, 0, 60)
+	notifFrame.Position = UDim2.new(0.5, 0, 0, -80)
+	notifFrame.AnchorPoint = Vector2.new(0.5, 0)
+	notifFrame.BackgroundColor3 = success and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 80, 80)
+	notifFrame.BorderSizePixel = 0
+	notifFrame.Parent = notification
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = notifFrame
+
+	local notifText = Instance.new("TextLabel")
+	notifText.Size = UDim2.new(1, -20, 1, 0)
+	notifText.Position = UDim2.new(0, 10, 0, 0)
+	notifText.BackgroundTransparency = 1
+	notifText.Text = (success and "✓ " or "✗ ") .. message
+	notifText.TextColor3 = Color3.new(1, 1, 1)
+	notifText.TextSize = 24
+	notifText.Font = Enum.Font.FredokaOne
+	notifText.Parent = notifFrame
+
+	-- Animación de entrada
+	TweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, 0, 0, 20)
+	}):Play()
+
+	-- Esperar y salir
+	task.delay(2.5, function()
+		TweenService:Create(notifFrame, TweenInfo.new(0.3), {
+			Position = UDim2.new(0.5, 0, 0, -80)
+		}):Play()
+		task.wait(0.3)
+		notification:Destroy()
+	end)
+end
+
 -- Función para crear la UI de desbloqueo
-local function createZoneUI(zoneName, coinsCost, robuxCost)
-	print("🎨 Creando UI para zona: " .. zoneName)
+-- vipOnly: si es true, solo muestra el botón de Robux (para zonas VIP)
+local function createZoneUI(zoneName, coinsCost, robuxCost, vipOnly)
+	print("[ZonasClient] Creando UI para zona: " .. zoneName .. (vipOnly and " (VIP)" or ""))
 
 	-- Si ya existe una UI, destruirla
 	if currentZoneUI then
 		currentZoneUI:Destroy()
-		print("🗑️ UI anterior destruida")
+		print("[ZonasClient] UI anterior destruida")
 	end
+
+	-- Tamaños según el tipo de zona
+	local frameHeight = vipOnly and 220 or 300
+	local robuxButtonY = vipOnly and 130 or 200
 
 	-- Crear ScreenGui
 	local screenGui = Instance.new("ScreenGui")
@@ -78,10 +150,10 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 	-- Frame principal
 	local mainFrame = Instance.new("Frame")
 	mainFrame.Name = "MainFrame"
-	mainFrame.Size = UDim2.new(0, 400, 0, 300)
+	mainFrame.Size = UDim2.new(0, 400, 0, frameHeight)
 	mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 	mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-	mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	mainFrame.BackgroundColor3 = vipOnly and Color3.fromRGB(50, 35, 60) or Color3.fromRGB(40, 40, 50)
 	mainFrame.BorderSizePixel = 0
 	mainFrame.Parent = background
 
@@ -90,14 +162,22 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 	corner.CornerRadius = UDim.new(0, 15)
 	corner.Parent = mainFrame
 
-	-- Título
+	-- Borde dorado para VIP
+	if vipOnly then
+		local vipStroke = Instance.new("UIStroke")
+		vipStroke.Color = Color3.fromRGB(255, 200, 50)
+		vipStroke.Thickness = 3
+		vipStroke.Parent = mainFrame
+	end
+
+	-- Título (con corona para VIP)
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
 	title.Size = UDim2.new(1, -40, 0, 50)
 	title.Position = UDim2.new(0, 20, 0, 20)
 	title.BackgroundTransparency = 1
-	title.Text = "🔒 " .. zoneName
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.Text = vipOnly and ("👑 " .. zoneName .. " 👑") or ("🔒 " .. zoneName)
+	title.TextColor3 = vipOnly and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(255, 255, 255)
 	title.TextSize = 28
 	title.Font = Enum.Font.GothamBold
 	title.TextXAlignment = Enum.TextXAlignment.Center
@@ -109,39 +189,65 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 	subtitle.Size = UDim2.new(1, -40, 0, 40)
 	subtitle.Position = UDim2.new(0, 20, 0, 75)
 	subtitle.BackgroundTransparency = 1
-	subtitle.Text = "¿Pagar para desbloquear?"
+	subtitle.Text = vipOnly and "Zona exclusiva VIP" or "¿Pagar para desbloquear?"
 	subtitle.TextColor3 = Color3.fromRGB(200, 200, 200)
 	subtitle.TextSize = 18
 	subtitle.Font = Enum.Font.Gotham
 	subtitle.TextXAlignment = Enum.TextXAlignment.Center
 	subtitle.Parent = mainFrame
 
-	-- Botón de monedas
-	local coinsButton = Instance.new("TextButton")
-	coinsButton.Name = "CoinsButton"
-	coinsButton.Size = UDim2.new(1, -40, 0, 60)
-	coinsButton.Position = UDim2.new(0, 20, 0, 130)
-	coinsButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- Amarillo oro
-	coinsButton.BorderSizePixel = 0
-	coinsButton.Text = "💰 " .. coinsCost .. "$"
-	coinsButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-	coinsButton.TextSize = 24
-	coinsButton.Font = Enum.Font.GothamBold
-	coinsButton.AutoButtonColor = false
-	coinsButton.Parent = mainFrame
+	local hoverTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-	local coinsCorner = Instance.new("UICorner")
-	coinsCorner.CornerRadius = UDim.new(0, 10)
-	coinsCorner.Parent = coinsButton
+	-- Botón de monedas (solo si NO es VIP)
+	local coinsButton = nil
+	if not vipOnly then
+		coinsButton = Instance.new("TextButton")
+		coinsButton.Name = "CoinsButton"
+		coinsButton.Size = UDim2.new(1, -40, 0, 60)
+		coinsButton.Position = UDim2.new(0, 20, 0, 130)
+		coinsButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+		coinsButton.BorderSizePixel = 0
+		coinsButton.Text = "💰 " .. formatNumber(coinsCost) .. "$"
+		coinsButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+		coinsButton.TextSize = 24
+		coinsButton.Font = Enum.Font.GothamBold
+		coinsButton.AutoButtonColor = false
+		coinsButton.Parent = mainFrame
+
+		local coinsCorner = Instance.new("UICorner")
+		coinsCorner.CornerRadius = UDim.new(0, 10)
+		coinsCorner.Parent = coinsButton
+
+		-- Efecto hover para botón de monedas
+		coinsButton.MouseEnter:Connect(function()
+			SoundManager.play("ButtonHover", 0.2, 1.1)
+			TweenService:Create(coinsButton, hoverTweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(255, 230, 100)
+			}):Play()
+		end)
+
+		coinsButton.MouseLeave:Connect(function()
+			TweenService:Create(coinsButton, hoverTweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+			}):Play()
+		end)
+
+		coinsButton.MouseButton1Click:Connect(function()
+			SoundManager.play("ButtonClick", 0.5, 1.0)
+			unlockZoneRemote:FireServer(currentZoneName, "coins")
+			screenGui:Destroy()
+			currentZoneUI = nil
+		end)
+	end
 
 	-- Botón de Robux
 	local robuxButton = Instance.new("TextButton")
 	robuxButton.Name = "RobuxButton"
 	robuxButton.Size = UDim2.new(1, -40, 0, 60)
-	robuxButton.Position = UDim2.new(0, 20, 0, 200)
-	robuxButton.BackgroundColor3 = Color3.fromRGB(0, 230, 118) -- Verde infantil
+	robuxButton.Position = UDim2.new(0, 20, 0, robuxButtonY)
+	robuxButton.BackgroundColor3 = Color3.fromRGB(0, 230, 118)
 	robuxButton.BorderSizePixel = 0
-	robuxButton.Text = "💎 " .. robuxCost .. " Robux"
+	robuxButton.Text = "💎 " .. formatNumber(robuxCost) .. " R$"
 	robuxButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	robuxButton.TextSize = 24
 	robuxButton.Font = Enum.Font.GothamBold
@@ -152,77 +258,49 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 	robuxCorner.CornerRadius = UDim.new(0, 10)
 	robuxCorner.Parent = robuxButton
 
-	-- Botón de cerrar
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, 40, 0, 40)
-	closeButton.Position = UDim2.new(1, -50, 0, 10)
-	closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-	closeButton.BorderSizePixel = 0
-	closeButton.Text = "✕"
-	closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	closeButton.TextSize = 24
-	closeButton.Font = Enum.Font.GothamBold
-	closeButton.Parent = mainFrame
-
-	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0, 8)
-	closeCorner.Parent = closeButton
-
-	-- Efecto hover para botón de monedas (plateado)
-	local hoverTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-	coinsButton.MouseEnter:Connect(function()
-		SoundManager.play("ButtonHover", 0.2, 1.1)
-		local tween = TweenService:Create(coinsButton, hoverTweenInfo, {
-			BackgroundColor3 = Color3.fromRGB(192, 192, 192) -- Plateado
-		})
-		tween:Play()
-	end)
-
-	coinsButton.MouseLeave:Connect(function()
-		local tween = TweenService:Create(coinsButton, hoverTweenInfo, {
-			BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- Amarillo oro
-		})
-		tween:Play()
-	end)
-
-	-- Efecto hover para botón de Robux (mismo plateado)
+	-- Efecto hover para botón de Robux
 	robuxButton.MouseEnter:Connect(function()
 		SoundManager.play("ButtonHover", 0.2, 1.1)
-		local tween = TweenService:Create(robuxButton, hoverTweenInfo, {
-			BackgroundColor3 = Color3.fromRGB(192, 192, 192) -- Plateado
-		})
-		tween:Play()
+		TweenService:Create(robuxButton, hoverTweenInfo, {
+			BackgroundColor3 = Color3.fromRGB(50, 255, 150)
+		}):Play()
 	end)
 
 	robuxButton.MouseLeave:Connect(function()
-		local tween = TweenService:Create(robuxButton, hoverTweenInfo, {
-			BackgroundColor3 = Color3.fromRGB(0, 230, 118) -- Verde infantil
-		})
-		tween:Play()
-	end)
-
-	-- Eventos de click
-	coinsButton.MouseButton1Click:Connect(function()
-		SoundManager.play("ButtonClick", 0.5, 1.0)
-		SoundManager.play("CashRegister", 0.4, 1.1)
-		-- Enviar al servidor para desbloquear con monedas
-		unlockZoneRemote:FireServer(currentZoneName, "coins")
-		SoundManager.play("PopupClose", 0.3, 1.3)
-		screenGui:Destroy()
-		currentZoneUI = nil
+		TweenService:Create(robuxButton, hoverTweenInfo, {
+			BackgroundColor3 = Color3.fromRGB(0, 230, 118)
+		}):Play()
 	end)
 
 	robuxButton.MouseButton1Click:Connect(function()
 		SoundManager.play("ButtonClick", 0.5, 1.0)
-		SoundManager.play("CashRegister", 0.4, 1.1)
-		-- Enviar al servidor para desbloquear con Robux
 		unlockZoneRemote:FireServer(currentZoneName, "robux")
 		SoundManager.play("PopupClose", 0.3, 1.3)
 		screenGui:Destroy()
 		currentZoneUI = nil
 	end)
+
+	-- Botón de cerrar (estilo igual que la tienda)
+	local closeButton = Instance.new("TextButton")
+	closeButton.Name = "CloseButton"
+	closeButton.Size = UDim2.new(0, 45, 0, 45)
+	closeButton.Position = UDim2.new(1, -55, 0, 10)
+	closeButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+	closeButton.BorderSizePixel = 0
+	closeButton.Text = "X"
+	closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	closeButton.TextSize = 28
+	closeButton.Font = Enum.Font.GothamBlack
+	closeButton.Parent = mainFrame
+
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(0, 10)
+	closeCorner.Parent = closeButton
+
+	local closeStroke = Instance.new("UIStroke")
+	closeStroke.Color = Color3.fromRGB(200, 50, 50)
+	closeStroke.Thickness = 3
+	closeStroke.Parent = closeButton
 
 	closeButton.MouseEnter:Connect(function()
 		SoundManager.play("ButtonHover", 0.2, 1.2)
@@ -238,12 +316,13 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 	-- Cerrar al hacer click en el fondo
 	background.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			SoundManager.play("PopupClose", 0.3, 1.3)
 			screenGui:Destroy()
 			currentZoneUI = nil
 		end
 	end)
 
-	-- 🔊 Sonido de apertura del popup
+	-- Sonido de apertura del popup
 	SoundManager.play("PopupOpen", 0.4, 0.9)
 	task.delay(0.15, function()
 		SoundManager.play("Sparkle", 0.3, 1.2)
@@ -252,7 +331,7 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 	-- Animación de entrada
 	mainFrame.Size = UDim2.new(0, 0, 0, 0)
 	local openTween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0, 400, 0, 300)
+		Size = UDim2.new(0, 400, 0, frameHeight)
 	})
 	openTween:Play()
 
@@ -260,19 +339,20 @@ local function createZoneUI(zoneName, coinsCost, robuxCost)
 end
 
 -- Escuchar evento del servidor para mostrar UI
-showZoneUIRemote.OnClientEvent:Connect(function(zoneName, coinsCost, robuxCost)
-	print("📥 Cliente recibió petición de UI para: " .. zoneName)
+-- Ahora recibe un cuarto parámetro: vipOnly
+showZoneUIRemote.OnClientEvent:Connect(function(zoneName, coinsCost, robuxCost, vipOnly)
+	print("[ZonasClient] Recibida petición de UI para: " .. zoneName .. (vipOnly and " (VIP)" or ""))
 
 	-- Si ya hay una UI abierta, no crear otra
 	if currentZoneUI then
-		print("⚠️ Ya hay una UI abierta, ignorando petición")
+		print("[ZonasClient] Ya hay una UI abierta, ignorando petición")
 		return
 	end
 
-	print("   Coins: " .. coinsCost .. ", Robux: " .. robuxCost)
+	print("[ZonasClient] Coins: " .. tostring(coinsCost) .. ", Robux: " .. robuxCost .. ", VIP: " .. tostring(vipOnly))
 	currentZoneName = zoneName
-	createZoneUI(zoneName, coinsCost, robuxCost)
-	print("✅ UI creada")
+	createZoneUI(zoneName, coinsCost, robuxCost, vipOnly)
+	print("[ZonasClient] UI creada")
 end)
 
 -- Escuchar evento para hacer zona invisible
@@ -283,7 +363,7 @@ end
 
 if makeInvisibleRemote then
 	makeInvisibleRemote.OnClientEvent:Connect(function(zoneName)
-		-- 🔊 Sonidos de celebración al desbloquear zona
+		-- Sonidos de celebración al desbloquear zona
 		SoundManager.play("PurchaseSuccess", 0.6, 1.0)
 		task.delay(0.1, function()
 			SoundManager.play("CashRegister", 0.5, 1.1)
@@ -294,7 +374,7 @@ if makeInvisibleRemote then
 		task.delay(0.6, function()
 			SoundManager.play("Sparkle", 0.4, 1.3)
 		end)
-		print("👻 Haciendo " .. zoneName .. " invisible localmente")
+		print("[ZonasClient] Haciendo " .. zoneName .. " invisible localmente")
 
 		local zonesFolder = workspace:FindFirstChild("Zonas")
 		if zonesFolder then
@@ -306,10 +386,23 @@ if makeInvisibleRemote then
 						part.CanCollide = false
 					end
 				end
-				print("✅ Zona " .. zoneName .. " ahora invisible")
+				print("[ZonasClient] Zona " .. zoneName .. " ahora invisible")
 			end
 		end
 	end)
 end
 
-print("✅ Cliente de zonas desbloqueables inicializado")
+-- Escuchar evento de error de monedas insuficientes
+local insufficientFundsRemote = remotesFolder:FindFirstChild("ZoneInsufficientFunds")
+if not insufficientFundsRemote then
+	-- Esperar un poco por si el servidor lo crea después
+	insufficientFundsRemote = remotesFolder:WaitForChild("ZoneInsufficientFunds", 5)
+end
+
+if insufficientFundsRemote then
+	insufficientFundsRemote.OnClientEvent:Connect(function(zoneName, required, current)
+		showNotification(false, "Monedas insuficientes! Necesitas " .. formatNumber(required) .. "$")
+	end)
+end
+
+print("[ZonasClient] Cliente de zonas desbloqueables inicializado")
