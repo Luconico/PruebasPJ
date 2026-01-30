@@ -69,6 +69,176 @@ local function countItemsInParcel(parcelName)
 end
 
 -- ============================================
+-- ANIMACION DE COMER
+-- ============================================
+
+local isEatingAnimationPlaying = false
+
+local function playEatingAnimation()
+	-- Evitar animaciones superpuestas
+	if isEatingAnimationPlaying then return end
+
+	local character = player.Character
+	if not character then return end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	-- Detectar si es R15 o R6
+	local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
+
+	isEatingAnimationPlaying = true
+
+	local cycles = 4
+	local armSpeed = 0.08
+
+	if isR15 then
+		-- R15: Mover hombro Y codo para llevar mano a la boca
+		local rightUpperArm = character:FindFirstChild("RightUpperArm")
+		local leftUpperArm = character:FindFirstChild("LeftUpperArm")
+		local rightLowerArm = character:FindFirstChild("RightLowerArm")
+		local leftLowerArm = character:FindFirstChild("LeftLowerArm")
+
+		if not rightUpperArm or not leftUpperArm then
+			isEatingAnimationPlaying = false
+			return
+		end
+
+		local rightShoulder = rightUpperArm:FindFirstChild("RightShoulder")
+		local leftShoulder = leftUpperArm:FindFirstChild("LeftShoulder")
+		local rightElbow = rightLowerArm and rightLowerArm:FindFirstChild("RightElbow")
+		local leftElbow = leftLowerArm and leftLowerArm:FindFirstChild("LeftElbow")
+
+		if not rightShoulder or not leftShoulder then
+			isEatingAnimationPlaying = false
+			return
+		end
+
+		-- Guardar posiciones originales
+		local origRightShoulderC0 = rightShoulder.C0
+		local origLeftShoulderC0 = leftShoulder.C0
+		local origRightElbowC0 = rightElbow and rightElbow.C0
+		local origLeftElbowC0 = leftElbow and leftElbow.C0
+
+		-- Posicion "comiendo" - brazo levantado hacia la cara
+		-- Hombro: rotar hacia adelante y arriba, y hacia adentro
+		local rightShoulderEat = origRightShoulderC0 * CFrame.Angles(math.rad(70), math.rad(30), math.rad(-20))
+		local leftShoulderEat = origLeftShoulderC0 * CFrame.Angles(math.rad(70), math.rad(-30), math.rad(20))
+
+		-- Codo: doblar para acercar la mano a la boca
+		local rightElbowEat = origRightElbowC0 and (origRightElbowC0 * CFrame.Angles(math.rad(90), 0, 0))
+		local leftElbowEat = origLeftElbowC0 and (origLeftElbowC0 * CFrame.Angles(math.rad(90), 0, 0))
+
+		task.spawn(function()
+			for i = 1, cycles do
+				-- Mano derecha a la boca
+				TweenService:Create(rightShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					C0 = rightShoulderEat
+				}):Play()
+				if rightElbow and rightElbowEat then
+					TweenService:Create(rightElbow, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						C0 = rightElbowEat
+					}):Play()
+				end
+				task.wait(armSpeed)
+
+				-- Mano derecha baja
+				TweenService:Create(rightShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+					C0 = origRightShoulderC0
+				}):Play()
+				if rightElbow and origRightElbowC0 then
+					TweenService:Create(rightElbow, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+						C0 = origRightElbowC0
+					}):Play()
+				end
+
+				-- Mano izquierda a la boca (empieza mientras la derecha baja)
+				TweenService:Create(leftShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					C0 = leftShoulderEat
+				}):Play()
+				if leftElbow and leftElbowEat then
+					TweenService:Create(leftElbow, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						C0 = leftElbowEat
+					}):Play()
+				end
+				task.wait(armSpeed)
+
+				-- Mano izquierda baja
+				TweenService:Create(leftShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+					C0 = origLeftShoulderC0
+				}):Play()
+				if leftElbow and origLeftElbowC0 then
+					TweenService:Create(leftElbow, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+						C0 = origLeftElbowC0
+					}):Play()
+				end
+				task.wait(armSpeed * 0.5)
+			end
+
+			-- Restaurar posiciones originales
+			task.wait(armSpeed)
+			rightShoulder.C0 = origRightShoulderC0
+			leftShoulder.C0 = origLeftShoulderC0
+			if rightElbow and origRightElbowC0 then rightElbow.C0 = origRightElbowC0 end
+			if leftElbow and origLeftElbowC0 then leftElbow.C0 = origLeftElbowC0 end
+
+			isEatingAnimationPlaying = false
+		end)
+	else
+		-- R6: Solo hombros disponibles
+		local torso = character:FindFirstChild("Torso")
+		if not torso then
+			isEatingAnimationPlaying = false
+			return
+		end
+
+		local rightShoulder = torso:FindFirstChild("Right Shoulder")
+		local leftShoulder = torso:FindFirstChild("Left Shoulder")
+
+		if not rightShoulder or not leftShoulder then
+			isEatingAnimationPlaying = false
+			return
+		end
+
+		local origRightC0 = rightShoulder.C0
+		local origLeftC0 = leftShoulder.C0
+
+		-- R6: Rotar para simular llevar mano a la boca
+		local rightEat = origRightC0 * CFrame.Angles(math.rad(90), math.rad(40), 0)
+		local leftEat = origLeftC0 * CFrame.Angles(math.rad(-90), math.rad(40), 0)
+
+		task.spawn(function()
+			for i = 1, cycles do
+				TweenService:Create(rightShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					C0 = rightEat
+				}):Play()
+				task.wait(armSpeed)
+
+				TweenService:Create(rightShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+					C0 = origRightC0
+				}):Play()
+
+				TweenService:Create(leftShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					C0 = leftEat
+				}):Play()
+				task.wait(armSpeed)
+
+				TweenService:Create(leftShoulder, TweenInfo.new(armSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+					C0 = origLeftC0
+				}):Play()
+				task.wait(armSpeed * 0.5)
+			end
+
+			task.wait(armSpeed)
+			rightShoulder.C0 = origRightC0
+			leftShoulder.C0 = origLeftC0
+
+			isEatingAnimationPlaying = false
+		end)
+	end
+end
+
+-- ============================================
 -- CREAR ITEM VISUAL
 -- ============================================
 
@@ -172,6 +342,9 @@ function collectItem(itemPart)
 	if _G.FoodParcelGasBonus then
 		_G.FoodParcelGasBonus(typeConfig.GasBonus)
 	end
+
+	-- Animacion de comer
+	playEatingAnimation()
 
 	-- Efectos visuales
 	showCollectionEffect(position, itemData.ParcelType, typeConfig.GasBonus, typeConfig.CoinsBonus)
