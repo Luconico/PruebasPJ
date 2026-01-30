@@ -79,6 +79,14 @@ local upperTorso, lowerTorso
 -- Propulsión
 local bodyVelocity = nil
 
+-- Animación de propulsión
+local isPropellingAnimationActive = false
+local propellingAnimationThread = nil
+local leftElbow, rightElbow
+local leftKnee, rightKnee
+local originalLeftElbowC0, originalRightElbowC0
+local originalLeftKneeC0, originalRightKneeC0
+
 -- Cosmético equipado
 local equippedCosmeticConfig = nil
 
@@ -240,6 +248,9 @@ local function applyBodySize(multiplier)
 		end
 	end
 
+	-- No tocar joints si la animación de propulsión está activa
+	if isPropellingAnimationActive then return end
+
 	-- Ajustar hombros y caderas según el tamaño
 	if multiplier < 1.0 then
 		-- Cuando está delgado: solo ajustar hombros (no caderas)
@@ -330,10 +341,26 @@ local function setupBody()
 		leftHip = leftUpperLeg:FindFirstChild("LeftHip")
 		rightHip = rightUpperLeg:FindFirstChild("RightHip")
 
+		-- Codos (para animación de propulsión)
+		local leftLowerArm = character:FindFirstChild("LeftLowerArm")
+		local rightLowerArm = character:FindFirstChild("RightLowerArm")
+		leftElbow = leftLowerArm and leftLowerArm:FindFirstChild("LeftElbow")
+		rightElbow = rightLowerArm and rightLowerArm:FindFirstChild("RightElbow")
+
+		-- Rodillas (para animación de propulsión)
+		local leftLowerLeg = character:FindFirstChild("LeftLowerLeg")
+		local rightLowerLeg = character:FindFirstChild("RightLowerLeg")
+		leftKnee = leftLowerLeg and leftLowerLeg:FindFirstChild("LeftKnee")
+		rightKnee = rightLowerLeg and rightLowerLeg:FindFirstChild("RightKnee")
+
 		if leftShoulder then originalLeftShoulderC0 = leftShoulder.C0 end
 		if rightShoulder then originalRightShoulderC0 = rightShoulder.C0 end
 		if leftHip then originalLeftHipC0 = leftHip.C0 end
 		if rightHip then originalRightHipC0 = rightHip.C0 end
+		if leftElbow then originalLeftElbowC0 = leftElbow.C0 end
+		if rightElbow then originalRightElbowC0 = rightElbow.C0 end
+		if leftKnee then originalLeftKneeC0 = leftKnee.C0 end
+		if rightKnee then originalRightKneeC0 = rightKnee.C0 end
 
 	elseif character:FindFirstChild("Left Arm") then
 		-- R6 Rig
@@ -387,11 +414,154 @@ local function setupBody()
 end
 
 -- ============================================
+-- ANIMACIÓN DE PROPULSIÓN
+-- ============================================
+
+-- Funcion helper para calcular offset de gordura actual
+local function getShoulderOffset()
+	if not upperTorso or not originalSizes[upperTorso] then return 0 end
+	local originalTorsoSize = originalSizes[upperTorso]
+	if currentFatness < 1.0 then
+		return (originalTorsoSize.X / 2) * (1 - currentFatness)
+	elseif currentFatness > 1.0 then
+		return -(originalTorsoSize.X / 2) * (currentFatness - 1)
+	end
+	return 0
+end
+
+local function getHipOffset()
+	if not lowerTorso or not originalSizes[lowerTorso] then return 0 end
+	local originalTorsoSize = originalSizes[lowerTorso]
+	if currentFatness > 1.0 then
+		return -(originalTorsoSize.X / 2) * (currentFatness - 1)
+	end
+	return 0
+end
+
+local function startPropellingAnimation()
+	if isPropellingAnimationActive then return end
+	isPropellingAnimationActive = true
+
+	-- Desactivar animaciones por defecto de Roblox
+	if humanoid then
+		local animator = humanoid:FindFirstChildOfClass("Animator")
+		if animator then
+			for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+				track:Stop(0)
+			end
+		end
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
+	end
+
+	-- Loop principal de animación
+	propellingAnimationThread = task.spawn(function()
+		local legAngle = 55    -- Ángulo de piernas
+		local armTremble = 0
+		local legPhase = 0     -- Para interpolación suave
+
+		while isPropellingAnimationActive do
+			armTremble = armTremble + 1
+			legPhase = legPhase + 0.20  -- Velocidad de ciclo de piernas (más rápido)
+			local trembleOffset = math.sin(armTremble * 0.5) * 3
+
+			-- Calcular offsets de gordura ACTUALES
+			local shoulderOffset = getShoulderOffset()
+			local hipOffset = getHipOffset()
+
+			-- BRAZOS: Hacia atrás Y hacia abajo, sujetando trasero
+			-- Usamos rotación compuesta: primero hacia atrás, luego hacia abajo
+			if leftShoulder and originalLeftShoulderC0 then
+				leftShoulder.C0 = originalLeftShoulderC0
+					* CFrame.new(shoulderOffset, 0, 0)  -- Offset gordura
+					* CFrame.Angles(0, 0, math.rad(70))  -- Primero: rotar brazo hacia atrás
+					* CFrame.Angles(math.rad(40 + trembleOffset), 0, 0)  -- Segundo: inclinar hacia abajo
+			end
+			if rightShoulder and originalRightShoulderC0 then
+				rightShoulder.C0 = originalRightShoulderC0
+					* CFrame.new(-shoulderOffset, 0, 0)  -- Offset gordura
+					* CFrame.Angles(0, 0, math.rad(-70))  -- Primero: rotar brazo hacia atrás
+					* CFrame.Angles(math.rad(40 - trembleOffset), 0, 0)  -- Segundo: inclinar hacia abajo
+			end
+
+			-- Codos doblados hacia el trasero
+			if leftElbow and originalLeftElbowC0 then
+				leftElbow.C0 = originalLeftElbowC0 * CFrame.Angles(math.rad(-60 + trembleOffset), 0, 0)
+			end
+			if rightElbow and originalRightElbowC0 then
+				rightElbow.C0 = originalRightElbowC0 * CFrame.Angles(math.rad(-60 - trembleOffset), 0, 0)
+			end
+
+			-- PIERNAS: Movimiento suave con seno
+			local legSin = math.sin(legPhase) * legAngle
+
+			if leftHip and originalLeftHipC0 then
+				leftHip.C0 = originalLeftHipC0
+					* CFrame.new(hipOffset, 0, 0)  -- Offset gordura
+					* CFrame.Angles(math.rad(legSin), 0, 0)
+			end
+			if rightHip and originalRightHipC0 then
+				rightHip.C0 = originalRightHipC0
+					* CFrame.new(-hipOffset, 0, 0)  -- Offset gordura
+					* CFrame.Angles(math.rad(-legSin), 0, 0)
+			end
+
+			task.wait(0.016)  -- ~60 FPS para animación suave
+		end
+	end)
+end
+
+local function stopPropellingAnimation()
+	if not isPropellingAnimationActive then return end
+	isPropellingAnimationActive = false
+
+	-- Cancelar el thread si existe
+	if propellingAnimationThread then
+		task.cancel(propellingAnimationThread)
+		propellingAnimationThread = nil
+	end
+
+	-- Restaurar posiciones originales de brazos
+	if leftShoulder and originalLeftShoulderC0 then
+		leftShoulder.C0 = originalLeftShoulderC0
+	end
+	if rightShoulder and originalRightShoulderC0 then
+		rightShoulder.C0 = originalRightShoulderC0
+	end
+	if leftElbow and originalLeftElbowC0 then
+		leftElbow.C0 = originalLeftElbowC0
+	end
+	if rightElbow and originalRightElbowC0 then
+		rightElbow.C0 = originalRightElbowC0
+	end
+
+	-- Restaurar posiciones originales de piernas
+	if leftHip and originalLeftHipC0 then
+		leftHip.C0 = originalLeftHipC0
+	end
+	if rightHip and originalRightHipC0 then
+		rightHip.C0 = originalRightHipC0
+	end
+
+	-- Reactivar estados del humanoid
+	if humanoid then
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+	end
+
+	-- Reaplicar offset de gordura a los joints
+	applyBodySize(currentFatness)
+end
+
+-- ============================================
 -- MECÁNICAS DE JUEGO
 -- ============================================
 
 local function stopPropelling()
 	isPropelling = false
+
+	-- Detener animación de propulsión
+	stopPropellingAnimation()
 
 	if bodyVelocity then
 		bodyVelocity:Destroy()
@@ -437,6 +607,9 @@ local function startPropelling()
 	if fartParticles then
 		fartParticles.Enabled = true
 	end
+
+	-- Iniciar animación de propulsión
+	startPropellingAnimation()
 
 	playRandomFart()
 end
@@ -762,6 +935,13 @@ local function onCharacterAdded(newCharacter)
 	isPropelling = false
 	currentFatness = thinMultiplier
 	maxHeightThisFlight = 0
+
+	-- Detener animación de propulsión si estaba activa
+	isPropellingAnimationActive = false
+	if propellingAnimationThread then
+		task.cancel(propellingAnimationThread)
+		propellingAnimationThread = nil
+	end
 
 	if bodyVelocity then
 		bodyVelocity:Destroy()
