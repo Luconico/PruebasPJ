@@ -21,56 +21,58 @@ local Config = require(Shared:WaitForChild("Config"))
 -- Then replace these IDs with the real ones
 
 local DeveloperProducts = {
-	-- Each upgrade has 10 levels, each level is a different product
-	-- Format: UpgradeName_Level = ProductId
+	-- Each upgrade has 10 TIERS (each tier gives +10 levels)
+	-- Tier 1 = levels 1-10, Tier 2 = levels 11-20, etc.
+	-- Format: UpgradeName_Tier = ProductId
 
 	-- MaxFatness (example IDs - REPLACE with real ones)
-	MaxFatness_1 = 0, -- 10 Robux
-	MaxFatness_2 = 0, -- 20 Robux
-	MaxFatness_3 = 0, -- etc.
-	MaxFatness_4 = 0,
-	MaxFatness_5 = 0,
-	MaxFatness_6 = 0,
-	MaxFatness_7 = 0,
-	MaxFatness_8 = 0,
-	MaxFatness_9 = 0,
-	MaxFatness_10 = 0,
+	-- Each tier gives +10 levels (up to level 10, 20, 30... 100)
+	MaxFatness_Tier1 = 0, -- 10 Robux → levels 1-10
+	MaxFatness_Tier2 = 0, -- 20 Robux → levels 11-20
+	MaxFatness_Tier3 = 0, -- 35 Robux → levels 21-30
+	MaxFatness_Tier4 = 0, -- 50 Robux → levels 31-40
+	MaxFatness_Tier5 = 0, -- 75 Robux → levels 41-50
+	MaxFatness_Tier6 = 0, -- 100 Robux → levels 51-60
+	MaxFatness_Tier7 = 0, -- 150 Robux → levels 61-70
+	MaxFatness_Tier8 = 0, -- 200 Robux → levels 71-80
+	MaxFatness_Tier9 = 0, -- 300 Robux → levels 81-90
+	MaxFatness_Tier10 = 0, -- 500 Robux → levels 91-100
 
 	-- EatSpeed
-	EatSpeed_1 = 0,
-	EatSpeed_2 = 0,
-	EatSpeed_3 = 0,
-	EatSpeed_4 = 0,
-	EatSpeed_5 = 0,
-	EatSpeed_6 = 0,
-	EatSpeed_7 = 0,
-	EatSpeed_8 = 0,
-	EatSpeed_9 = 0,
-	EatSpeed_10 = 0,
+	EatSpeed_Tier1 = 0,
+	EatSpeed_Tier2 = 0,
+	EatSpeed_Tier3 = 0,
+	EatSpeed_Tier4 = 0,
+	EatSpeed_Tier5 = 0,
+	EatSpeed_Tier6 = 0,
+	EatSpeed_Tier7 = 0,
+	EatSpeed_Tier8 = 0,
+	EatSpeed_Tier9 = 0,
+	EatSpeed_Tier10 = 0,
 
 	-- PropulsionForce
-	PropulsionForce_1 = 0,
-	PropulsionForce_2 = 0,
-	PropulsionForce_3 = 0,
-	PropulsionForce_4 = 0,
-	PropulsionForce_5 = 0,
-	PropulsionForce_6 = 0,
-	PropulsionForce_7 = 0,
-	PropulsionForce_8 = 0,
-	PropulsionForce_9 = 0,
-	PropulsionForce_10 = 0,
+	PropulsionForce_Tier1 = 0,
+	PropulsionForce_Tier2 = 0,
+	PropulsionForce_Tier3 = 0,
+	PropulsionForce_Tier4 = 0,
+	PropulsionForce_Tier5 = 0,
+	PropulsionForce_Tier6 = 0,
+	PropulsionForce_Tier7 = 0,
+	PropulsionForce_Tier8 = 0,
+	PropulsionForce_Tier9 = 0,
+	PropulsionForce_Tier10 = 0,
 
 	-- FuelEfficiency
-	FuelEfficiency_1 = 0,
-	FuelEfficiency_2 = 0,
-	FuelEfficiency_3 = 0,
-	FuelEfficiency_4 = 0,
-	FuelEfficiency_5 = 0,
-	FuelEfficiency_6 = 0,
-	FuelEfficiency_7 = 0,
-	FuelEfficiency_8 = 0,
-	FuelEfficiency_9 = 0,
-	FuelEfficiency_10 = 0,
+	FuelEfficiency_Tier1 = 0,
+	FuelEfficiency_Tier2 = 0,
+	FuelEfficiency_Tier3 = 0,
+	FuelEfficiency_Tier4 = 0,
+	FuelEfficiency_Tier5 = 0,
+	FuelEfficiency_Tier6 = 0,
+	FuelEfficiency_Tier7 = 0,
+	FuelEfficiency_Tier8 = 0,
+	FuelEfficiency_Tier9 = 0,
+	FuelEfficiency_Tier10 = 0,
 
 	-- ============================================
 	-- COSMÉTICOS DE PEDO
@@ -103,10 +105,13 @@ local DeveloperProducts = {
 	Cosmetic_Legendary_Phoenix = 0,
 }
 
--- Mapeo inverso: ProductId -> {UpgradeName, Level}
+-- Mapeo inverso: ProductId -> {UpgradeName, Tier, TargetLevel}
+-- Tier 1 = target level 10, Tier 2 = target level 20, etc.
 local ProductToUpgrade = {}
 -- Mapeo inverso para cosméticos: ProductId -> CosmeticId
 local ProductToCosmetic = {}
+
+local LEVELS_PER_TIER = 10 -- Each Robux tier gives 10 levels
 
 for key, productId in pairs(DeveloperProducts) do
 	if productId > 0 then
@@ -114,12 +119,14 @@ for key, productId in pairs(DeveloperProducts) do
 			-- Es un cosmético
 			local cosmeticId = key:sub(10) -- Quitar "Cosmetic_"
 			ProductToCosmetic[productId] = cosmeticId
-		else
-			-- Es un upgrade
-			local parts = string.split(key, "_")
+		elseif key:find("_Tier") then
+			-- Es un upgrade con sistema de tiers
+			local parts = string.split(key, "_Tier")
+			local tierNumber = tonumber(parts[2])
 			ProductToUpgrade[productId] = {
 				UpgradeName = parts[1],
-				Level = tonumber(parts[2])
+				Tier = tierNumber,
+				TargetLevel = tierNumber * LEVELS_PER_TIER -- 10, 20, 30... 100
 			}
 		end
 	end
@@ -334,13 +341,15 @@ local function purchaseUpgrade(player, upgradeName, useRobux)
 		return false, "Nivel máximo alcanzado"
 	end
 
-	local nextLevel = currentLevel + 1
-	local cost = useRobux
-		and upgradeConfig.CostRobux[nextLevel]
-		or upgradeConfig.CostCoins[nextLevel]
-
 	if not useRobux then
-		-- Compra con monedas
+		-- Compra con monedas (+1 nivel)
+		local nextLevel = currentLevel + 1
+		local cost = upgradeConfig.CostCoins[nextLevel]
+
+		if not cost then
+			return false, "Nivel no disponible"
+		end
+
 		if data.Coins < cost then
 			return false, "Monedas insuficientes"
 		end
@@ -353,29 +362,45 @@ local function purchaseUpgrade(player, upgradeName, useRobux)
 			Upgrades = data.Upgrades
 		})
 
-		return true, "Compra exitosa"
+		return true, "Nivel " .. nextLevel .. " desbloqueado!"
 	else
-		-- Compra con Robux usando MarketplaceService
-		local productKey = upgradeName .. "_" .. nextLevel
+		-- Compra con Robux (+10 niveles por tier)
+		local levelsPerTier = upgradeConfig.RobuxLevelsPerPurchase or LEVELS_PER_TIER
+		local currentTier = math.floor(currentLevel / levelsPerTier) -- 0-9
+		local nextTier = currentTier + 1
+		local targetLevel = nextTier * levelsPerTier -- 10, 20, 30... 100
+
+		-- Verificar que no haya comprado ya este tier
+		if currentLevel >= targetLevel then
+			return false, "Ya tienes este tier"
+		end
+
+		-- Verificar que el tier exista
+		if nextTier > #upgradeConfig.CostRobux then
+			return false, "Todos los tiers de Robux comprados"
+		end
+
+		local productKey = upgradeName .. "_Tier" .. nextTier
 		local productId = DeveloperProducts[productKey]
 
 		if not productId or productId == 0 then
 			-- Si no hay producto configurado, usar modo de prueba
 			warn("[PlayerData] Developer Product no configurado para:", productKey)
-			warn("[PlayerData] Usando modo de prueba - upgrade gratis")
+			warn("[PlayerData] Usando modo de prueba - upgrade gratis (+10 niveles)")
 
-			-- En modo de prueba, dar el upgrade gratis
-			data.Upgrades[upgradeName] = nextLevel
+			-- En modo de prueba, dar los 10 niveles gratis
+			data.Upgrades[upgradeName] = targetLevel
 			updatePlayerData(player, {
 				Upgrades = data.Upgrades
 			})
-			return true, "Compra exitosa (Modo prueba)"
+			return true, "+" .. (targetLevel - currentLevel) .. " niveles! (Modo prueba)"
 		end
 
 		-- Guardar compra pendiente
 		pendingPurchases[player.UserId] = {
 			UpgradeName = upgradeName,
-			Level = nextLevel,
+			Tier = nextTier,
+			TargetLevel = targetLevel,
 			ProductId = productId,
 		}
 
@@ -553,7 +578,7 @@ local function processReceipt(receiptInfo)
 	end
 
 	-- ============================================
-	-- VERIFICAR SI ES UN UPGRADE
+	-- VERIFICAR SI ES UN UPGRADE (TIER SYSTEM)
 	-- ============================================
 	local upgradeInfo = ProductToUpgrade[productId]
 
@@ -563,7 +588,8 @@ local function processReceipt(receiptInfo)
 		if pending and pending.ProductId == productId then
 			upgradeInfo = {
 				UpgradeName = pending.UpgradeName,
-				Level = pending.Level
+				Tier = pending.Tier,
+				TargetLevel = pending.TargetLevel
 			}
 		end
 	end
@@ -574,25 +600,25 @@ local function processReceipt(receiptInfo)
 	end
 
 	local currentLevel = data.Upgrades[upgradeInfo.UpgradeName] or 0
+	local targetLevel = upgradeInfo.TargetLevel
 
-	-- Verificar que el nivel comprado sea el correcto (siguiente nivel)
-	if upgradeInfo.Level ~= currentLevel + 1 then
-		warn("[PlayerData] Nivel incorrecto. Esperado:", currentLevel + 1, "Recibido:", upgradeInfo.Level)
-		-- Aún así procesar si es un nivel válido y mayor
-		if upgradeInfo.Level <= currentLevel then
-			-- Ya tiene este nivel o superior
-			return Enum.ProductPurchaseDecision.PurchaseGranted
-		end
+	-- Verificar que el tier sea válido (jugador no tiene ya este nivel)
+	if currentLevel >= targetLevel then
+		-- Ya tiene este nivel o superior - compra válida pero ya aplicada
+		print("[PlayerData] Jugador ya tiene nivel", currentLevel, "para", upgradeInfo.UpgradeName)
+		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end
 
-	-- Aplicar el upgrade
-	data.Upgrades[upgradeInfo.UpgradeName] = upgradeInfo.Level
+	-- Aplicar el upgrade (saltar al targetLevel del tier)
+	local levelsGained = targetLevel - currentLevel
+	data.Upgrades[upgradeInfo.UpgradeName] = targetLevel
 
 	-- Notificar al jugador si está conectado
 	if player then
 		local upgradeValues = getPlayerUpgradeValues(player)
 		Remotes.OnDataUpdated:FireClient(player, data)
-		print("[PlayerData] Upgrade comprado con Robux:", upgradeInfo.UpgradeName, "Nivel:", upgradeInfo.Level)
+		print("[PlayerData] Upgrade comprado con Robux:", upgradeInfo.UpgradeName,
+			"Tier:", upgradeInfo.Tier, "Nivel:", targetLevel, "(+" .. levelsGained .. " niveles)")
 	end
 
 	-- Limpiar compra pendiente

@@ -23,53 +23,96 @@ Config.Fatness = {
 }
 
 -- ============================================
--- UPGRADES
+-- UPGRADES (100 LEVELS - Robux gives +10 levels per purchase)
 -- ============================================
+
+-- Helper function to generate exponential coin costs
+local function generateCoinCosts(startCost, endCost, levels)
+	local costs = {}
+	local ratio = (endCost / startCost) ^ (1 / (levels - 1))
+	for i = 1, levels do
+		costs[i] = math.floor(startCost * (ratio ^ (i - 1)))
+	end
+	return costs
+end
+
+-- Helper function to interpolate exponential values
+local function interpolateValues(baseValue, targetValues, levels)
+	-- targetValues has 10 values, we need to interpolate to 100
+	local values = {}
+	for i = 1, levels do
+		-- Map level 1-100 to index 0.1-10 in original array
+		local originalIndex = (i / 10)
+		local lowerIndex = math.floor(originalIndex)
+		local upperIndex = math.ceil(originalIndex)
+
+		if lowerIndex < 1 then
+			-- Interpolate between baseValue and first target
+			local t = originalIndex
+			values[i] = baseValue + (targetValues[1] - baseValue) * t
+		elseif upperIndex > #targetValues or lowerIndex == upperIndex then
+			values[i] = targetValues[math.min(lowerIndex, #targetValues)]
+		else
+			-- Linear interpolation between two target values
+			local t = originalIndex - lowerIndex
+			values[i] = targetValues[lowerIndex] + (targetValues[upperIndex] - targetValues[lowerIndex]) * t
+		end
+	end
+	return values
+end
+
 Config.Upgrades = {
-	-- Maximum fatness
+	-- Maximum fatness (LINEAR - 100 levels)
 	MaxFatness = {
 		Name = "Max Fatness",
 		Description = "Increase your fat storage capacity",
-		MaxLevel = 10,
+		MaxLevel = 100,
 		BaseValue = 1.5,
-		IncrementPerLevel = 0.25, -- +0.25 per level (max 4.0 at level 10)
-		CostCoins = { 100, 250, 500, 1000, 2000, 4000, 8000, 15000, 30000, 50000 },
+		IncrementPerLevel = 0.025, -- +0.025 per level (0.25/10) → max 4.0 at level 100
+		-- Coin costs: 100 levels, exponential growth from 10 to 50000
+		CostCoins = generateCoinCosts(10, 50000, 100),
+		-- Robux costs: 10 purchases (each gives +10 levels)
+		-- Buying at levels 1-10, 11-20, 21-30, etc.
 		CostRobux = { 10, 20, 35, 50, 75, 100, 150, 200, 300, 500 },
+		RobuxLevelsPerPurchase = 10, -- Each Robux purchase gives 10 levels
 	},
 
-	-- Eating speed
+	-- Eating speed (LINEAR - 100 levels)
 	EatSpeed = {
 		Name = "Eating Speed",
 		Description = "Eat faster",
-		MaxLevel = 10,
+		MaxLevel = 100,
 		BaseValue = 0.08,
-		IncrementPerLevel = 0.02, -- +0.02 per level
-		CostCoins = { 75, 200, 400, 800, 1500, 3000, 6000, 12000, 25000, 40000 },
+		IncrementPerLevel = 0.002, -- +0.002 per level (0.02/10)
+		CostCoins = generateCoinCosts(8, 40000, 100),
 		CostRobux = { 10, 15, 25, 40, 60, 80, 120, 175, 250, 400 },
+		RobuxLevelsPerPurchase = 10,
 	},
 
-	-- Propulsion force (EXPONENTIAL)
+	-- Propulsion force (EXPONENTIAL - 100 levels)
 	PropulsionForce = {
 		Name = "Fart Power",
 		Description = "More powerful farts push you higher",
-		MaxLevel = 10,
+		MaxLevel = 100,
 		BaseValue = 50,
-		-- Exponential progression: 50 -> 275 (5.5x more powerful at level 10)
-		ValuesPerLevel = { 58, 68, 80, 95, 115, 140, 170, 210, 260, 320 },
-		CostCoins = { 150, 350, 700, 1400, 2800, 5500, 11000, 22000, 45000, 75000 },
+		-- Interpolated from original 10 values to 100 values
+		ValuesPerLevel = interpolateValues(50, { 58, 68, 80, 95, 115, 140, 170, 210, 260, 320 }, 100),
+		CostCoins = generateCoinCosts(15, 75000, 100),
 		CostRobux = { 15, 25, 40, 60, 90, 130, 180, 250, 350, 600 },
+		RobuxLevelsPerPurchase = 10,
 	},
 
-	-- Fuel efficiency (EXPONENTIAL)
+	-- Fuel efficiency (EXPONENTIAL - 100 levels)
 	FuelEfficiency = {
 		Name = "Gas Efficiency",
 		Description = "Lose less fat when propelling",
-		MaxLevel = 10,
+		MaxLevel = 100,
 		BaseValue = 0.04,
-		-- Exponential progression: 0.04 -> 0.004 (10x more efficient at level 10)
-		ValuesPerLevel = { 0.032, 0.025, 0.019, 0.014, 0.010, 0.0075, 0.0055, 0.0045, 0.0038, 0.0032 },
-		CostCoins = { 200, 500, 1000, 2000, 4000, 8000, 16000, 32000, 60000, 100000 },
+		-- Interpolated from original 10 values to 100 values
+		ValuesPerLevel = interpolateValues(0.04, { 0.032, 0.025, 0.019, 0.014, 0.010, 0.0075, 0.0055, 0.0045, 0.0038, 0.0032 }, 100),
+		CostCoins = generateCoinCosts(20, 100000, 100),
 		CostRobux = { 20, 35, 55, 80, 120, 170, 230, 320, 450, 750 },
+		RobuxLevelsPerPurchase = 10,
 	},
 }
 

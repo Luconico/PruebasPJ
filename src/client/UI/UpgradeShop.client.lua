@@ -711,6 +711,13 @@ local function updateUpgradeCard(cardData)
 	local currentValue = getValueAtLevel(upgradeConfig, currentLevel)
 	local nextValue = getValueAtLevel(upgradeConfig, currentLevel + 1)
 
+	-- Calcular info de Robux (compras de +10 niveles)
+	local robuxLevelsPerPurchase = upgradeConfig.RobuxLevelsPerPurchase or 10
+	local currentRobuxTier = math.floor(currentLevel / robuxLevelsPerPurchase) -- 0-9 (tiers 1-10)
+	local nextRobuxLevel = (currentRobuxTier + 1) * robuxLevelsPerPurchase -- 10, 20, 30... 100
+	local levelsToNextRobux = nextRobuxLevel - currentLevel -- How many levels Robux will give
+	local isRobuxMaxed = currentRobuxTier >= #upgradeConfig.CostRobux -- All Robux tiers purchased
+
 	if isMaxed then
 		cardData.ValueLabel.Text = string.format("%.2f", currentValue) .. " (MAX)"
 		cardData.CoinButton.Visible = false
@@ -719,15 +726,11 @@ local function updateUpgradeCard(cardData)
 	else
 		cardData.ValueLabel.Text = string.format("%.2f", currentValue) .. " → " .. string.format("%.2f", nextValue)
 		cardData.CoinButton.Visible = true
-		cardData.RobuxButton.Visible = true
 		cardData.MaxLabel.Visible = false
 
-		-- Actualizar precios
+		-- Actualizar precio de monedas (+1 nivel)
 		local coinCost = upgradeConfig.CostCoins[currentLevel + 1]
-		local robuxCost = upgradeConfig.CostRobux[currentLevel + 1]
-
 		cardData.CoinPriceLabel.Text = formatNumber(coinCost)
-		cardData.RobuxPriceLabel.Text = robuxCost .. " R$"
 
 		-- Verificar si puede comprar con monedas
 		local canAfford = playerData.Coins >= coinCost
@@ -735,6 +738,16 @@ local function updateUpgradeCard(cardData)
 			cardData.CoinButton.BackgroundColor3 = Styles.Colors.CoinButton
 		else
 			cardData.CoinButton.BackgroundColor3 = Styles.Colors.DisabledButton
+		end
+
+		-- Actualizar Robux (compra +10 niveles)
+		if isRobuxMaxed then
+			cardData.RobuxButton.Visible = false
+		else
+			cardData.RobuxButton.Visible = true
+			local robuxCost = upgradeConfig.CostRobux[currentRobuxTier + 1]
+			-- Show "+X Lvls" to indicate how many levels you'll get
+			cardData.RobuxPriceLabel.Text = robuxCost .. " R$ (+" .. levelsToNextRobux .. " Lvls)"
 		end
 	end
 end

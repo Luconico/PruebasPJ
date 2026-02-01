@@ -14,7 +14,8 @@
       "Bash(grep:*)",
       "Bash(cd:*)",
       "Bash(tree:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "WebFetch(domain:roblox.fandom.com)"
     ]
   }
 }
