@@ -6,6 +6,9 @@
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
+      },
+      "uxpRS": {
+        "$path": "src/uxpRS"
       }
     },
 
