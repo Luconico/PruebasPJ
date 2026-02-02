@@ -15,6 +15,9 @@
     "ServerScriptService": {
       "Server": {
         "$path": "src/server"
+      },
+      "uxpSSS2": {
+        "$path": "src/uxpSSS2"
       }
     },
 
