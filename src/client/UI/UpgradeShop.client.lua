@@ -34,55 +34,54 @@ local function getResponsiveSizes()
 	local mobileScale = math.max(0.85, scale)
 
 	return {
-		-- Contenedor principal
-		-- En móvil: casi pantalla completa, en PC: ventana centrada
-		ContainerWidth = isMobile and 0.95 or (isTablet and 0.85 or 0.5),
-		ContainerWidthOffset = isMobile and 0 or (isTablet and 0 or 900),
-		ContainerHeight = isMobile and 0.92 or (isTablet and 0.85 or 0.75),
-		ContainerHeightOffset = isMobile and 0 or (isTablet and 0 or 650),
-		UseScale = isMobile or isTablet, -- Si usar Scale en lugar de Offset
+		-- Contenedor principal (más ancho en PC para usar más espacio)
+		ContainerWidth = isMobile and 0.95 or (isTablet and 0.85 or 0.75),
+		ContainerWidthOffset = isMobile and 0 or (isTablet and 0 or 1100),
+		ContainerHeight = isMobile and 0.92 or (isTablet and 0.85 or 0.85),
+		ContainerHeightOffset = isMobile and 0 or (isTablet and 0 or 750),
+		UseScale = isMobile or isTablet,
 
-		-- Header (más grande en móvil)
-		HeaderHeight = isMobile and 80 or math.floor(100 * scale),
-		TitleSize = isMobile and 28 or math.floor(42 * scale),
-		CloseButtonSize = isMobile and 55 or math.floor(70 * scale),
-		CloseButtonTextSize = isMobile and 32 or math.floor(42 * scale),
+		-- Header
+		HeaderHeight = isMobile and 80 or math.floor(110 * scale),
+		TitleSize = isMobile and 28 or math.floor(48 * scale),
+		CloseButtonSize = isMobile and 55 or math.floor(75 * scale),
+		CloseButtonTextSize = isMobile and 32 or math.floor(44 * scale),
 
 		-- Coins display
-		CoinsDisplayWidth = isMobile and 140 or math.floor(200 * scale),
-		CoinsDisplayHeight = isMobile and 40 or math.floor(50 * scale),
-		CoinsIconSize = isMobile and 24 or math.floor(28 * scale),
-		CoinsTextSize = isMobile and 22 or math.floor(28 * scale),
+		CoinsDisplayWidth = isMobile and 140 or math.floor(220 * scale),
+		CoinsDisplayHeight = isMobile and 40 or math.floor(55 * scale),
+		CoinsIconSize = isMobile and 24 or math.floor(32 * scale),
+		CoinsTextSize = isMobile and 22 or math.floor(32 * scale),
 
-		-- Cards (altura ajustada)
-		CardHeight = isMobile and 140 or math.floor(140 * scale),
-		CardPadding = isMobile and 10 or math.floor(20 * scale),
-		IconSize = isMobile and 55 or math.floor(80 * scale),
-		IconTextSize = isMobile and 34 or math.floor(48 * scale),
+		-- Cards (MÁS GRANDES)
+		CardHeight = isMobile and 150 or math.floor(180 * scale),
+		CardPadding = isMobile and 12 or math.floor(18 * scale),
+		IconSize = isMobile and 60 or math.floor(100 * scale),
+		IconTextSize = isMobile and 38 or math.floor(58 * scale),
 
-		-- Card text (tamaños más legibles)
-		NameTextSize = isMobile and 22 or math.floor(28 * scale),
-		DescTextSize = isMobile and 14 or math.floor(16 * scale),
-		LevelTextSize = isMobile and 16 or math.floor(20 * scale),
-		ValueTextSize = isMobile and 14 or math.floor(16 * scale),
+		-- Card text (más grandes y legibles)
+		NameTextSize = isMobile and 24 or math.floor(32 * scale),
+		DescTextSize = isMobile and 14 or math.floor(18 * scale),
+		LevelTextSize = isMobile and 17 or math.floor(22 * scale),
+		ValueTextSize = isMobile and 15 or math.floor(18 * scale),
 
-		-- Progress bar
-		ProgressBarHeight = isMobile and 14 or math.floor(16 * scale),
-		ProgressBarWidth = isMobile and 120 or math.floor(200 * scale),
+		-- Progress bar (más grande)
+		ProgressBarHeight = isMobile and 16 or math.floor(20 * scale),
+		ProgressBarWidth = isMobile and 140 or math.floor(250 * scale),
 
-		-- Buttons (compactos en móvil)
-		ButtonHeight = isMobile and 38 or math.floor(50 * scale),
-		ButtonTextSize = isMobile and 16 or math.floor(22 * scale),
-		ButtonIconSize = isMobile and 20 or math.floor(24 * scale),
-		ButtonWidth = isMobile and 130 or math.floor(280 * scale),
+		-- Buttons (MÁS GRANDES Y CONSISTENTES)
+		ButtonHeight = isMobile and 42 or math.floor(58 * scale),
+		ButtonTextSize = isMobile and 18 or math.floor(24 * scale),
+		ButtonIconSize = isMobile and 24 or math.floor(28 * scale),
+		ButtonWidth = isMobile and 150 or math.floor(220 * scale),
 
 		-- Max label
-		MaxLabelSize = isMobile and 24 or math.floor(32 * scale),
+		MaxLabelSize = isMobile and 26 or math.floor(36 * scale),
 
 		-- General
-		CornerRadius = isMobile and 12 or math.floor(16 * scale),
-		StrokeThickness = isMobile and 3 or math.floor(4 * scale),
-		Padding = isMobile and 12 or math.floor(20 * scale),
+		CornerRadius = isMobile and 14 or math.floor(20 * scale),
+		StrokeThickness = isMobile and 4 or math.floor(5 * scale),
+		Padding = isMobile and 14 or math.floor(24 * scale),
 
 		-- Layout
 		IsMobile = isMobile,
@@ -198,17 +197,45 @@ local function createPadding(parent, padding)
 	return uiPadding
 end
 
--- Animación de "bounce" para botones
+-- Animación de "bounce" para botones (no bloqueante, totalmente asíncrona)
+local buttonAnimating = {}
+local buttonOriginalSizes = {}
+
 local function animateButtonPress(button)
-	local originalSize = button.Size
-	TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = UDim2.new(originalSize.X.Scale * 0.95, originalSize.X.Offset * 0.95,
-						  originalSize.Y.Scale * 0.95, originalSize.Y.Offset * 0.95)
-	}):Play()
-	task.wait(0.1)
-	TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = originalSize
-	}):Play()
+	if buttonAnimating[button] then return end
+	buttonAnimating[button] = true
+
+	task.spawn(function()
+		-- Guardar tamaño original completo (Scale + Offset)
+		if not buttonOriginalSizes[button] then
+			buttonOriginalSizes[button] = button.Size
+		end
+
+		local originalSize = buttonOriginalSizes[button]
+
+		-- Pequeña reducción (mantener tanto Scale como Offset)
+		local shrinkSize = UDim2.new(
+			originalSize.X.Scale * 0.92,
+			originalSize.X.Offset * 0.92,
+			originalSize.Y.Scale * 0.92,
+			originalSize.Y.Offset * 0.92
+		)
+
+		local shrinkTween = TweenService:Create(button, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = shrinkSize
+		})
+		shrinkTween:Play()
+		shrinkTween.Completed:Wait()
+
+		-- Volver al tamaño original
+		local expandTween = TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = originalSize
+		})
+		expandTween:Play()
+		expandTween.Completed:Wait()
+
+		buttonAnimating[button] = false
+	end)
 end
 
 -- Formatear números grandes
@@ -276,29 +303,32 @@ local function createShopUI()
 	local header = Instance.new("Frame")
 	header.Name = "Header"
 	header.Size = UDim2.new(1, 0, 0, sizes.HeaderHeight)
-	header.BackgroundColor3 = Styles.Colors.Primary
+	header.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+	header.ZIndex = 2
 	header.Parent = mainContainer
 
 	createCorner(header, UDim.new(0, sizes.IsMobile and 16 or 24))
+	createStroke(header, Color3.fromRGB(200, 140, 20), sizes.IsMobile and 5 or 7)
 	createGradient(header,
-		Color3.fromRGB(255, 220, 100),
-		Color3.fromRGB(255, 180, 50),
-		90)
+		Color3.fromRGB(255, 240, 120),
+		Color3.fromRGB(255, 160, 30),
+		135)
 
 	-- Parche inferior para que no se vea el corner abajo
 	local headerPatch = Instance.new("Frame")
 	headerPatch.Name = "HeaderPatch"
 	headerPatch.Size = UDim2.new(1, 0, 0, 30)
 	headerPatch.Position = UDim2.new(0, 0, 1, -30)
-	headerPatch.BackgroundColor3 = Styles.Colors.Primary
+	headerPatch.BackgroundColor3 = Color3.fromRGB(255, 180, 40)
 	headerPatch.BorderSizePixel = 0
+	headerPatch.ZIndex = 2
 	headerPatch.Parent = header
 	createGradient(headerPatch,
-		Color3.fromRGB(255, 200, 70),
-		Color3.fromRGB(255, 180, 50),
-		90)
+		Color3.fromRGB(255, 210, 80),
+		Color3.fromRGB(255, 160, 30),
+		135)
 
-	-- Título (responsive)
+	-- Título (responsive con sombra)
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
 	title.Size = UDim2.new(1, -(sizes.CloseButtonSize + sizes.CoinsDisplayWidth + 40), 1, 0)
@@ -310,6 +340,9 @@ local function createShopUI()
 	title.Font = Styles.Fonts.Title
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.TextScaled = sizes.IsMobile
+	title.TextStrokeTransparency = 0.5
+	title.TextStrokeColor3 = Color3.fromRGB(180, 120, 20)
+	title.ZIndex = 3
 	title.Parent = header
 
 	if sizes.IsMobile then
@@ -319,7 +352,7 @@ local function createShopUI()
 		titleConstraint.Parent = title
 	end
 
-	-- Botón de cerrar (responsive)
+	-- Botón de cerrar (responsive con más estilo)
 	local closeButton = Instance.new("TextButton")
 	closeButton.Name = "CloseButton"
 	closeButton.Size = UDim2.new(0, sizes.CloseButtonSize, 0, sizes.CloseButtonSize)
@@ -330,28 +363,41 @@ local function createShopUI()
 	closeButton.TextColor3 = Color3.new(1, 1, 1)
 	closeButton.TextSize = sizes.CloseButtonTextSize
 	closeButton.Font = Enum.Font.GothamBlack
+	closeButton.TextStrokeTransparency = 0.5
+	closeButton.TextStrokeColor3 = Color3.fromRGB(150, 40, 40)
+	closeButton.ZIndex = 4
 	closeButton.Parent = header
 
 	createCorner(closeButton)
-	createStroke(closeButton, Color3.fromRGB(200, 50, 50))
+	createStroke(closeButton, Color3.fromRGB(200, 50, 50), 4)
+	createGradient(closeButton,
+		Color3.fromRGB(255, 100, 100),
+		Color3.fromRGB(220, 60, 60),
+		90)
 
-	-- Mostrar monedas del jugador (responsive)
+	-- Mostrar monedas del jugador (responsive con más estilo)
 	local coinsDisplay = Instance.new("Frame")
 	coinsDisplay.Name = "CoinsDisplay"
 	coinsDisplay.Size = UDim2.new(0, sizes.CoinsDisplayWidth, 0, sizes.CoinsDisplayHeight)
 	coinsDisplay.Position = UDim2.new(1, -(sizes.CloseButtonSize + sizes.CoinsDisplayWidth + sizes.Padding * 2 + 10), 0.5, 0)
 	coinsDisplay.AnchorPoint = Vector2.new(0, 0.5)
-	coinsDisplay.BackgroundColor3 = Styles.Colors.Background
+	coinsDisplay.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+	coinsDisplay.ZIndex = 4
 	coinsDisplay.Parent = header
 
-	createCorner(coinsDisplay)
-	createStroke(coinsDisplay, Styles.Colors.TextDark)
+	createCorner(coinsDisplay, UDim.new(0, sizes.CoinsDisplayHeight / 2))
+	createStroke(coinsDisplay, Color3.fromRGB(200, 150, 50), 3)
+	createGradient(coinsDisplay,
+		Color3.fromRGB(45, 45, 70),
+		Color3.fromRGB(25, 25, 45),
+		90)
 
 	local coinsIcon = Instance.new("TextLabel")
 	coinsIcon.Size = UDim2.new(0, sizes.CoinsDisplayHeight, 1, 0)
 	coinsIcon.BackgroundTransparency = 1
 	coinsIcon.Text = "💰"
 	coinsIcon.TextSize = sizes.CoinsIconSize
+	coinsIcon.ZIndex = 5
 	coinsIcon.Parent = coinsDisplay
 
 	local coinsText = Instance.new("TextLabel")
@@ -360,11 +406,14 @@ local function createShopUI()
 	coinsText.Position = UDim2.new(0, sizes.CoinsDisplayHeight, 0, 0)
 	coinsText.BackgroundTransparency = 1
 	coinsText.Text = "0"
-	coinsText.TextColor3 = Styles.Colors.Primary
+	coinsText.TextColor3 = Color3.fromRGB(255, 220, 100)
 	coinsText.TextSize = sizes.CoinsTextSize
 	coinsText.Font = Styles.Fonts.Title
 	coinsText.TextXAlignment = Enum.TextXAlignment.Left
 	coinsText.TextScaled = true
+	coinsText.TextStrokeTransparency = 0.7
+	coinsText.TextStrokeColor3 = Color3.fromRGB(180, 130, 50)
+	coinsText.ZIndex = 5
 	coinsText.Parent = coinsDisplay
 
 	local coinsTextConstraint = Instance.new("UITextSizeConstraint")
@@ -411,39 +460,120 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	card.Size = UDim2.new(1, 0, 0, cardHeight)
 	card.BackgroundColor3 = Styles.Colors.BackgroundLight
 	card.LayoutOrder = layoutOrder
+	card.ClipsDescendants = true -- Necesario para el efecto shine
 	card.Parent = parent
 
 	createCorner(card)
-	createStroke(card, accentColor)
+	createStroke(card, accentColor, sizes.StrokeThickness * 1.5)
 
-	-- Barra de color lateral
-	local accentBarWidth = sizes.IsMobile and 6 or 8
+	-- Gradiente de fondo en la tarjeta
+	createGradient(card,
+		Color3.fromRGB(55, 55, 85),
+		Color3.fromRGB(40, 40, 70),
+		180)
+
+	-- ========== EFECTO SHINE ==========
+	local shineContainer = Instance.new("Frame")
+	shineContainer.Name = "ShineContainer"
+	shineContainer.Size = UDim2.new(1, 0, 1, 0)
+	shineContainer.BackgroundTransparency = 1
+	shineContainer.ClipsDescendants = true
+	shineContainer.ZIndex = 10
+	shineContainer.Parent = card
+	createCorner(shineContainer)
+
+	local shine = Instance.new("Frame")
+	shine.Name = "Shine"
+	shine.Size = UDim2.new(0, sizes.IsMobile and 30 or 40, 1, 0)
+	shine.Position = UDim2.new(-0.1, 0, 0.5, 0)
+	shine.AnchorPoint = Vector2.new(0.5, 0.5)
+	shine.BackgroundColor3 = Color3.new(1, 1, 1)
+	shine.BackgroundTransparency = 0.7
+	shine.BorderSizePixel = 0
+	shine.Rotation = 15
+	shine.Parent = shineContainer
+
+	local shineGradient = Instance.new("UIGradient")
+	shineGradient.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.3, 0.6),
+		NumberSequenceKeypoint.new(0.5, 0.4),
+		NumberSequenceKeypoint.new(0.7, 0.6),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	shineGradient.Parent = shine
+
+	-- Animación del shine (aleatorio para cada tarjeta)
+	local shineDelay = 3 + math.random() * 4
+	task.spawn(function()
+		task.wait(math.random() * 3)
+		while shineContainer.Parent do
+			shine.Position = UDim2.new(-0.15, 0, 0.5, 0)
+			local shineTween = TweenService:Create(shine, TweenInfo.new(0.6, Enum.EasingStyle.Linear), {
+				Position = UDim2.new(1.15, 0, 0.5, 0)
+			})
+			shineTween:Play()
+			shineTween.Completed:Wait()
+			task.wait(shineDelay)
+		end
+	end)
+
+	-- Barra de color lateral (más gruesa y con sombra)
+	local accentBarWidth = sizes.IsMobile and 8 or 12
 	local accentBar = Instance.new("Frame")
 	accentBar.Name = "AccentBar"
-	accentBar.Size = UDim2.new(0, accentBarWidth, 1, -20)
-	accentBar.Position = UDim2.new(0, 8, 0.5, 0)
+	accentBar.Size = UDim2.new(0, accentBarWidth, 1, -30)
+	accentBar.Position = UDim2.new(0, 10, 0.5, 0)
 	accentBar.AnchorPoint = Vector2.new(0, 0.5)
 	accentBar.BackgroundColor3 = accentColor
+	accentBar.ZIndex = 2
 	accentBar.Parent = card
-	createCorner(accentBar, UDim.new(0, 4))
+	createCorner(accentBar, UDim.new(0, 6))
 
-	-- Icono (centrado verticalmente)
-	local iconOffset = sizes.IsMobile and 22 or 30
+	-- Gradiente en la barra de acento
+	createGradient(accentBar, accentColor,
+		Color3.new(accentColor.R * 0.7, accentColor.G * 0.7, accentColor.B * 0.7), 90)
+
+	-- Icono (centrado verticalmente con más estilo)
+	local iconOffset = sizes.IsMobile and 26 or 40
 	local icon = Instance.new("TextLabel")
 	icon.Name = "Icon"
 	icon.Size = UDim2.new(0, sizes.IconSize, 0, sizes.IconSize)
 	icon.Position = UDim2.new(0, iconOffset, 0.5, 0)
 	icon.AnchorPoint = Vector2.new(0, 0.5)
 	icon.BackgroundColor3 = accentColor
-	icon.BackgroundTransparency = 0.3
 	icon.Text = Styles.UpgradeIcons[upgradeName] or "⭐"
 	icon.TextSize = sizes.IconTextSize
+	icon.ZIndex = 3
 	icon.Parent = card
-	createCorner(icon)
+	createCorner(icon, UDim.new(0, sizes.CornerRadius))
+	createStroke(icon, Color3.new(1, 1, 1), 3)
+
+	-- Gradiente en el icono para más profundidad
+	createGradient(icon,
+		Color3.new(
+			math.min(accentColor.R * 1.3, 1),
+			math.min(accentColor.G * 1.3, 1),
+			math.min(accentColor.B * 1.3, 1)
+		),
+		Color3.new(accentColor.R * 0.8, accentColor.G * 0.8, accentColor.B * 0.8),
+		135)
+
+	-- Sombra del icono
+	local iconShadow = Instance.new("Frame")
+	iconShadow.Name = "IconShadow"
+	iconShadow.Size = icon.Size
+	iconShadow.Position = UDim2.new(0, iconOffset + 4, 0.5, 4)
+	iconShadow.AnchorPoint = Vector2.new(0, 0.5)
+	iconShadow.BackgroundColor3 = Color3.new(0, 0, 0)
+	iconShadow.BackgroundTransparency = 0.6
+	iconShadow.ZIndex = 1
+	iconShadow.Parent = card
+	createCorner(iconShadow, UDim.new(0, sizes.CornerRadius))
 
 	-- Contenedor de información (layout vertical interno)
-	local infoStartX = iconOffset + sizes.IconSize + 12
-	local infoWidth = sizes.IsMobile and 0.45 or 350 -- En móvil usa Scale, en PC usa Offset
+	local infoStartX = iconOffset + sizes.IconSize + (sizes.IsMobile and 16 or 24)
+	local infoWidth = sizes.IsMobile and 0.42 or 400 -- En móvil usa Scale, en PC usa Offset
 
 	local infoContainer = Instance.new("Frame")
 	infoContainer.Name = "InfoContainer"
@@ -456,12 +586,13 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	end
 	infoContainer.AnchorPoint = Vector2.new(0, 0.5)
 	infoContainer.BackgroundTransparency = 1
+	infoContainer.ZIndex = 4
 	infoContainer.Parent = card
 
 	-- Nombre del upgrade
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "NameLabel"
-	nameLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 24 or 35)
+	nameLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 26 or 38)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = upgradeConfig.Name
 	nameLabel.TextColor3 = Styles.Colors.Text
@@ -469,6 +600,9 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	nameLabel.Font = Styles.Fonts.Title
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextScaled = true
+	nameLabel.TextStrokeTransparency = 0.8
+	nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+	nameLabel.ZIndex = 5
 	nameLabel.Parent = infoContainer
 
 	local nameConstraint = Instance.new("UITextSizeConstraint")
@@ -479,8 +613,8 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	-- Descripción (versión corta en móvil)
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Name = "DescLabel"
-	descLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 18 or 25)
-	descLabel.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 24 or 35)
+	descLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 18 or 26)
+	descLabel.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 26 or 38)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = upgradeConfig.Description
 	descLabel.TextColor3 = Styles.Colors.TextMuted
@@ -488,55 +622,72 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	descLabel.Font = Styles.Fonts.Body
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
 	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	descLabel.ZIndex = 5
 	descLabel.Parent = infoContainer
 
 	-- Nivel y barra de progreso
 	local levelContainer = Instance.new("Frame")
 	levelContainer.Name = "LevelContainer"
-	levelContainer.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 22 or 30)
-	levelContainer.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 44 or 65)
+	levelContainer.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 24 or 34)
+	levelContainer.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 46 or 68)
 	levelContainer.BackgroundTransparency = 1
+	levelContainer.ZIndex = 5
 	levelContainer.Parent = infoContainer
 
 	local levelLabel = Instance.new("TextLabel")
 	levelLabel.Name = "LevelLabel"
-	levelLabel.Size = UDim2.new(0, sizes.IsMobile and 70 or 100, 1, 0)
+	levelLabel.Size = UDim2.new(0, sizes.IsMobile and 75 or 110, 1, 0)
 	levelLabel.BackgroundTransparency = 1
 	levelLabel.Text = "Lv 0/10"
 	levelLabel.TextColor3 = accentColor
 	levelLabel.TextSize = sizes.LevelTextSize
 	levelLabel.Font = Styles.Fonts.Body
 	levelLabel.TextXAlignment = Enum.TextXAlignment.Left
+	levelLabel.TextStrokeTransparency = 0.7
+	levelLabel.ZIndex = 5
 	levelLabel.Parent = levelContainer
 
-	-- Barra de progreso de nivel
+	-- Barra de progreso de nivel (con sombra)
 	local progressBg = Instance.new("Frame")
 	progressBg.Name = "ProgressBg"
 	progressBg.Size = UDim2.new(0, sizes.ProgressBarWidth, 0, sizes.ProgressBarHeight)
-	progressBg.Position = UDim2.new(0, sizes.IsMobile and 70 or 110, 0.5, 0)
+	progressBg.Position = UDim2.new(0, sizes.IsMobile and 78 or 120, 0.5, 0)
 	progressBg.AnchorPoint = Vector2.new(0, 0.5)
-	progressBg.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+	progressBg.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+	progressBg.ZIndex = 5
 	progressBg.Parent = levelContainer
 	createCorner(progressBg, UDim.new(0, math.floor(sizes.ProgressBarHeight / 2)))
+	createStroke(progressBg, Color3.fromRGB(30, 30, 50), 2)
 
 	local progressFill = Instance.new("Frame")
 	progressFill.Name = "ProgressFill"
 	progressFill.Size = UDim2.new(0, 0, 1, 0)
 	progressFill.BackgroundColor3 = accentColor
+	progressFill.ZIndex = 6
 	progressFill.Parent = progressBg
 	createCorner(progressFill, UDim.new(0, math.floor(sizes.ProgressBarHeight / 2)))
+
+	-- Gradiente en la barra de progreso
+	createGradient(progressFill,
+		Color3.new(
+			math.min(accentColor.R * 1.2, 1),
+			math.min(accentColor.G * 1.2, 1),
+			math.min(accentColor.B * 1.2, 1)
+		),
+		accentColor, 0)
 
 	-- Valor actual → próximo valor
 	local valueLabel = Instance.new("TextLabel")
 	valueLabel.Name = "ValueLabel"
-	valueLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 20 or 25)
-	valueLabel.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 68 or 95)
+	valueLabel.Size = UDim2.new(1, 0, 0, sizes.IsMobile and 22 or 28)
+	valueLabel.Position = UDim2.new(0, 0, 0, sizes.IsMobile and 72 or 104)
 	valueLabel.BackgroundTransparency = 1
 	valueLabel.Text = "Value: 3.0 → 3.5"
 	valueLabel.TextColor3 = Styles.Colors.Text
 	valueLabel.TextSize = sizes.ValueTextSize
 	valueLabel.Font = Styles.Fonts.Body
 	valueLabel.TextXAlignment = Enum.TextXAlignment.Left
+	valueLabel.ZIndex = 5
 	valueLabel.Parent = infoContainer
 
 	-- ============================================
@@ -545,11 +696,23 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 
 	local buttonsContainer = Instance.new("Frame")
 	buttonsContainer.Name = "ButtonsContainer"
-	buttonsContainer.Size = UDim2.new(0, sizes.ButtonWidth, 0, sizes.ButtonHeight * 2 + 8)
-	buttonsContainer.Position = UDim2.new(1, -12, 0.5, 0)
+	buttonsContainer.Size = UDim2.new(0, sizes.ButtonWidth, 0, sizes.ButtonHeight * 2 + 12)
+	buttonsContainer.Position = UDim2.new(1, -(sizes.Padding + 8), 0.5, 0)
 	buttonsContainer.AnchorPoint = Vector2.new(1, 0.5)
 	buttonsContainer.BackgroundTransparency = 1
+	buttonsContainer.ZIndex = 4
 	buttonsContainer.Parent = card
+
+	-- Sombra del botón de monedas
+	local coinButtonShadow = Instance.new("Frame")
+	coinButtonShadow.Name = "CoinButtonShadow"
+	coinButtonShadow.Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
+	coinButtonShadow.Position = UDim2.new(0, 4, 0, 4)
+	coinButtonShadow.BackgroundColor3 = Color3.new(0, 0, 0)
+	coinButtonShadow.BackgroundTransparency = 0.6
+	coinButtonShadow.ZIndex = 3
+	coinButtonShadow.Parent = buttonsContainer
+	createCorner(coinButtonShadow)
 
 	-- Botón de monedas
 	local coinButton = Instance.new("TextButton")
@@ -559,18 +722,20 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	coinButton.BackgroundColor3 = Styles.Colors.CoinButton
 	coinButton.Text = ""
 	coinButton.AutoButtonColor = false
+	coinButton.ZIndex = 5
 	coinButton.Parent = buttonsContainer
 
 	createCorner(coinButton)
-	createStroke(coinButton, Color3.fromRGB(200, 150, 30))
+	createStroke(coinButton, Color3.fromRGB(180, 130, 20), 4)
 	createGradient(coinButton,
-		Color3.fromRGB(255, 220, 100),
-		Color3.fromRGB(255, 180, 50),
+		Color3.fromRGB(255, 230, 120),
+		Color3.fromRGB(255, 170, 40),
 		90)
 
 	local coinButtonContent = Instance.new("Frame")
 	coinButtonContent.Size = UDim2.new(1, 0, 1, 0)
 	coinButtonContent.BackgroundTransparency = 1
+	coinButtonContent.ZIndex = 6
 	coinButtonContent.Parent = coinButton
 
 	local coinIcon = Instance.new("TextLabel")
@@ -578,6 +743,7 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	coinIcon.BackgroundTransparency = 1
 	coinIcon.Text = "💰"
 	coinIcon.TextSize = sizes.ButtonIconSize
+	coinIcon.ZIndex = 6
 	coinIcon.Parent = coinButtonContent
 
 	local coinPriceLabel = Instance.new("TextLabel")
@@ -591,6 +757,9 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	coinPriceLabel.Font = Styles.Fonts.Button
 	coinPriceLabel.TextXAlignment = Enum.TextXAlignment.Left
 	coinPriceLabel.TextScaled = sizes.IsMobile
+	coinPriceLabel.TextStrokeTransparency = 0.8
+	coinPriceLabel.TextStrokeColor3 = Color3.fromRGB(200, 150, 50)
+	coinPriceLabel.ZIndex = 6
 	coinPriceLabel.Parent = coinButtonContent
 
 	if sizes.IsMobile then
@@ -600,26 +769,39 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 		coinPriceConstraint.Parent = coinPriceLabel
 	end
 
+	-- Sombra del botón de Robux
+	local robuxButtonShadow = Instance.new("Frame")
+	robuxButtonShadow.Name = "RobuxButtonShadow"
+	robuxButtonShadow.Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
+	robuxButtonShadow.Position = UDim2.new(0, 4, 0, sizes.ButtonHeight + 12 + 4)
+	robuxButtonShadow.BackgroundColor3 = Color3.new(0, 0, 0)
+	robuxButtonShadow.BackgroundTransparency = 0.6
+	robuxButtonShadow.ZIndex = 3
+	robuxButtonShadow.Parent = buttonsContainer
+	createCorner(robuxButtonShadow)
+
 	-- Botón de Robux
 	local robuxButton = Instance.new("TextButton")
 	robuxButton.Name = "RobuxButton"
 	robuxButton.Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
-	robuxButton.Position = UDim2.new(0, 0, 0, sizes.ButtonHeight + 8)
+	robuxButton.Position = UDim2.new(0, 0, 0, sizes.ButtonHeight + 12)
 	robuxButton.BackgroundColor3 = Styles.Colors.RobuxButton
 	robuxButton.Text = ""
 	robuxButton.AutoButtonColor = false
+	robuxButton.ZIndex = 5
 	robuxButton.Parent = buttonsContainer
 
 	createCorner(robuxButton)
-	createStroke(robuxButton, Color3.fromRGB(70, 150, 70))
+	createStroke(robuxButton, Color3.fromRGB(60, 130, 60), 4)
 	createGradient(robuxButton,
-		Color3.fromRGB(130, 230, 130),
-		Color3.fromRGB(80, 180, 80),
+		Color3.fromRGB(140, 240, 140),
+		Color3.fromRGB(70, 170, 70),
 		90)
 
 	local robuxButtonContent = Instance.new("Frame")
 	robuxButtonContent.Size = UDim2.new(1, 0, 1, 0)
 	robuxButtonContent.BackgroundTransparency = 1
+	robuxButtonContent.ZIndex = 6
 	robuxButtonContent.Parent = robuxButton
 
 	local robuxIcon = Instance.new("TextLabel")
@@ -627,6 +809,7 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	robuxIcon.BackgroundTransparency = 1
 	robuxIcon.Text = "💎"
 	robuxIcon.TextSize = sizes.ButtonIconSize
+	robuxIcon.ZIndex = 6
 	robuxIcon.Parent = robuxButtonContent
 
 	local robuxPriceLabel = Instance.new("TextLabel")
@@ -640,6 +823,9 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	robuxPriceLabel.Font = Styles.Fonts.Button
 	robuxPriceLabel.TextXAlignment = Enum.TextXAlignment.Left
 	robuxPriceLabel.TextScaled = sizes.IsMobile
+	robuxPriceLabel.TextStrokeTransparency = 0.8
+	robuxPriceLabel.TextStrokeColor3 = Color3.fromRGB(60, 150, 60)
+	robuxPriceLabel.ZIndex = 6
 	robuxPriceLabel.Parent = robuxButtonContent
 
 	if sizes.IsMobile then
@@ -649,7 +835,7 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 		robuxPriceConstraint.Parent = robuxPriceLabel
 	end
 
-	-- Etiqueta de "MAX" cuando está al máximo
+	-- Etiqueta de "MAX" cuando está al máximo (con sombra de texto)
 	local maxLabel = Instance.new("TextLabel")
 	maxLabel.Name = "MaxLabel"
 	maxLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -659,7 +845,10 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	maxLabel.TextColor3 = Styles.Colors.Primary
 	maxLabel.TextSize = sizes.MaxLabelSize
 	maxLabel.Font = Styles.Fonts.Title
+	maxLabel.TextStrokeTransparency = 0.3
+	maxLabel.TextStrokeColor3 = Color3.fromRGB(200, 150, 30)
 	maxLabel.Visible = false
+	maxLabel.ZIndex = 6
 	maxLabel.Parent = buttonsContainer
 
 	return {
@@ -969,32 +1158,42 @@ local function initialize()
 			end
 		end)
 
-		-- Efectos hover (solo en PC, no en móvil)
+		-- Efectos hover más sutiles (solo en PC, no en móvil)
 		if not sizes.IsMobile then
 			cardData.CoinButton.MouseEnter:Connect(function()
-				SoundManager.play("ButtonHover", 0.2, 1.1)
-				TweenService:Create(cardData.CoinButton, TweenInfo.new(0.1), {
-					Size = UDim2.new(1, 4, 0, sizes.ButtonHeight + 4)
-				}):Play()
+				if not buttonAnimating[cardData.CoinButton] then
+					SoundManager.play("ButtonHover", 0.2, 1.1)
+					-- Solo cambiar el brillo, no el tamaño
+					TweenService:Create(cardData.CoinButton, TweenInfo.new(0.1), {
+						BackgroundColor3 = Color3.fromRGB(255, 240, 150)
+					}):Play()
+				end
 			end)
 
 			cardData.CoinButton.MouseLeave:Connect(function()
-				TweenService:Create(cardData.CoinButton, TweenInfo.new(0.1), {
-					Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
-				}):Play()
+				if not buttonAnimating[cardData.CoinButton] then
+					TweenService:Create(cardData.CoinButton, TweenInfo.new(0.1), {
+						BackgroundColor3 = Styles.Colors.CoinButton
+					}):Play()
+				end
 			end)
 
 			cardData.RobuxButton.MouseEnter:Connect(function()
-				SoundManager.play("ButtonHover", 0.2, 1.1)
-				TweenService:Create(cardData.RobuxButton, TweenInfo.new(0.1), {
-					Size = UDim2.new(1, 4, 0, sizes.ButtonHeight + 4)
-				}):Play()
+				if not buttonAnimating[cardData.RobuxButton] then
+					SoundManager.play("ButtonHover", 0.2, 1.1)
+					-- Solo cambiar el brillo, no el tamaño
+					TweenService:Create(cardData.RobuxButton, TweenInfo.new(0.1), {
+						BackgroundColor3 = Color3.fromRGB(160, 255, 160)
+					}):Play()
+				end
 			end)
 
 			cardData.RobuxButton.MouseLeave:Connect(function()
-				TweenService:Create(cardData.RobuxButton, TweenInfo.new(0.1), {
-					Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
-				}):Play()
+				if not buttonAnimating[cardData.RobuxButton] then
+					TweenService:Create(cardData.RobuxButton, TweenInfo.new(0.1), {
+						BackgroundColor3 = Styles.Colors.RobuxButton
+					}):Play()
+				end
 			end)
 		end
 	end
