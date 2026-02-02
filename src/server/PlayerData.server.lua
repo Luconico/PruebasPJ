@@ -137,7 +137,7 @@ local pendingPurchases = {}
 local pendingCosmeticPurchases = {} -- Para cosméticos
 
 -- DataStore
-local DATA_STORE_NAME = "FartTycoon_PlayerData_v5" -- Cambiar versión para resetear datos
+local DATA_STORE_NAME = "FartTycoon_PlayerData_v6" -- Cambiar versión para resetear datos
 local playerDataStore = DataStoreService:GetDataStore(DATA_STORE_NAME)
 
 -- Cache de datos en memoria

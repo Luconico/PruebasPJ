@@ -31,16 +31,46 @@ function ResponsiveUI.getViewportInfo()
 	local viewportSize = camera.ViewportSize
 	local width = viewportSize.X
 	local height = viewportSize.Y
-	local isMobile = width <= ResponsiveUI.Breakpoints.Mobile
-	local isTablet = width > ResponsiveUI.Breakpoints.Mobile and width <= ResponsiveUI.Breakpoints.Tablet
-	local isDesktop = width > ResponsiveUI.Breakpoints.Tablet
+
+	-- Detectar dispositivo real usando UserInputService (más confiable que solo tamaño de ventana)
+	local UserInputService = game:GetService("UserInputService")
+	local isTouchDevice = UserInputService.TouchEnabled
+	local isKeyboardDevice = UserInputService.KeyboardEnabled
+
+	-- Determinar tipo de dispositivo
+	-- Si tiene teclado y NO es táctil → PC/Desktop (Studio, PC con teclado)
+	-- Si es táctil → usar tamaño de pantalla para mobile/tablet/desktop (móviles, tablets reales)
+	local isMobile, isTablet, isDesktop
+
+	if isKeyboardDevice and not isTouchDevice then
+		-- PC/Desktop - siempre Desktop independientemente del tamaño de ventana
+		-- (El tamaño de ventana en Studio no debe cambiar el modo, solo la escala)
+		isMobile = false
+		isTablet = false
+		isDesktop = true
+	elseif isTouchDevice then
+		-- Dispositivo táctil real - usar tamaño de pantalla
+		isMobile = width <= ResponsiveUI.Breakpoints.Mobile
+		isTablet = width > ResponsiveUI.Breakpoints.Mobile and width <= ResponsiveUI.Breakpoints.Tablet
+		isDesktop = width > ResponsiveUI.Breakpoints.Tablet
+	else
+		-- Fallback (no debería ocurrir, pero por si acaso)
+		isMobile = width <= ResponsiveUI.Breakpoints.Mobile
+		isTablet = width > ResponsiveUI.Breakpoints.Mobile and width <= ResponsiveUI.Breakpoints.Tablet
+		isDesktop = width > ResponsiveUI.Breakpoints.Tablet
+	end
 
 	-- Escala base según el ancho
+	-- En Desktop: escalar suavemente según tamaño de ventana (para ventanas pequeñas en Studio)
+	-- En Mobile/Tablet: escalar según sus propias reglas
 	local scale = 1
 	if isMobile then
 		scale = math.clamp(width / 400, 0.6, 1)
 	elseif isTablet then
 		scale = math.clamp(width / 800, 0.8, 1)
+	elseif isDesktop and width < 1400 then
+		-- Desktop con ventana pequeña: escalar suavemente
+		scale = math.clamp(width / 1400, 0.85, 1)
 	end
 
 	-- Escala de texto (ligeramente diferente para legibilidad)

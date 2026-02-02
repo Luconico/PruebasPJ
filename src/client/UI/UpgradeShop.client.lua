@@ -65,9 +65,9 @@ local function getResponsiveSizes()
 		LevelTextSize = isMobile and 17 or math.floor(22 * scale),
 		ValueTextSize = isMobile and 15 or math.floor(18 * scale),
 
-		-- Progress bar (más grande)
-		ProgressBarHeight = isMobile and 16 or math.floor(20 * scale),
-		ProgressBarWidth = isMobile and 140 or math.floor(250 * scale),
+		-- Progress bar (más grande pero que quepa sin montar sobre botones)
+		ProgressBarHeight = isMobile and 16 or math.floor(28 * scale),
+		ProgressBarWidth = isMobile and 140 or math.floor(260 * scale),
 
 		-- Buttons (MÁS GRANDES Y CONSISTENTES)
 		ButtonHeight = isMobile and 42 or math.floor(58 * scale),
@@ -90,6 +90,7 @@ local function getResponsiveSizes()
 end
 
 local sizes = getResponsiveSizes()
+print("[DEBUG] IsMobile:", sizes.IsMobile, "IsTablet:", sizes.IsTablet, "ProgressBarWidth:", sizes.ProgressBarWidth)
 
 -- ============================================
 -- CONFIGURACIÓN DE ESTILOS (CARTOON)
@@ -535,7 +536,7 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 		Color3.new(accentColor.R * 0.7, accentColor.G * 0.7, accentColor.B * 0.7), 90)
 
 	-- Icono (centrado verticalmente con más estilo)
-	local iconOffset = sizes.IsMobile and 26 or 40
+	local iconOffset = sizes.IsMobile and 26 or 85
 	local icon = Instance.new("TextLabel")
 	icon.Name = "Icon"
 	icon.Size = UDim2.new(0, sizes.IconSize, 0, sizes.IconSize)
@@ -572,7 +573,7 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	createCorner(iconShadow, UDim.new(0, sizes.CornerRadius))
 
 	-- Contenedor de información (layout vertical interno)
-	local infoStartX = iconOffset + sizes.IconSize + (sizes.IsMobile and 16 or 24)
+	local infoStartX = iconOffset + sizes.IconSize + (sizes.IsMobile and 16 or 45)
 	local infoWidth = sizes.IsMobile and 0.42 or 400 -- En móvil usa Scale, en PC usa Offset
 
 	local infoContainer = Instance.new("Frame")
@@ -648,6 +649,7 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	levelLabel.Parent = levelContainer
 
 	-- Barra de progreso de nivel (con sombra)
+	print("[DEBUG] ProgressBarWidth:", sizes.ProgressBarWidth, "ProgressBarHeight:", sizes.ProgressBarHeight, "iconOffset:", iconOffset)
 	local progressBg = Instance.new("Frame")
 	progressBg.Name = "ProgressBg"
 	progressBg.Size = UDim2.new(0, sizes.ProgressBarWidth, 0, sizes.ProgressBarHeight)
@@ -1329,4 +1331,4 @@ ResponsiveUI.onViewportChanged(function(info)
 	end
 end)
 
-print("[UpgradeShop] Presiona 'P' para abrir la tienda de upgrades (Responsive)")
+print("[UpgradeShop] Presiona 'P' para abrir la tienda de upgrades (Responsive) - v2.0")
