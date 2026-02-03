@@ -688,6 +688,130 @@ Config.CosmeticOrder = {
 }
 
 -- ============================================
+-- PET SYSTEM
+-- ============================================
+
+-- Rarities
+Config.PetRarities = {
+	Common = {
+		Name = "Common",
+		Color = Color3.fromRGB(177, 188, 191),
+		BackgroundId = "rbxassetid://17336706814",
+	},
+	Uncommon = {
+		Name = "Uncommon",
+		Color = Color3.fromRGB(94, 194, 51),
+		BackgroundId = "rbxassetid://17336708149",
+	},
+	Rare = {
+		Name = "Rare",
+		Color = Color3.fromRGB(71, 204, 255),
+		BackgroundId = "rbxassetid://17336709544",
+	},
+	Epic = {
+		Name = "Epic",
+		Color = Color3.fromRGB(227, 9, 13),
+		BackgroundId = "rbxassetid://17336710759",
+	},
+	Legendary = {
+		Name = "Legendary",
+		Color = Color3.fromRGB(243, 193, 10),
+		BackgroundId = "rbxassetid://17336711281",
+	},
+}
+
+-- Pet definitions
+Config.Pets = {
+	-- Normal pets
+	Axolotl = { Name = "Axolotl", Boost = 0.4, Rarity = "Common", Icon = "🦎" },
+	Lion = { Name = "Lion", Boost = 0.4, Rarity = "Common", Icon = "🦁" },
+	Dog = { Name = "Dog", Boost = 0.4, Rarity = "Common", Icon = "🐕" },
+	Cat = { Name = "Cat", Boost = 0.5, Rarity = "Uncommon", Icon = "🐈" },
+	Bunny = { Name = "Bunny", Boost = 0.4, Rarity = "Common", Icon = "🐰" },
+	Duck = { Name = "Duck", Boost = 0.4, Rarity = "Common", Icon = "🦆" },
+	Monkey = { Name = "Monkey", Boost = 0.4, Rarity = "Common", Icon = "🐵" },
+	Bee = { Name = "Bee", Boost = 0.4, Rarity = "Common", Icon = "🐝" },
+	Parrot = { Name = "Parrot", Boost = 0.4, Rarity = "Common", Icon = "🦜" },
+	Cow = { Name = "Cow", Boost = 0.4, Rarity = "Common", Icon = "🐄" },
+	Chicken = { Name = "Chicken", Boost = 0.4, Rarity = "Common", Icon = "🐔" },
+	Pig = { Name = "Pig", Boost = 0.4, Rarity = "Common", Icon = "🐷" },
+	Lamp = { Name = "Lamp", Boost = 0.4, Rarity = "Common", Icon = "🪔" },
+	Elephant = { Name = "Elephant", Boost = 0.5, Rarity = "Uncommon", Icon = "🐘" },
+	Dragon = { Name = "Dragon", Boost = 0.9, Rarity = "Rare", Icon = "🐉" },
+	-- Golden variants
+	GoldenAxolotl = { Name = "Golden Axolotl", Boost = 0.8, Rarity = "Common", Icon = "✨" },
+	GoldenLion = { Name = "Golden Lion", Boost = 0.8, Rarity = "Common", Icon = "✨" },
+	GoldenDog = { Name = "Golden Dog", Boost = 0.8, Rarity = "Common", Icon = "✨" },
+	GoldenCat = { Name = "Golden Cat", Boost = 0.9, Rarity = "Uncommon", Icon = "✨" },
+	GoldenDragon = { Name = "Golden Dragon", Boost = 1.3, Rarity = "Rare", Icon = "✨" },
+	-- Rainbow variants
+	RainbowAxolotl = { Name = "Rainbow Axolotl", Boost = 1.2, Rarity = "Epic", Icon = "🌈" },
+	RainbowDog = { Name = "Rainbow Dog", Boost = 1.2, Rarity = "Epic", Icon = "🌈" },
+	RainbowCat = { Name = "Rainbow Cat", Boost = 1.4, Rarity = "Rare", Icon = "🌈" },
+	RainbowDragon = { Name = "Rainbow Dragon", Boost = 1.9, Rarity = "Legendary", Icon = "🌈" },
+}
+
+-- Eggs
+Config.Eggs = {
+	BasicEgg = {
+		Name = "Basic Egg",
+		Cost = 100,
+		Icon = "🥚",
+		Description = "Common pets",
+		Pets = {
+			Dog = 0.30,
+			Cat = 0.25,
+			Bunny = 0.20,
+			Duck = 0.15,
+			Axolotl = 0.10,
+		},
+	},
+
+	PremiumEgg = {
+		Name = "Premium Egg",
+		Cost = 500,
+		Icon = "🥇",
+		Description = "Better pets with rare chances",
+		Pets = {
+			Cat = 0.30,
+			Elephant = 0.25,
+			Monkey = 0.20,
+			Dragon = 0.15,
+			Parrot = 0.10,
+		},
+	},
+
+	RobuxEgg = {
+		Name = "Golden Egg",
+		CostRobux = 99,
+		Icon = "💎",
+		DevProductId = 0,
+		Description = "Legendary and golden pets!",
+		Pets = {
+			GoldenDragon = 0.05,
+			Dragon = 0.20,
+			GoldenCat = 0.20,
+			Cat = 0.25,
+			GoldenLion = 0.15,
+			GoldenDog = 0.15,
+		},
+	},
+}
+
+-- Pet System Settings
+Config.PetSystem = {
+	DefaultEquipSlots = 3,
+	DefaultInventorySlots = 50,
+	Spacing = 5,
+	MaxClimbHeight = 13,
+	WalkAnimationSpeed = 10,
+	IdleAnimationSpeed = 10,
+	WalkAmplitude = 0.5,
+	IdleAmplitude = 0.05,
+	FlyingHeightOffset = 2,
+}
+
+-- ============================================
 -- GAME ZONES
 -- ============================================
 Config.Zones = {
@@ -736,6 +860,14 @@ Config.DefaultPlayerData = {
 		MaxHeight = 0,
 		TotalCoinsEarned = 0,
 		TotalFlights = 0,
+	},
+
+	-- Pet system data
+	PetSystem = {
+		Pets = {}, -- {PetName, UUID, Equiped, Locked}
+		EquipSlots = 3,
+		InventorySlots = 50,
+		PetIndex = {}, -- Mascotas descubiertas
 	},
 }
 

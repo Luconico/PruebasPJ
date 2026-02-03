@@ -13,6 +13,10 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 
+-- Cargar PetManager (está en la misma carpeta Server)
+local PetManager = require(script.Parent.PetManager)
+print("[PlayerData] ✓ PetManager cargado exitosamente")
+
 -- ============================================
 -- DEVELOPER PRODUCTS FOR ROBUX
 -- ============================================
@@ -170,6 +174,14 @@ local function createRemotes()
 		"CollectCoin",       -- Cliente → Servidor: recoger moneda
 		"PurchaseCosmetic",  -- Cliente → Servidor: comprar cosmético
 		"EquipCosmetic",     -- Cliente → Servidor: equipar cosmético
+		-- Pet system
+		"OpenEgg",           -- Cliente → Servidor: abrir huevo
+		"EquipPet",          -- Cliente → Servidor: equipar mascota
+		"UnequipPet",        -- Cliente → Servidor: desequipar mascota
+		"DeletePet",         -- Cliente → Servidor: eliminar mascota
+		"LockPet",           -- Cliente → Servidor: bloquear/desbloquear
+		"GetPets",           -- Cliente → Servidor: obtener inventario
+		"GetPetStats",       -- Cliente → Servidor: estadísticas
 	}
 
 	for _, name in ipairs(events) do
@@ -517,6 +529,209 @@ local function equipCosmetic(player, cosmeticId)
 end
 
 -- ============================================
+-- FUNCIONES DE MASCOTAS
+-- ============================================
+
+local HttpService = game:GetService("HttpService")
+-- PetManager ya está cargado al inicio del script
+
+local function generateUUID()
+	return HttpService:GenerateGUID(false)
+end
+
+local function calculatePetBoost(player)
+	local data = getPlayerData(player)
+	if not data or not data.PetSystem then return 0 end
+
+	local totalBoost = 0
+	for _, pet in ipairs(data.PetSystem.Pets) do
+		if pet.Equiped then
+			local petConfig = Config.Pets[pet.PetName]
+			if petConfig then
+				totalBoost = totalBoost + petConfig.Boost
+			end
+		end
+	end
+	return totalBoost
+end
+
+local function openEgg(player, eggName)
+	local data = getPlayerData(player)
+	if not data then return false, "Datos no disponibles" end
+
+	if not data.PetSystem then
+		data.PetSystem = deepClone(Config.DefaultPlayerData.PetSystem)
+	end
+
+	local eggConfig = Config.Eggs[eggName]
+	if not eggConfig then return false, "Huevo no existe" end
+
+	-- Verificar espacio
+	if #data.PetSystem.Pets >= data.PetSystem.InventorySlots then
+		return false, "Inventario lleno"
+	end
+
+	-- Verificar costo
+	if eggConfig.CostRobux then
+		return false, "Usar sistema de Robux"
+	end
+
+	if data.Coins < eggConfig.Cost then
+		return false, "Monedas insuficientes"
+	end
+
+	-- Restar monedas
+	data.Coins = data.Coins - eggConfig.Cost
+
+	-- Selección aleatoria ponderada
+	local totalWeight = 0
+	for _, weight in pairs(eggConfig.Pets) do
+		totalWeight = totalWeight + weight
+	end
+
+	local randomValue = math.random() * totalWeight
+	local currentWeight = 0
+	local selectedPet = nil
+
+	for petName, weight in pairs(eggConfig.Pets) do
+		currentWeight = currentWeight + weight
+		if randomValue <= currentWeight then
+			selectedPet = petName
+			break
+		end
+	end
+
+	if not selectedPet then
+		selectedPet = next(eggConfig.Pets)
+	end
+
+	-- Crear mascota
+	local newPet = {
+		PetName = selectedPet,
+		UUID = generateUUID(),
+		Equiped = false,
+		Locked = false,
+	}
+
+	table.insert(data.PetSystem.Pets, newPet)
+
+	-- Índice
+	if not table.find(data.PetSystem.PetIndex, selectedPet) then
+		table.insert(data.PetSystem.PetIndex, selectedPet)
+	end
+
+	updatePlayerData(player, {
+		Coins = data.Coins,
+		PetSystem = data.PetSystem
+	})
+
+	print("[PetSystem] Huevo abierto:", player.Name, eggName, "→", selectedPet)
+	return true, selectedPet, newPet.UUID
+end
+
+local function equipPet(player, uuid)
+	local data = getPlayerData(player)
+	if not data then return false, "Datos no disponibles" end
+
+	-- Contar equipadas
+	local equippedCount = 0
+	for _, pet in ipairs(data.PetSystem.Pets) do
+		if pet.Equiped then equippedCount = equippedCount + 1 end
+	end
+
+	if equippedCount >= data.PetSystem.EquipSlots then
+		return false, "Límite alcanzado"
+	end
+
+	-- Equipar
+	for _, pet in ipairs(data.PetSystem.Pets) do
+		if pet.UUID == uuid and not pet.Equiped then
+			pet.Equiped = true
+
+			-- Spawn en mundo
+			print("[EquipPet] PetManager disponible?", PetManager ~= nil)
+			if PetManager then
+				print("[EquipPet] Llamando a PetManager:EquipPet para", pet.PetName)
+				PetManager:EquipPet(player, pet.PetName)
+			else
+				warn("[EquipPet] PetManager no está disponible aún")
+			end
+
+			updatePlayerData(player, {
+				PetSystem = data.PetSystem
+			})
+			return true, "Mascota equipada"
+		end
+	end
+
+	return false, "Mascota no encontrada"
+end
+
+local function unequipPet(player, uuid)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	for _, pet in ipairs(data.PetSystem.Pets) do
+		if pet.UUID == uuid and pet.Equiped then
+			pet.Equiped = false
+
+			-- Despawn del mundo
+			if PetManager then
+				PetManager:UnequipPet(player, pet.PetName)
+			end
+
+			updatePlayerData(player, {
+				PetSystem = data.PetSystem
+			})
+			return true, "Mascota desequipada"
+		end
+	end
+
+	return false
+end
+
+local function deletePet(player, uuid)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	for i, pet in ipairs(data.PetSystem.Pets) do
+		if pet.UUID == uuid then
+			if pet.Locked then
+				return false, "Mascota bloqueada"
+			end
+			if pet.Equiped then
+				return false, "Desequipa primero"
+			end
+
+			table.remove(data.PetSystem.Pets, i)
+			updatePlayerData(player, {
+				PetSystem = data.PetSystem
+			})
+			return true, "Mascota eliminada"
+		end
+	end
+
+	return false
+end
+
+local function lockPet(player, uuid)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	for _, pet in ipairs(data.PetSystem.Pets) do
+		if pet.UUID == uuid then
+			pet.Locked = not pet.Locked
+			updatePlayerData(player, {
+				PetSystem = data.PetSystem
+			})
+			return true, pet.Locked
+		end
+	end
+
+	return false
+end
+
+-- ============================================
 -- PROCESAMIENTO DE COMPRAS ROBUX
 -- ============================================
 
@@ -640,21 +855,26 @@ MarketplaceService.ProcessReceipt = processReceipt
 -- FUNCIONES DE JUEGO
 -- ============================================
 
--- Recoger una moneda
+-- Recoger una moneda (con boost de pets)
 local function collectCoin(player, coinValue)
 	local data = getPlayerData(player)
 	if not data then return false end
 
 	coinValue = coinValue or Config.Rewards.CoinValue
-	data.Coins = data.Coins + coinValue
-	data.Records.TotalCoinsEarned = data.Records.TotalCoinsEarned + coinValue
+
+	-- Aplicar boost de pets
+	local petBoost = calculatePetBoost(player)
+	local boostedValue = math.floor(coinValue * (1 + petBoost))
+
+	data.Coins = data.Coins + boostedValue
+	data.Records.TotalCoinsEarned = data.Records.TotalCoinsEarned + boostedValue
 
 	updatePlayerData(player, {
 		Coins = data.Coins,
 		Records = data.Records
 	})
 
-	Remotes.OnCoinCollected:FireClient(player, coinValue, data.Coins)
+	Remotes.OnCoinCollected:FireClient(player, boostedValue, data.Coins)
 	return true
 end
 
@@ -741,6 +961,53 @@ end
 
 Remotes.EquipCosmetic.OnServerInvoke = function(player, cosmeticId)
 	return equipCosmetic(player, cosmeticId)
+end
+
+-- Pet system RemoteFunctions
+Remotes.OpenEgg.OnServerInvoke = function(player, eggName)
+	return openEgg(player, eggName)
+end
+
+Remotes.EquipPet.OnServerInvoke = function(player, uuid)
+	return equipPet(player, uuid)
+end
+
+Remotes.UnequipPet.OnServerInvoke = function(player, uuid)
+	return unequipPet(player, uuid)
+end
+
+Remotes.DeletePet.OnServerInvoke = function(player, uuid)
+	return deletePet(player, uuid)
+end
+
+Remotes.LockPet.OnServerInvoke = function(player, uuid)
+	return lockPet(player, uuid)
+end
+
+Remotes.GetPets.OnServerInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data or not data.PetSystem then return {} end
+	return data.PetSystem.Pets
+end
+
+Remotes.GetPetStats.OnServerInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data or not data.PetSystem then
+		return {TotalPets = 0, EquippedPets = 0, TotalBoost = 0}
+	end
+
+	local equippedCount = 0
+	for _, pet in ipairs(data.PetSystem.Pets) do
+		if pet.Equiped then equippedCount = equippedCount + 1 end
+	end
+
+	return {
+		TotalPets = #data.PetSystem.Pets,
+		EquippedPets = equippedCount,
+		InventorySlots = data.PetSystem.InventorySlots,
+		EquipSlots = data.PetSystem.EquipSlots,
+		TotalBoost = calculatePetBoost(player),
+	}
 end
 
 -- Sistema anti-exploit para height bonus (tracking por vuelo)
@@ -836,9 +1103,39 @@ Players.PlayerAdded:Connect(function(player)
 			Rewards = Config.Rewards,
 		}
 	})
+
+	-- Función para equipar mascotas guardadas
+	local function equipSavedPets()
+		if data.PetSystem and PetManager then
+			for _, pet in ipairs(data.PetSystem.Pets) do
+				if pet.Equiped then
+					PetManager:EquipPet(player, pet.PetName)
+				end
+			end
+		end
+	end
+
+	-- Equipar mascotas al entrar por primera vez
+	local character = player.Character or player.CharacterAdded:Wait()
+	if character then
+		task.wait(0.5) -- Esperar a que el personaje esté completamente cargado
+		equipSavedPets()
+		print("[PlayerData] Mascotas equipadas al iniciar para", player.Name)
+	end
+
+	-- Re-equipar mascotas en cada respawn
+	player.CharacterAdded:Connect(function(char)
+		task.wait(1)
+		equipSavedPets()
+	end)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
+	-- Desequipar todas las mascotas antes de guardar
+	if PetManager then
+		PetManager:UnequipAllPets(player)
+	end
+
 	savePlayerData(player)
 	playerDataCache[player.UserId] = nil
 end)
