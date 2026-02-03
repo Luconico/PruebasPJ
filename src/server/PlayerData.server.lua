@@ -107,6 +107,11 @@ local DeveloperProducts = {
 	Cosmetic_Void = 0,
 	Cosmetic_Chromatic = 0,
 	Cosmetic_Legendary_Phoenix = 0,
+
+	-- ============================================
+	-- HUEVOS DE MASCOTAS (Robux)
+	-- ============================================
+	Egg_RobuxEgg = 0, -- 99 Robux - Golden Egg
 }
 
 -- Mapeo inverso: ProductId -> {UpgradeName, Tier, TargetLevel}
@@ -114,6 +119,8 @@ local DeveloperProducts = {
 local ProductToUpgrade = {}
 -- Mapeo inverso para cosméticos: ProductId -> CosmeticId
 local ProductToCosmetic = {}
+-- Mapeo inverso para huevos: ProductId -> EggName
+local ProductToEgg = {}
 
 local LEVELS_PER_TIER = 10 -- Each Robux tier gives 10 levels
 
@@ -123,6 +130,10 @@ for key, productId in pairs(DeveloperProducts) do
 			-- Es un cosmético
 			local cosmeticId = key:sub(10) -- Quitar "Cosmetic_"
 			ProductToCosmetic[productId] = cosmeticId
+		elseif key:sub(1, 4) == "Egg_" then
+			-- Es un huevo
+			local eggName = key:sub(5) -- Quitar "Egg_"
+			ProductToEgg[productId] = eggName
 		elseif key:find("_Tier") then
 			-- Es un upgrade con sistema de tiers
 			local parts = string.split(key, "_Tier")
@@ -139,6 +150,7 @@ end
 -- Compras pendientes (para cuando el jugador compra pero aún no se procesa)
 local pendingPurchases = {}
 local pendingCosmeticPurchases = {} -- Para cosméticos
+local pendingEggPurchases = {} -- Para huevos
 
 -- DataStore
 local DATA_STORE_NAME = "FartTycoon_PlayerData_v6" -- Cambiar versión para resetear datos
@@ -573,15 +585,32 @@ local function openEgg(player, eggName)
 
 	-- Verificar costo
 	if eggConfig.CostRobux then
-		return false, "Usar sistema de Robux"
-	end
+		-- Es un huevo de Robux - iniciar compra
+		local productKey = "Egg_" .. eggName
+		local productId = DeveloperProducts[productKey]
 
-	if data.Coins < eggConfig.Cost then
+		if not productId or productId == 0 then
+			-- Modo de prueba: abrir gratis
+			warn("[PlayerData] Developer Product no configurado para huevo:", productKey)
+			warn("[PlayerData] Usando modo de prueba - huevo gratis")
+			-- Continuar con la lógica normal (no restar monedas)
+		else
+			-- Guardar compra pendiente
+			pendingEggPurchases[player.UserId] = {
+				EggName = eggName,
+				ProductId = productId,
+			}
+
+			-- Iniciar prompt de compra
+			MarketplaceService:PromptProductPurchase(player, productId)
+			return false, "ROBUX_PROMPT", productId
+		end
+	elseif data.Coins < eggConfig.Cost then
 		return false, "Monedas insuficientes"
+	else
+		-- Restar monedas (solo para huevos de monedas)
+		data.Coins = data.Coins - eggConfig.Cost
 	end
-
-	-- Restar monedas
-	data.Coins = data.Coins - eggConfig.Cost
 
 	-- Selección aleatoria ponderada
 	local totalWeight = 0
@@ -782,6 +811,92 @@ local function processReceipt(receiptInfo)
 
 		-- Limpiar compra pendiente
 		pendingCosmeticPurchases[playerId] = nil
+
+		-- Guardar datos
+		local saveKey = "Player_" .. playerId
+		pcall(function()
+			playerDataStore:SetAsync(saveKey, data)
+		end)
+
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	-- ============================================
+	-- VERIFICAR SI ES UN HUEVO (PET EGG)
+	-- ============================================
+	local eggName = ProductToEgg[productId]
+
+	-- También revisar compras pendientes de huevos
+	if not eggName then
+		local pendingEgg = pendingEggPurchases[playerId]
+		if pendingEgg and pendingEgg.ProductId == productId then
+			eggName = pendingEgg.EggName
+		end
+	end
+
+	if eggName then
+		-- Es una compra de huevo - abrir el huevo y dar mascota
+		local eggConfig = Config.Eggs[eggName]
+		if not eggConfig then
+			warn("[PlayerData] Huevo no encontrado en Config:", eggName)
+			return Enum.ProductPurchaseDecision.NotProcessedYet
+		end
+
+		-- Verificar espacio en inventario
+		if not data.PetSystem then
+			data.PetSystem = deepClone(Config.DefaultPlayerData.PetSystem)
+		end
+
+		if #data.PetSystem.Pets >= data.PetSystem.InventorySlots then
+			warn("[PlayerData] Inventario lleno para huevo Robux - reembolsar")
+			return Enum.ProductPurchaseDecision.NotProcessedYet
+		end
+
+		-- Selección aleatoria ponderada
+		local totalWeight = 0
+		for _, weight in pairs(eggConfig.Pets) do
+			totalWeight = totalWeight + weight
+		end
+
+		local randomValue = math.random() * totalWeight
+		local currentWeight = 0
+		local selectedPet = nil
+
+		for petName, weight in pairs(eggConfig.Pets) do
+			currentWeight = currentWeight + weight
+			if randomValue <= currentWeight then
+				selectedPet = petName
+				break
+			end
+		end
+
+		if not selectedPet then
+			selectedPet = next(eggConfig.Pets)
+		end
+
+		-- Crear mascota
+		local newPet = {
+			PetName = selectedPet,
+			UUID = generateUUID(),
+			Equiped = false,
+			Locked = false,
+		}
+
+		table.insert(data.PetSystem.Pets, newPet)
+
+		-- Añadir al índice de mascotas descubiertas
+		if not table.find(data.PetSystem.PetIndex, selectedPet) then
+			table.insert(data.PetSystem.PetIndex, selectedPet)
+		end
+
+		-- Notificar al jugador si está conectado
+		if player then
+			updatePlayerData(player, { PetSystem = data.PetSystem })
+			print("[PlayerData] Huevo Robux abierto:", eggName, "→", selectedPet)
+		end
+
+		-- Limpiar compra pendiente
+		pendingEggPurchases[playerId] = nil
 
 		-- Guardar datos
 		local saveKey = "Player_" .. playerId

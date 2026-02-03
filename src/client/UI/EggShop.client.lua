@@ -1,58 +1,41 @@
 --[[
 	EggShop.client.lua
-	UI para comprar y abrir huevos de mascotas
-	Estilo consistente con UpgradeShop
+	Sistema de huevos con BillboardGui clickeable
+	El BillboardGui debe estar en PlayerGui con Adornee apuntando al Part
+	Busca Parts/Models con nombre Egg_[NombreHuevo]
 ]]
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local Shared = ReplicatedStorage:WaitForChild("Shared", 10)
 local Config = require(Shared:WaitForChild("Config"))
-local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 
--- Tamaños responsive
-local function getResponsiveSizes()
-	local info = ResponsiveUI.getViewportInfo()
-	local scale = info.Scale
-	local isMobile = info.IsMobile
+-- ============================================
+-- CONFIGURACIÓN
+-- ============================================
 
-	return {
-		ContainerWidth = isMobile and 0.95 or 0.6,
-		ContainerHeight = isMobile and 0.85 or 0.7,
-		HeaderHeight = isMobile and 80 or math.floor(100 * scale),
-		TitleSize = isMobile and 28 or math.floor(42 * scale),
-		CardSize = isMobile and 160 or math.floor(220 * scale),
-		CardPadding = isMobile and 12 or math.floor(18 * scale),
-		IconSize = isMobile and 80 or math.floor(120 * scale),
-		ButtonHeight = isMobile and 45 or math.floor(60 * scale),
-		ButtonTextSize = isMobile and 18 or math.floor(24 * scale),
-		TextSize = isMobile and 16 or math.floor(20 * scale),
-		CornerRadius = isMobile and 12 or math.floor(18 * scale),
-		IsMobile = isMobile,
-	}
-end
-
-local sizes = getResponsiveSizes()
+local PROXIMITY_DISTANCE = 12
+local EGG_PART_PREFIX = "Egg_"
 
 -- Estilos
 local Styles = {
 	Colors = {
-		Background = Color3.fromRGB(25, 25, 45),
-		Header = Color3.fromRGB(255, 180, 50),
-		Card = Color3.fromRGB(45, 45, 75),
+		Background = Color3.fromRGB(35, 35, 55),
+		Header = Color3.fromRGB(255, 200, 100),
 		ButtonCoin = Color3.fromRGB(255, 200, 50),
 		ButtonRobux = Color3.fromRGB(100, 200, 100),
 		Text = Color3.fromRGB(255, 255, 255),
 		TextDark = Color3.fromRGB(40, 40, 60),
-		TextMuted = Color3.fromRGB(180, 180, 200),
-		Border = Color3.fromRGB(255, 255, 255),
 	},
 	Fonts = {
 		Title = Enum.Font.FredokaOne,
@@ -60,280 +43,440 @@ local Styles = {
 	},
 }
 
--- Estado
-local playerData = nil
-local shopOpen = false
-
--- ============================================
--- CREAR UI
--- ============================================
-
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "EggShop"
-screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Parent = playerGui
-
--- Backdrop (fondo semi-transparente)
-local backdrop = Instance.new("Frame")
-backdrop.Name = "Backdrop"
-backdrop.Size = UDim2.new(1, 0, 1, 0)
-backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-backdrop.BackgroundTransparency = 0.5
-backdrop.BorderSizePixel = 0
-backdrop.Visible = false
-backdrop.Parent = screenGui
-
--- Main container
-local mainContainer = Instance.new("Frame")
-mainContainer.Name = "MainContainer"
-mainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
-mainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
-mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
-mainContainer.BackgroundColor3 = Styles.Colors.Background
-mainContainer.BorderSizePixel = 0
-mainContainer.Parent = backdrop
-
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, sizes.CornerRadius)
-mainCorner.Parent = mainContainer
-
--- Header
-local header = Instance.new("Frame")
-header.Name = "Header"
-header.Size = UDim2.new(1, 0, 0, sizes.HeaderHeight)
-header.BackgroundColor3 = Styles.Colors.Header
-header.BorderSizePixel = 0
-header.Parent = mainContainer
-
-local headerCorner = Instance.new("UICorner")
-headerCorner.CornerRadius = UDim.new(0, sizes.CornerRadius)
-headerCorner.Parent = header
-
-local headerGradient = Instance.new("UIGradient")
-headerGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 100)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 150, 50)),
+local RarityColors = {
+	Common = Color3.fromRGB(180, 180, 180),
+	Uncommon = Color3.fromRGB(100, 200, 100),
+	Rare = Color3.fromRGB(100, 150, 255),
+	Epic = Color3.fromRGB(200, 100, 255),
+	Legendary = Color3.fromRGB(255, 200, 50),
 }
-headerGradient.Rotation = 90
-headerGradient.Parent = header
 
--- Title
-local title = Instance.new("TextLabel")
-title.Name = "Title"
-title.Size = UDim2.new(0, 300, 1, 0)
-title.Position = UDim2.new(0, 20, 0, 0)
-title.BackgroundTransparency = 1
-title.Text = "🥚 PET EGGS 🥚"
-title.Font = Styles.Fonts.Title
-title.TextSize = sizes.TitleSize
-title.TextColor3 = Styles.Colors.TextDark
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = header
+-- ============================================
+-- ESTADO
+-- ============================================
 
--- Close button
-local closeButton = Instance.new("TextButton")
-closeButton.Name = "CloseButton"
-closeButton.AnchorPoint = Vector2.new(1, 0.5)
-closeButton.Position = UDim2.new(1, -15, 0.5, 0)
-closeButton.Size = UDim2.new(0, 60, 0, 60)
-closeButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-closeButton.Text = "✕"
-closeButton.Font = Styles.Fonts.Title
-closeButton.TextSize = 36
-closeButton.TextColor3 = Styles.Colors.Text
-closeButton.Parent = header
+local eggDisplays = {} -- {eggName = {part, billboard}}
+local autoOpenEnabled = {}
+local currentVisibleEgg = nil
 
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(1, 0)
-closeCorner.Parent = closeButton
+-- ============================================
+-- FUNCIONES AUXILIARES
+-- ============================================
 
-closeButton.MouseButton1Click:Connect(function()
-	backdrop.Visible = false
-	shopOpen = false
+player.CharacterAdded:Connect(function(char)
+	character = char
+	humanoidRootPart = char:WaitForChild("HumanoidRootPart")
 end)
 
--- Content container
-local contentContainer = Instance.new("ScrollingFrame")
-contentContainer.Name = "ContentContainer"
-contentContainer.Position = UDim2.new(0, 0, 0, sizes.HeaderHeight)
-contentContainer.Size = UDim2.new(1, 0, 1, -sizes.HeaderHeight)
-contentContainer.BackgroundTransparency = 1
-contentContainer.BorderSizePixel = 0
-contentContainer.ScrollBarThickness = 8
-contentContainer.Parent = mainContainer
+local function getPartPosition(part)
+	if part:IsA("Model") then
+		return part.PrimaryPart and part.PrimaryPart.Position or part:GetPivot().Position
+	end
+	return part.Position
+end
 
-local contentPadding = Instance.new("UIPadding")
-contentPadding.PaddingTop = UDim.new(0, 20)
-contentPadding.PaddingBottom = UDim.new(0, 20)
-contentPadding.PaddingLeft = UDim.new(0, 20)
-contentPadding.PaddingRight = UDim.new(0, 20)
-contentPadding.Parent = contentContainer
+local function getAdorneePart(part)
+	-- Si es Model, devolver PrimaryPart o la primera BasePart
+	if part:IsA("Model") then
+		if part.PrimaryPart then
+			return part.PrimaryPart
+		end
+		for _, child in ipairs(part:GetDescendants()) do
+			if child:IsA("BasePart") then
+				return child
+			end
+		end
+	end
+	return part
+end
 
-local contentLayout = Instance.new("UIGridLayout")
-contentLayout.CellSize = UDim2.new(0, sizes.CardSize, 0, sizes.CardSize + 80)
-contentLayout.CellPadding = UDim2.new(0, sizes.CardPadding, 0, sizes.CardPadding)
-contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-contentLayout.Parent = contentContainer
+local function sortPetsByChance(pets)
+	local sorted = {}
+	for petName, chance in pairs(pets) do
+		table.insert(sorted, {name = petName, chance = chance})
+	end
+	table.sort(sorted, function(a, b) return a.chance > b.chance end)
+	return sorted
+end
 
 -- ============================================
--- FUNCIONES (Forward declarations)
+-- FUNCIONES DE COMPRA
 -- ============================================
 
-local updateEggShop -- Forward declaration
+local function buyEgg(eggName, amount)
+	for i = 1, amount do
+		-- InvokeServer devuelve: success, petName/errorMsg, productId
+		local success, petNameOrError, extra = Remotes.OpenEgg:InvokeServer(eggName)
 
--- ============================================
--- CREAR TARJETA DE HUEVO
--- ============================================
+		if not success then
+			if petNameOrError == "ROBUX_PROMPT" then
+				-- Se abrió el prompt de Robux - esperar a que el jugador compre
+				print("[EggShop] Esperando compra con Robux...")
+				return false -- No continuar, el ProcessReceipt manejará la compra
+			else
+				warn("[EggShop] Error:", petNameOrError or "Desconocido")
+				return false
+			end
+		end
 
-local function createEggCard(eggName, eggConfig)
-	local card = Instance.new("Frame")
-	card.Name = eggName
-	card.BackgroundColor3 = Styles.Colors.Card
-	card.BorderSizePixel = 0
-	card.Parent = contentContainer
+		print("[EggShop] Huevo abierto! Obtenido:", petNameOrError)
+		if amount > 1 then task.wait(0.3) end
+	end
+	return true
+end
 
-	local cardCorner = Instance.new("UICorner")
-	cardCorner.CornerRadius = UDim.new(0, sizes.CornerRadius)
-	cardCorner.Parent = card
+local function toggleAuto(eggName, autoButton)
+	autoOpenEnabled[eggName] = not autoOpenEnabled[eggName]
 
-	-- Icono del huevo
-	local icon = Instance.new("TextLabel")
-	icon.Size = UDim2.new(0, sizes.IconSize, 0, sizes.IconSize)
-	icon.Position = UDim2.new(0.5, 0, 0, 15)
-	icon.AnchorPoint = Vector2.new(0.5, 0)
-	icon.BackgroundTransparency = 1
-	icon.Text = eggConfig.Icon
-	icon.Font = Enum.Font.SourceSans
-	icon.TextSize = sizes.IconSize
-	icon.Parent = card
+	if autoOpenEnabled[eggName] then
+		autoButton.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
+		autoButton.Text = "Auto ✓"
 
-	-- Nombre del huevo
-	local name = Instance.new("TextLabel")
-	name.Size = UDim2.new(1, -20, 0, 30)
-	name.Position = UDim2.new(0.5, 0, 0, sizes.IconSize + 25)
-	name.AnchorPoint = Vector2.new(0.5, 0)
-	name.BackgroundTransparency = 1
-	name.Text = eggConfig.Name
-	name.Font = Styles.Fonts.Title
-	name.TextSize = sizes.TextSize + 4
-	name.TextColor3 = Styles.Colors.Text
-	name.Parent = card
-
-	-- Descripción
-	local desc = Instance.new("TextLabel")
-	desc.Size = UDim2.new(1, -20, 0, 30)
-	desc.Position = UDim2.new(0.5, 0, 0, sizes.IconSize + 55)
-	desc.AnchorPoint = Vector2.new(0.5, 0)
-	desc.BackgroundTransparency = 1
-	desc.Text = eggConfig.Description
-	desc.Font = Styles.Fonts.Body
-	desc.TextSize = sizes.TextSize - 4
-	desc.TextColor3 = Styles.Colors.TextMuted
-	desc.TextWrapped = true
-	desc.Parent = card
-
-	-- Botón de compra
-	local buyButton = Instance.new("TextButton")
-	buyButton.Size = UDim2.new(1, -30, 0, sizes.ButtonHeight)
-	buyButton.Position = UDim2.new(0.5, 0, 1, -sizes.ButtonHeight - 15)
-	buyButton.AnchorPoint = Vector2.new(0.5, 0)
-	buyButton.BackgroundColor3 = eggConfig.CostRobux and Styles.Colors.ButtonRobux or Styles.Colors.ButtonCoin
-	buyButton.Text = eggConfig.CostRobux and ("💎 " .. eggConfig.CostRobux .. " R$") or ("💰 " .. eggConfig.Cost)
-	buyButton.Font = Styles.Fonts.Title
-	buyButton.TextSize = sizes.ButtonTextSize
-	buyButton.TextColor3 = eggConfig.CostRobux and Styles.Colors.Text or Styles.Colors.TextDark
-	buyButton.Parent = card
-
-	local buyCorner = Instance.new("UICorner")
-	buyCorner.CornerRadius = UDim.new(0, sizes.CornerRadius)
-	buyCorner.Parent = buyButton
-
-	local buyStroke = Instance.new("UIStroke")
-	buyStroke.Color = Styles.Colors.Border
-	buyStroke.Thickness = 3
-	buyStroke.Transparency = 0.7
-	buyStroke.Parent = buyButton
-
-	buyButton.MouseButton1Click:Connect(function()
-		if not playerData then return end
-
-		local success, result, petName, uuid = pcall(function()
-			return Remotes.OpenEgg:InvokeServer(eggName)
+		task.spawn(function()
+			while autoOpenEnabled[eggName] do
+				if not buyEgg(eggName, 1) then
+					autoOpenEnabled[eggName] = false
+					autoButton.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
+					autoButton.Text = "Auto"
+					break
+				end
+				task.wait(0.5)
+			end
 		end)
+	else
+		autoButton.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
+		autoButton.Text = "Auto"
+	end
+end
 
-		if success and result then
-			print("[EggShop] Mascota obtenida:", petName)
-			-- La UI se actualiza automáticamente via OnDataUpdated
-		else
-			warn("[EggShop] Error:", result)
+-- ============================================
+-- CREAR BILLBOARD PARA UN HUEVO
+-- ============================================
+
+local function createEggBillboard(eggPart, eggName, eggConfig)
+	-- Obtener el Part para el Adornee
+	local adorneePart = getAdorneePart(eggPart)
+
+	-- BillboardGui en PlayerGui con Adornee (ESTO ES LA CLAVE PARA CLICKS)
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "EggShopBillboard_" .. eggName
+	billboard.Size = UDim2.new(14, 0, 18, 0) -- Tamaño en studs (perspectiva natural)
+	billboard.StudsOffset = Vector3.new(0, 8, 0)
+	billboard.AlwaysOnTop = false
+	billboard.Active = true
+	billboard.ClipsDescendants = false
+	billboard.MaxDistance = 50
+	billboard.ResetOnSpawn = false
+	billboard.Adornee = adorneePart -- Apunta al Part
+	billboard.Enabled = false
+	billboard.Parent = playerGui -- EN PLAYERGUI, NO EN EL PART
+
+	-- Frame principal
+	local mainFrame = Instance.new("Frame")
+	mainFrame.Name = "MainFrame"
+	mainFrame.Size = UDim2.new(1, 0, 1, 0)
+	mainFrame.BackgroundColor3 = Styles.Colors.Background
+	mainFrame.BorderSizePixel = 0
+	mainFrame.Active = false -- No bloquear clicks a hijos
+	mainFrame.Parent = billboard
+
+	local mainCorner = Instance.new("UICorner")
+	mainCorner.CornerRadius = UDim.new(0.05, 0)
+	mainCorner.Parent = mainFrame
+
+	local mainStroke = Instance.new("UIStroke")
+	mainStroke.Color = Styles.Colors.Header
+	mainStroke.Thickness = 4
+	mainStroke.Parent = mainFrame
+
+	-- Header
+	local header = Instance.new("Frame")
+	header.Name = "Header"
+	header.Size = UDim2.new(1, 0, 0.12, 0)
+	header.BackgroundColor3 = Styles.Colors.Header
+	header.BorderSizePixel = 0
+	header.Parent = mainFrame
+
+	local headerCorner = Instance.new("UICorner")
+	headerCorner.CornerRadius = UDim.new(0.3, 0)
+	headerCorner.Parent = header
+
+	-- Nombre
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(0.55, 0, 1, 0)
+	nameLabel.Position = UDim2.new(0.02, 0, 0, 0)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = eggConfig.Name
+	nameLabel.Font = Styles.Fonts.Title
+	nameLabel.TextScaled = true
+	nameLabel.TextColor3 = Styles.Colors.TextDark
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	nameLabel.Parent = header
+
+	-- Precio
+	local priceLabel = Instance.new("TextLabel")
+	priceLabel.Size = UDim2.new(0.4, 0, 1, 0)
+	priceLabel.Position = UDim2.new(0.58, 0, 0, 0)
+	priceLabel.BackgroundTransparency = 1
+	priceLabel.Text = eggConfig.CostRobux and ("R$ " .. eggConfig.CostRobux) or ("$ " .. eggConfig.Cost)
+	priceLabel.Font = Styles.Fonts.Title
+	priceLabel.TextScaled = true
+	priceLabel.TextColor3 = Styles.Colors.TextDark
+	priceLabel.TextXAlignment = Enum.TextXAlignment.Right
+	priceLabel.Parent = header
+
+	-- Container de mascotas
+	local petsContainer = Instance.new("Frame")
+	petsContainer.Name = "PetsContainer"
+	petsContainer.Size = UDim2.new(0.96, 0, 0.55, 0)
+	petsContainer.Position = UDim2.new(0.02, 0, 0.14, 0)
+	petsContainer.BackgroundTransparency = 1
+	petsContainer.Parent = mainFrame
+
+	local petsLayout = Instance.new("UIGridLayout")
+	petsLayout.CellSize = UDim2.new(0.3, 0, 0.45, 0)
+	petsLayout.CellPadding = UDim2.new(0.02, 0, 0.03, 0)
+	petsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	petsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	petsLayout.Parent = petsContainer
+
+	-- Crear tarjetas de mascotas
+	local sortedPets = sortPetsByChance(eggConfig.Pets)
+	for i, petData in ipairs(sortedPets) do
+		local petConfig = Config.Pets[petData.name]
+		if petConfig then
+			local petCard = Instance.new("Frame")
+			petCard.Name = petData.name
+			petCard.BackgroundColor3 = RarityColors[petConfig.Rarity] or RarityColors.Common
+			petCard.BorderSizePixel = 0
+			petCard.LayoutOrder = i
+			petCard.Parent = petsContainer
+
+			local petCorner = Instance.new("UICorner")
+			petCorner.CornerRadius = UDim.new(0.15, 0)
+			petCorner.Parent = petCard
+
+			-- Probabilidad
+			local chanceLabel = Instance.new("TextLabel")
+			chanceLabel.Size = UDim2.new(1, 0, 0.25, 0)
+			chanceLabel.BackgroundTransparency = 1
+			chanceLabel.Text = math.floor(petData.chance * 100) .. "%"
+			chanceLabel.Font = Styles.Fonts.Body
+			chanceLabel.TextScaled = true
+			chanceLabel.TextColor3 = Styles.Colors.Text
+			chanceLabel.Parent = petCard
+
+			-- Icono
+			local petIcon = Instance.new("TextLabel")
+			petIcon.Size = UDim2.new(1, 0, 0.5, 0)
+			petIcon.Position = UDim2.new(0, 0, 0.2, 0)
+			petIcon.BackgroundTransparency = 1
+			petIcon.Text = petConfig.Icon
+			petIcon.TextScaled = true
+			petIcon.Parent = petCard
+
+			-- Nombre
+			local petNameLabel = Instance.new("TextLabel")
+			petNameLabel.Size = UDim2.new(1, 0, 0.25, 0)
+			petNameLabel.Position = UDim2.new(0, 0, 0.72, 0)
+			petNameLabel.BackgroundTransparency = 1
+			petNameLabel.Text = petConfig.Name
+			petNameLabel.Font = Styles.Fonts.Body
+			petNameLabel.TextScaled = true
+			petNameLabel.TextColor3 = Styles.Colors.Text
+			petNameLabel.Parent = petCard
 		end
+	end
+
+	-- Container de botones
+	local buttonsContainer = Instance.new("Frame")
+	buttonsContainer.Name = "ButtonsContainer"
+	buttonsContainer.Size = UDim2.new(0.96, 0, 0.15, 0)
+	buttonsContainer.Position = UDim2.new(0.02, 0, 0.72, 0)
+	buttonsContainer.BackgroundTransparency = 1
+	buttonsContainer.Parent = mainFrame
+
+	local buttonsLayout = Instance.new("UIListLayout")
+	buttonsLayout.FillDirection = Enum.FillDirection.Horizontal
+	buttonsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	buttonsLayout.Padding = UDim.new(0.02, 0)
+	buttonsLayout.Parent = buttonsContainer
+
+	local btnColor = eggConfig.CostRobux and Styles.Colors.ButtonRobux or Styles.Colors.ButtonCoin
+	local txtColor = eggConfig.CostRobux and Styles.Colors.Text or Styles.Colors.TextDark
+
+	-- Botón x1
+	local btnX1 = Instance.new("TextButton")
+	btnX1.Name = "BtnX1"
+	btnX1.Size = UDim2.new(0.28, 0, 1, 0)
+	btnX1.BackgroundColor3 = btnColor
+	btnX1.Text = "x1"
+	btnX1.Font = Styles.Fonts.Body
+	btnX1.TextScaled = true
+	btnX1.TextColor3 = txtColor
+	btnX1.AutoButtonColor = true
+	btnX1.Parent = buttonsContainer
+	Instance.new("UICorner", btnX1).CornerRadius = UDim.new(0.2, 0)
+
+	btnX1.Activated:Connect(function()
+		buyEgg(eggName, 1)
 	end)
+
+	-- Botón x3
+	local btnX3 = Instance.new("TextButton")
+	btnX3.Name = "BtnX3"
+	btnX3.Size = UDim2.new(0.28, 0, 1, 0)
+	btnX3.BackgroundColor3 = btnColor
+	btnX3.Text = "x3"
+	btnX3.Font = Styles.Fonts.Body
+	btnX3.TextScaled = true
+	btnX3.TextColor3 = txtColor
+	btnX3.AutoButtonColor = true
+	btnX3.Parent = buttonsContainer
+	Instance.new("UICorner", btnX3).CornerRadius = UDim.new(0.2, 0)
+
+	btnX3.Activated:Connect(function()
+		buyEgg(eggName, 3)
+	end)
+
+	-- Botón Auto
+	local btnAuto = Instance.new("TextButton")
+	btnAuto.Name = "BtnAuto"
+	btnAuto.Size = UDim2.new(0.35, 0, 1, 0)
+	btnAuto.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
+	btnAuto.Text = "Auto"
+	btnAuto.Font = Styles.Fonts.Body
+	btnAuto.TextScaled = true
+	btnAuto.TextColor3 = Styles.Colors.Text
+	btnAuto.AutoButtonColor = true
+	btnAuto.Parent = buttonsContainer
+	Instance.new("UICorner", btnAuto).CornerRadius = UDim.new(0.2, 0)
+
+	btnAuto.Activated:Connect(function()
+		toggleAuto(eggName, btnAuto)
+	end)
+
+	-- Texto de ayuda
+	local helpText = Instance.new("TextLabel")
+	helpText.Size = UDim2.new(1, 0, 0.08, 0)
+	helpText.Position = UDim2.new(0, 0, 0.9, 0)
+	helpText.BackgroundTransparency = 1
+	helpText.Text = "E: x1 | R: x3 | Y: Auto"
+	helpText.Font = Styles.Fonts.Body
+	helpText.TextScaled = true
+	helpText.TextColor3 = Color3.fromRGB(150, 150, 170)
+	helpText.Parent = mainFrame
+
+	return billboard
 end
 
 -- ============================================
--- ACTUALIZAR UI
+-- BUSCAR E INICIALIZAR HUEVOS
 -- ============================================
 
-updateEggShop = function()
-	-- Limpiar tarjetas existentes
-	for _, child in ipairs(contentContainer:GetChildren()) do
-		if child:IsA("Frame") then
-			child:Destroy()
+local function findAndSetupEggs()
+	local function searchInFolder(folder)
+		for _, child in ipairs(folder:GetChildren()) do
+			if child.Name:sub(1, #EGG_PART_PREFIX) == EGG_PART_PREFIX then
+				local eggName = child.Name:sub(#EGG_PART_PREFIX + 1)
+				local eggConfig = Config.Eggs[eggName]
+
+				if eggConfig then
+					print("[EggShop] Encontrado:", child.Name)
+					local billboard = createEggBillboard(child, eggName, eggConfig)
+					eggDisplays[eggName] = {
+						part = child,
+						billboard = billboard,
+					}
+				end
+			end
+
+			if child:IsA("Folder") or child:IsA("Model") then
+				searchInFolder(child)
+			end
 		end
 	end
 
-	-- Obtener datos del jugador
-	local success, result = pcall(function()
-		return Remotes.GetPlayerData:InvokeServer()
-	end)
+	searchInFolder(Workspace)
+end
 
-	if success then
-		playerData = result.Data
+-- ============================================
+-- ACTUALIZAR VISIBILIDAD POR PROXIMIDAD
+-- ============================================
+
+local function updateProximity()
+	if not humanoidRootPart then return end
+
+	local playerPos = humanoidRootPart.Position
+	local closestEgg = nil
+	local closestDistance = math.huge
+
+	-- Encontrar huevo más cercano
+	for eggName, data in pairs(eggDisplays) do
+		local partPos = getPartPosition(data.part)
+		local distance = (partPos - playerPos).Magnitude
+
+		if distance <= PROXIMITY_DISTANCE and distance < closestDistance then
+			closestDistance = distance
+			closestEgg = eggName
+		end
 	end
 
-	-- Crear tarjetas para cada huevo
-	for eggName, eggConfig in pairs(Config.Eggs) do
-		createEggCard(eggName, eggConfig)
+	-- Solo actualizar si cambió el huevo visible
+	if closestEgg ~= currentVisibleEgg then
+		-- Ocultar el anterior
+		if currentVisibleEgg and eggDisplays[currentVisibleEgg] then
+			eggDisplays[currentVisibleEgg].billboard.Enabled = false
+		end
+
+		-- Mostrar el nuevo
+		if closestEgg and eggDisplays[closestEgg] then
+			eggDisplays[closestEgg].billboard.Enabled = true
+		end
+
+		currentVisibleEgg = closestEgg
 	end
 end
 
 -- ============================================
--- ABRIR/CERRAR TIENDA
+-- TECLAS RÁPIDAS
 -- ============================================
 
-local function openShop()
-	if shopOpen then return end
-	shopOpen = true
-	backdrop.Visible = true
-	updateEggShop()
-end
-
-local function closeShop()
-	shopOpen = false
-	backdrop.Visible = false
-end
-
--- Toggle con tecla E
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 
+	-- Encontrar huevo visible
+	local visibleEgg = currentVisibleEgg
+	if not visibleEgg then return end
+
 	if input.KeyCode == Enum.KeyCode.E then
-		if shopOpen then
-			closeShop()
-		else
-			openShop()
+		buyEgg(visibleEgg, 1)
+	elseif input.KeyCode == Enum.KeyCode.R then
+		buyEgg(visibleEgg, 3)
+	elseif input.KeyCode == Enum.KeyCode.T then
+		buyEgg(visibleEgg, 5)
+	elseif input.KeyCode == Enum.KeyCode.Y then
+		local data = eggDisplays[visibleEgg]
+		local btnAuto = data.billboard:FindFirstChild("MainFrame")
+			and data.billboard.MainFrame:FindFirstChild("ButtonsContainer")
+			and data.billboard.MainFrame.ButtonsContainer:FindFirstChild("BtnAuto")
+		if btnAuto then
+			toggleAuto(visibleEgg, btnAuto)
 		end
 	end
 end)
 
--- Actualizar cuando cambien los datos
+-- ============================================
+-- INICIALIZACIÓN
+-- ============================================
+
+task.wait(1)
+findAndSetupEggs()
+
+RunService.Heartbeat:Connect(updateProximity)
+
 Remotes.OnDataUpdated.OnClientEvent:Connect(function(newData)
-	playerData = newData
-	if shopOpen then
-		updateEggShop()
-	end
+	-- Datos actualizados
 end)
 
-print("[EggShop] Inicializado - Presiona E para abrir")
+print("[EggShop] Sistema con BillboardGui clickeable inicializado")
