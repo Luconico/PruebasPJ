@@ -6,18 +6,12 @@
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
-      },
-      "uxpRS2": {
-        "$path": "src/uxpRS2"
       }
     },
 
     "ServerScriptService": {
       "Server": {
         "$path": "src/server"
-      },
-      "uxpSSS2": {
-        "$path": "src/uxpSSS2"
       }
     },
 
