@@ -62,19 +62,27 @@ local function getRowWidth(row, pet)
 	return rowWidth
 end
 
-local function movePets(hrp, pet, x, y, z, xOffset, hum)
+local function movePets(hrp, pet, x, y, z, xOffset, hum, playerInAir)
 	if not pet.PrimaryPart then return end
 
-	local targetCFrame = CFrame.new(hrp.CFrame.X, 0, hrp.CFrame.Z)
-		* hrp.CFrame.Rotation
-		* CFrame.new(x - xOffset, y, z)
+	local targetCFrame
 
-	-- Animación de caminar
-	if hum.MoveDirection.Magnitude > 0 then
-		local timeDelay = pet:FindFirstChild("TimeDelay") and pet.TimeDelay.Value or 0
-		local isFlying = pet:FindFirstChild("Flying") and pet.Flying.Value or false
+	if playerInAir then
+		-- Cuando el jugador está en el aire, seguirlo directamente
+		targetCFrame = hrp.CFrame * CFrame.new(x - xOffset, -2, z)
+	else
+		-- En el suelo, usar la altura del raycast
+		targetCFrame = CFrame.new(hrp.CFrame.X, 0, hrp.CFrame.Z)
+			* hrp.CFrame.Rotation
+			* CFrame.new(x - xOffset, y, z)
+	end
 
-		if isFlying then
+	-- Animación de caminar/volar
+	local timeDelay = pet:FindFirstChild("TimeDelay") and pet.TimeDelay.Value or 0
+	local isFlying = pet:FindFirstChild("Flying") and pet.Flying.Value or false
+
+	if hum.MoveDirection.Magnitude > 0 or playerInAir then
+		if isFlying or playerInAir then
 			local wave = math.sin((time() + timeDelay) * WALK_SPEED) * 0.1
 			local cos = math.cos((time() + timeDelay) * WALK_SPEED) * 0.1
 			targetCFrame = targetCFrame * CFrame.new(0, -wave, 0) * CFrame.Angles(cos, 0, 0)
@@ -85,13 +93,15 @@ local function movePets(hrp, pet, x, y, z, xOffset, hum)
 		end
 	end
 
-	-- Animación idle
-	local timeDelay = pet:FindFirstChild("TimeDelay") and pet.TimeDelay.Value or 0
-	local idleWave = math.sin((time() + timeDelay) * IDLE_SPEED) * IDLE_AMP
-	targetCFrame = targetCFrame * CFrame.new(0, idleWave, 0)
+	-- Animación idle (solo si no está en el aire)
+	if not playerInAir then
+		local idleWave = math.sin((time() + timeDelay) * IDLE_SPEED) * IDLE_AMP
+		targetCFrame = targetCFrame * CFrame.new(0, idleWave, 0)
+	end
 
-	-- Suavizar con Lerp
-	pet.PrimaryPart.CFrame = pet.PrimaryPart.CFrame:Lerp(targetCFrame, 0.1)
+	-- Suavizar con Lerp (más rápido cuando está en el aire para mejor seguimiento)
+	local lerpSpeed = playerInAir and 0.15 or 0.1
+	pet.PrimaryPart.CFrame = pet.PrimaryPart.CFrame:Lerp(targetCFrame, lerpSpeed)
 end
 
 RunService.Heartbeat:Connect(function()
@@ -121,6 +131,9 @@ RunService.Heartbeat:Connect(function()
 
 	rayParams.FilterDescendantsInstances = {ServerPets, character}
 
+	-- Detectar si el jugador está en el aire
+	local playerInAir = humanoid.FloorMaterial == Enum.Material.Air
+
 	local maxRowCapacity = math.ceil(math.sqrt(#pets))
 	rearrangeTables(pets, rows, maxRowCapacity)
 
@@ -135,22 +148,25 @@ RunService.Heartbeat:Connect(function()
 		local z = rowIndex * SPACING
 		local y = 0
 
-		local rayResult = Workspace:Blockcast(
-			pet.PrimaryPart.CFrame + Vector3.new(0, MAX_CLIMB_HEIGHT, 0),
-			pet.PrimaryPart.Size,
-			rayDirection,
-			rayParams
-		)
+		-- Solo hacer raycast si el jugador está en el suelo
+		if not playerInAir then
+			local rayResult = Workspace:Blockcast(
+				pet.PrimaryPart.CFrame + Vector3.new(0, MAX_CLIMB_HEIGHT, 0),
+				pet.PrimaryPart.Size,
+				rayDirection,
+				rayParams
+			)
 
-		if rayResult then
-			local isFlying = pet:FindFirstChild("Flying") and pet.Flying.Value or false
-			y = rayResult.Position.Y + pet.PrimaryPart.Size.Y / 2
-			if isFlying then
-				y = y + FLY_OFFSET
+			if rayResult then
+				local isFlying = pet:FindFirstChild("Flying") and pet.Flying.Value or false
+				y = rayResult.Position.Y + pet.PrimaryPart.Size.Y / 2
+				if isFlying then
+					y = y + FLY_OFFSET
+				end
 			end
 		end
 
-		movePets(humanoidRootPart, pet, x, y, z, xOffset, humanoid)
+		movePets(humanoidRootPart, pet, x, y, z, xOffset, humanoid, playerInAir)
 	end
 end)
 

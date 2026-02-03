@@ -273,11 +273,10 @@ local function createPetCard(pet)
 			return Remotes[remoteName]:InvokeServer(pet.UUID)
 		end)
 
-		if success then
-			updateInventory()
-		else
+		if not success then
 			warn("[PetInventory] Error:", result)
 		end
+		-- La UI se actualiza automáticamente via OnDataUpdated
 	end)
 
 	-- Botón Lock
@@ -297,10 +296,7 @@ local function createPetCard(pet)
 		local success = pcall(function()
 			return Remotes.LockPet:InvokeServer(pet.UUID)
 		end)
-
-		if success then
-			updateInventory()
-		end
+		-- La UI se actualiza automáticamente via OnDataUpdated
 	end)
 
 	-- Botón Delete
@@ -325,10 +321,7 @@ local function createPetCard(pet)
 		local success = pcall(function()
 			return Remotes.DeletePet:InvokeServer(pet.UUID)
 		end)
-
-		if success then
-			updateInventory()
-		end
+		-- La UI se actualiza automáticamente via OnDataUpdated
 	end)
 end
 

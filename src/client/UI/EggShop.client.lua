@@ -265,9 +265,7 @@ local function createEggCard(eggName, eggConfig)
 
 		if success and result then
 			print("[EggShop] Mascota obtenida:", petName)
-			-- Mostrar notificación (puede mejorarse con UI animada)
-			-- Por ahora solo print
-			updateEggShop()
+			-- La UI se actualiza automáticamente via OnDataUpdated
 		else
 			warn("[EggShop] Error:", result)
 		end
