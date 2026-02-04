@@ -23,7 +23,7 @@ SoundManager.Sounds = {
 	-- Compras y Éxito
 	PurchaseSuccess = "rbxassetid://4307186075", -- Victory sound
 	CashRegister = "rbxassetid://7112275565",   -- Cash Register (Kaching)
-	Sparkle = "rbxassetid://9125402735",        -- Sparkle/Chime (corto)
+	Sparkle = "rbxassetid://3043029786",        -- Eat Sound Effect 2
 
 	-- Acciones
 	Equip = "rbxassetid://6042053626",          -- Equip/Action sound
