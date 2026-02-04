@@ -120,6 +120,8 @@ local function createRemotes()
 		"OnCoinCollected",   -- Servidor → Cliente: moneda recogida
 		"OnMilestoneReached",-- Servidor → Cliente: hito alcanzado
 		"CollectHeightBonus",-- Cliente → Servidor: recompensa por altura
+		"OnTrophyCollected", -- Servidor → Cliente: trofeo recogido
+		"OnTrophyVisibility",-- Servidor → Cliente: mostrar/ocultar trofeo
 	}
 
 	-- Funciones (con respuesta)
@@ -132,6 +134,7 @@ local function createRemotes()
 		"CollectCoin",       -- Cliente → Servidor: recoger moneda
 		"PurchaseCosmetic",  -- Cliente → Servidor: comprar cosmético
 		"EquipCosmetic",     -- Cliente → Servidor: equipar cosmético
+		"CollectTrophy",     -- Cliente → Servidor: recoger trofeo
 		-- Pet system
 		"OpenEgg",           -- Cliente → Servidor: abrir huevo
 		"EquipPet",          -- Cliente → Servidor: equipar mascota
@@ -152,6 +155,17 @@ local function createRemotes()
 		local remote = Instance.new("RemoteFunction")
 		remote.Name = name
 		remote.Parent = remotesFolder
+	end
+
+	-- BindableFunctions para comunicación servidor-servidor
+	local bindables = {
+		"CollectTrophyInternal", -- Servidor → Servidor: recoger trofeo
+	}
+
+	for _, name in ipairs(bindables) do
+		local bindable = Instance.new("BindableFunction")
+		bindable.Name = name
+		bindable.Parent = remotesFolder
 	end
 
 	return remotesFolder
@@ -923,6 +937,23 @@ local function collectCoin(player, coinValue)
 	return true
 end
 
+-- Recoger un trofeo
+local function collectTrophy(player, trophyValue)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	trophyValue = trophyValue or 1
+
+	data.Trophies = (data.Trophies or 0) + trophyValue
+
+	updatePlayerData(player, {
+		Trophies = data.Trophies
+	})
+
+	Remotes.OnTrophyCollected:FireClient(player, trophyValue, data.Trophies)
+	return true
+end
+
 -- Registrar altura alcanzada y dar bonus si corresponde
 local function registerHeight(player, height)
 	local data = getPlayerData(player)
@@ -994,6 +1025,15 @@ end
 
 Remotes.CollectCoin.OnServerInvoke = function(player, coinValue)
 	return collectCoin(player, coinValue)
+end
+
+Remotes.CollectTrophy.OnServerInvoke = function(player, trophyValue)
+	return collectTrophy(player, trophyValue)
+end
+
+-- BindableFunction para comunicación servidor-servidor
+Remotes.CollectTrophyInternal.OnInvoke = function(player, trophyValue)
+	return collectTrophy(player, trophyValue)
 end
 
 Remotes.RegisterHeight.OnServerInvoke = function(player, height)

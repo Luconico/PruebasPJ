@@ -383,19 +383,19 @@ local function createHeightMeter(parent)
 	return wrapper, height
 end
 
--- Contador de récord de altura (centro)
-local function createMaxHeightCounter(parent)
+-- Contador de trofeos (centro)
+local function createTrophyCounter(parent)
 	local totalWidth = sizes.CounterWidth + sizes.CounterIconOverflow
 
 	local wrapper, amount = createCartoonCounter(
 		parent,
-		"MaxHeightCounter",
+		"TrophyCounter",
 		"🏆",
-		Styles.Colors.MaxHeightTextColor, -- Dorado/naranja para récord
+		Styles.Colors.MaxHeightTextColor, -- Dorado/naranja para trofeos
 		UDim2.new(0, totalWidth + sizes.CounterSpacing, 0, 0) -- Segunda posición (centro)
 	)
 
-	amount.Text = "0m"
+	amount.Text = "0"
 
 	return wrapper, amount
 end
@@ -502,7 +502,7 @@ local countersContainer = createCenteredCountersContainer(screenGui)
 
 -- Crear contadores dentro del contenedor centrado
 local heightContainer, heightText = createHeightMeter(countersContainer)
-local maxHeightContainer, maxHeightText = createMaxHeightCounter(countersContainer)
+local trophyContainer, trophyText = createTrophyCounter(countersContainer)
 local coinContainer, coinText = createCoinCounter(countersContainer)
 
 local milestoneContainer, milestoneMain, milestoneBonus = createMilestoneNotification(screenGui)
@@ -546,38 +546,33 @@ local function updateHeight(height)
 end
 
 -- Tamaño base fijo para evitar acumulación de animaciones
-local maxHeightTextBaseSize = nil
+local trophyTextBaseSize = nil
 
-local function updateMaxHeight(maxHeight)
-	-- Formatear altura (metros o km)
-	local displayText
-	if maxHeight >= 1000 then
-		displayText = string.format("%.1fkm", maxHeight / 1000)
-	else
-		displayText = math.floor(maxHeight) .. "m"
-	end
+local function updateTrophies(trophies)
+	local displayText = tostring(trophies)
 
 	-- Guardar tamaño base la primera vez
-	if not maxHeightTextBaseSize then
-		maxHeightTextBaseSize = maxHeightText.Size
+	if not trophyTextBaseSize then
+		trophyTextBaseSize = trophyText.Size
 	end
 
-	-- Solo animar si cambió el récord
-	if maxHeight > playerData.MaxHeight then
-		playerData.MaxHeight = maxHeight
+	-- Solo animar si aumentaron los trofeos
+	if trophies > (playerData.Trophies or 0) then
+		playerData.Trophies = trophies
 
-		-- Animación de "pop" cuando se supera el récord - siempre volver al tamaño base fijo
-		maxHeightText.Text = displayText
-		TweenService:Create(maxHeightText, TweenInfo.new(0.1), {
-			Size = UDim2.new(maxHeightTextBaseSize.X.Scale * 1.15, maxHeightTextBaseSize.X.Offset, maxHeightTextBaseSize.Y.Scale, maxHeightTextBaseSize.Y.Offset)
+		-- Animación de "pop" cuando aumentan trofeos
+		trophyText.Text = displayText
+		TweenService:Create(trophyText, TweenInfo.new(0.1), {
+			Size = UDim2.new(trophyTextBaseSize.X.Scale * 1.15, trophyTextBaseSize.X.Offset, trophyTextBaseSize.Y.Scale, trophyTextBaseSize.Y.Offset)
 		}):Play()
 		task.delay(0.1, function()
-			TweenService:Create(maxHeightText, TweenInfo.new(0.1), {
-				Size = maxHeightTextBaseSize
+			TweenService:Create(trophyText, TweenInfo.new(0.1), {
+				Size = trophyTextBaseSize
 			}):Play()
 		end)
 	else
-		maxHeightText.Text = displayText
+		playerData.Trophies = trophies
+		trophyText.Text = displayText
 	end
 end
 
@@ -636,6 +631,32 @@ local function showFloatingNumber(amount, worldPosition)
 	end)
 end
 
+local function showFloatingTrophy(amount, worldPosition)
+	local camera = workspace.CurrentCamera
+	if not camera then return end
+
+	local screenPos, onScreen = camera:WorldToScreenPoint(worldPosition)
+	if not onScreen then return end
+
+	local floater = floatingNumberTemplate:Clone()
+	floater.Text = "+" .. amount .. " 🏆"
+	floater.TextColor3 = Styles.Colors.MaxHeightTextColor -- Dorado
+	floater.Position = UDim2.new(0, screenPos.X, 0, screenPos.Y)
+	floater.Visible = true
+	floater.Parent = screenGui
+
+	-- Animación hacia arriba y desvanecimiento
+	local tweenUp = TweenService:Create(floater, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0, screenPos.X, 0, screenPos.Y - 100),
+		TextTransparency = 1,
+		TextStrokeTransparency = 1
+	})
+	tweenUp:Play()
+	tweenUp.Completed:Connect(function()
+		floater:Destroy()
+	end)
+end
+
 -- ============================================
 -- CONEXIONES CON SERVIDOR
 -- ============================================
@@ -650,9 +671,9 @@ if Remotes then
 				playerData.MaxFatness = data.UpgradeValues and data.UpgradeValues.MaxFatness or 3.0
 				updateCoins(playerData.Coins)
 
-				-- Actualizar récord de altura
-				if data.Data.Records and data.Data.Records.MaxHeight then
-					updateMaxHeight(data.Data.Records.MaxHeight)
+				-- Actualizar trofeos
+				if data.Data.Trophies then
+					updateTrophies(data.Data.Trophies)
 				end
 			end
 		end)
@@ -666,9 +687,9 @@ if Remotes then
 				playerData.Coins = data.Coins or playerData.Coins
 				updateCoins(playerData.Coins)
 
-				-- Actualizar récord de altura si hay nuevos datos
-				if data.Records and data.Records.MaxHeight then
-					updateMaxHeight(data.Records.MaxHeight)
+				-- Actualizar trofeos si hay nuevos datos
+				if data.Trophies then
+					updateTrophies(data.Trophies)
 				end
 			end
 		end)
@@ -686,6 +707,23 @@ if Remotes then
 				local rootPart = character:FindFirstChild("HumanoidRootPart")
 				if rootPart then
 					showFloatingNumber(amount, rootPart.Position + Vector3.new(0, 3, 0))
+				end
+			end
+		end)
+	end
+
+	-- Trofeo recogido
+	local OnTrophyCollected = Remotes:FindFirstChild("OnTrophyCollected")
+	if OnTrophyCollected then
+		OnTrophyCollected.OnClientEvent:Connect(function(amount, totalTrophies)
+			updateTrophies(totalTrophies)
+
+			-- Mostrar número flotante de trofeo
+			local character = player.Character
+			if character then
+				local rootPart = character:FindFirstChild("HumanoidRootPart")
+				if rootPart then
+					showFloatingTrophy(amount, rootPart.Position + Vector3.new(0, 3, 0))
 				end
 			end
 		end)
@@ -745,8 +783,8 @@ local function rebuildUI()
 	heightContainer.Size = UDim2.new(0, totalWidth, 0, sizes.CounterHeight)
 	heightContainer.Position = UDim2.new(0, 0, 0, 0)
 
-	maxHeightContainer.Size = UDim2.new(0, totalWidth, 0, sizes.CounterHeight)
-	maxHeightContainer.Position = UDim2.new(0, totalWidth + sizes.CounterSpacing, 0, 0)
+	trophyContainer.Size = UDim2.new(0, totalWidth, 0, sizes.CounterHeight)
+	trophyContainer.Position = UDim2.new(0, totalWidth + sizes.CounterSpacing, 0, 0)
 
 	coinContainer.Size = UDim2.new(0, totalWidth, 0, sizes.CounterHeight)
 	coinContainer.Position = UDim2.new(0, (totalWidth + sizes.CounterSpacing) * 2, 0, 0)
