@@ -436,8 +436,9 @@ function collectItem(itemPart)
 		activeItems[itemPart] = nil
 		itemPart:Destroy()
 
-		-- Respawn despues del tiempo configurado
-		task.delay(globalSettings.RespawnTime, function()
+		-- Respawn despues del tiempo configurado (usa tiempo del tipo o global como fallback)
+		local respawnTime = typeConfig.RespawnTime or globalSettings.RespawnTime
+		task.delay(respawnTime, function()
 			if parcelsData[itemData.ParcelName] then
 				createFoodItem(itemData.ParcelName)
 			end

@@ -60,6 +60,12 @@ local DEFAULT_PARCELS = {
 		Size = Vector3.new(22, 2, 22),
 	},
 	{
+		Name = "BurgerFieldFast",
+		ParcelType = "Burger",
+		Position = Vector3.new(-50, 1, 30),
+		Size = Vector3.new(22, 2, 22),
+	},
+	{
 		Name = "PizzaParadise",
 		ParcelType = "Pizza",
 		Position = Vector3.new(50, 1, -40),
