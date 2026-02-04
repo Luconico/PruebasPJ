@@ -241,6 +241,40 @@ Config.FoodParcels = {
 			Color = Color3.fromRGB(255, 215, 0),    -- Dorado
 			Rarity = "legendary",
 		},
+
+		-- Variantes Slow (menos items, respawn más lento)
+		BurgerSlow = {
+			Name = "Burger Field (Slow)",
+			Icon = "🍔",
+			GasBonus = 0.033,
+			CoinsBonus = 2,
+			MaxItems = 3,
+			RespawnTime = 5,
+			Color = Color3.fromRGB(210, 140, 60),   -- Naranja burger
+			Rarity = "uncommon",
+		},
+
+		PizzaSlow = {
+			Name = "Pizza Paradise (Slow)",
+			Icon = "🍕",
+			GasBonus = 0.05,
+			CoinsBonus = 3,
+			MaxItems = 2,
+			RespawnTime = 10,
+			Color = Color3.fromRGB(230, 180, 80),   -- Amarillo queso
+			Rarity = "rare",
+		},
+
+		HotDogSlow = {
+			Name = "Hot Dog Haven (Slow)",
+			Icon = "🌭",
+			GasBonus = 0.067,
+			CoinsBonus = 4,
+			MaxItems = 1,
+			RespawnTime = 15,
+			Color = Color3.fromRGB(200, 100, 80),   -- Rojo salchicha
+			Rarity = "epic",
+		},
 	},
 
 	-- Efectos visuales por rareza
