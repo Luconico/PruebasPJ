@@ -23,7 +23,7 @@ Config.Fatness = {
 }
 
 -- ============================================
--- UPGRADES (100 LEVELS - Robux gives +10 levels per purchase)
+-- UPGRADES (100 LEVELS - Robux: 10 R$ per level, independent of coin scaling)
 -- ============================================
 
 -- Helper function to generate exponential coin costs
@@ -71,10 +71,8 @@ Config.Upgrades = {
 		IncrementPerLevel = 0.025, -- +0.025 per level (0.25/10) → max 4.0 at level 100
 		-- Coin costs: 100 levels, exponential growth from 10 to 50000
 		CostCoins = generateCoinCosts(10, 50000, 100),
-		-- Robux costs: 10 purchases (each gives +10 levels)
-		-- Buying at levels 1-10, 11-20, 21-30, etc.
-		CostRobux = { 10, 20, 35, 50, 75, 100, 150, 200, 300, 500 },
-		RobuxLevelsPerPurchase = 10, -- Each Robux purchase gives 10 levels
+		-- Robux: fixed 10 R$ per level (independent of coin scaling)
+		CostRobux = 10,
 	},
 
 	-- Eating speed (LINEAR - 100 levels)
@@ -85,8 +83,7 @@ Config.Upgrades = {
 		BaseValue = 0.08,
 		IncrementPerLevel = 0.002, -- +0.002 per level (0.02/10)
 		CostCoins = generateCoinCosts(8, 40000, 100),
-		CostRobux = { 10, 15, 25, 40, 60, 80, 120, 175, 250, 400 },
-		RobuxLevelsPerPurchase = 10,
+		CostRobux = 10,
 	},
 
 	-- Propulsion force (EXPONENTIAL - 100 levels)
@@ -98,8 +95,7 @@ Config.Upgrades = {
 		-- Interpolated from original 10 values to 100 values
 		ValuesPerLevel = interpolateValues(50, { 58, 68, 80, 95, 115, 140, 170, 210, 260, 320 }, 100),
 		CostCoins = generateCoinCosts(15, 75000, 100),
-		CostRobux = { 15, 25, 40, 60, 90, 130, 180, 250, 350, 600 },
-		RobuxLevelsPerPurchase = 10,
+		CostRobux = 10,
 	},
 
 	-- Fuel efficiency (EXPONENTIAL - 100 levels)
@@ -111,8 +107,7 @@ Config.Upgrades = {
 		-- Interpolated from original 10 values to 100 values
 		ValuesPerLevel = interpolateValues(0.04, { 0.032, 0.025, 0.019, 0.014, 0.010, 0.0075, 0.0055, 0.0045, 0.0038, 0.0032 }, 100),
 		CostCoins = generateCoinCosts(20, 100000, 100),
-		CostRobux = { 20, 35, 55, 80, 120, 170, 230, 320, 450, 750 },
-		RobuxLevelsPerPurchase = 10,
+		CostRobux = 10,
 	},
 }
 

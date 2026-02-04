@@ -162,7 +162,7 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	billboard.Name = "EggShopBillboard_" .. eggName
 	billboard.Size = UDim2.new(14, 0, 18, 0) -- Tamaño en studs (perspectiva natural)
 	billboard.StudsOffset = Vector3.new(0, 8, 0)
-	billboard.AlwaysOnTop = false
+	billboard.AlwaysOnTop = true
 	billboard.Active = true
 	billboard.ClipsDescendants = false
 	billboard.MaxDistance = 50
