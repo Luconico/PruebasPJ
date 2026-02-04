@@ -192,8 +192,8 @@ Config.FoodParcels = {
 			Icon = "🥬",
 			GasBonus = 0.017,      -- +1.7% del max fatness
 			CoinsBonus = 1,        -- +1 moneda
-			MaxItems = 8,          -- Maximo items simultaneos
-			RespawnTime = 4,       -- Segundos para respawn
+			MaxItems = 40,          -- Maximo items simultaneos
+			RespawnTime = 0.5,       -- Segundos para respawn
 			Color = Color3.fromRGB(120, 200, 80),   -- Verde lechuga
 			Rarity = "common",
 		},
@@ -203,8 +203,8 @@ Config.FoodParcels = {
 			Icon = "🍔",
 			GasBonus = 0.033,      -- +3.3% del max fatness
 			CoinsBonus = 2,        -- +2 monedas
-			MaxItems = 6,
-			RespawnTime = 5,       -- Segundos para respawn
+			MaxItems = 30,
+			RespawnTime = 1,       -- Segundos para respawn
 			Color = Color3.fromRGB(210, 140, 60),   -- Naranja burger
 			Rarity = "uncommon",
 		},
@@ -214,8 +214,8 @@ Config.FoodParcels = {
 			Icon = "🍕",
 			GasBonus = 0.05,       -- +5% del max fatness
 			CoinsBonus = 3,        -- +3 monedas
-			MaxItems = 5,
-			RespawnTime = 6,       -- Segundos para respawn
+			MaxItems = 30,
+			RespawnTime = 1,       -- Segundos para respawn
 			Color = Color3.fromRGB(230, 180, 80),   -- Amarillo queso
 			Rarity = "rare",
 		},
@@ -225,8 +225,8 @@ Config.FoodParcels = {
 			Icon = "🌭",
 			GasBonus = 0.067,      -- +6.7% del max fatness
 			CoinsBonus = 4,        -- +4 monedas
-			MaxItems = 4,
-			RespawnTime = 7,       -- Segundos para respawn
+			MaxItems = 30,
+			RespawnTime = 1,       -- Segundos para respawn
 			Color = Color3.fromRGB(200, 100, 80),   -- Rojo salchicha
 			Rarity = "epic",
 		},
@@ -236,8 +236,8 @@ Config.FoodParcels = {
 			Icon = "👑",
 			GasBonus = 0.12,       -- +12% del max fatness
 			CoinsBonus = 8,        -- +8 monedas
-			MaxItems = 3,
-			RespawnTime = 10,      -- Segundos para respawn (más lento por ser legendario)
+			MaxItems = 30,
+			RespawnTime = 1,      -- Segundos para respawn (más lento por ser legendario)
 			Color = Color3.fromRGB(255, 215, 0),    -- Dorado
 			Rarity = "legendary",
 		},
