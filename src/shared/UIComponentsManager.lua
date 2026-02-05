@@ -312,4 +312,427 @@ function UIComponentsManager.createNavbar(parent, options)
 	return navbar, titleLabel, rightLabel
 end
 
+-- ============================================
+-- STYLED CARD (Cartoon Style)
+-- ============================================
+
+--[[
+	Crea una card estilizada con fondo de studs, gradiente, stroke grueso y barra de acento
+	@param parent Instance - El padre donde se colocará la card
+	@param options table - Opciones de personalización {
+		size: UDim2 - Tamaño de la card
+		position: UDim2? - Posición (opcional)
+		anchorPoint: Vector2? - AnchorPoint (opcional)
+		layoutOrder: number? - LayoutOrder (opcional)
+		color: Color3 - Color principal (accent bar + stroke)
+		backgroundColor: Color3? - Color base del fondo (default: 55,55,85)
+		cornerRadius: number? - Radio esquinas (default: 16)
+		strokeThickness: number? - Grosor stroke (default: 5)
+		accentBarWidth: number? - Ancho barra lateral (default: 8)
+		withShine: boolean? - Efecto shine (default: true)
+	}
+	@return Frame - La card creada
+]]
+function UIComponentsManager.createStyledCard(parent, options)
+	options = options or {}
+
+	local size = options.size or UDim2.new(1, 0, 0, 100)
+	local position = options.position
+	local anchorPoint = options.anchorPoint
+	local layoutOrder = options.layoutOrder
+	local color = options.color or Color3.fromRGB(100, 180, 255)
+	local backgroundColor = options.backgroundColor or Color3.fromRGB(55, 55, 85)
+	local cornerRadius = options.cornerRadius or 16
+	local strokeThickness = options.strokeThickness or 5
+	local accentBarWidth = options.accentBarWidth or 8
+	local withShine = options.withShine ~= false -- default true
+
+	-- Frame contenedor principal
+	local card = Instance.new("Frame")
+	card.Name = "StyledCard"
+	card.Size = size
+	card.BackgroundTransparency = 1
+	card.ClipsDescendants = true
+	card.Parent = parent
+
+	if position then card.Position = position end
+	if anchorPoint then card.AnchorPoint = anchorPoint end
+	if layoutOrder then card.LayoutOrder = layoutOrder end
+
+	-- Esquinas redondeadas del contenedor
+	local cardCorner = Instance.new("UICorner")
+	cardCorner.CornerRadius = UDim.new(0, cornerRadius)
+	cardCorner.Parent = card
+
+	-- Fondo con textura de studs
+	local background = Instance.new("ImageLabel")
+	background.Name = "Background"
+	background.Size = UDim2.new(1, 0, 1, 0)
+	background.BackgroundTransparency = 1
+	background.Image = TextureManager.Backgrounds.StudGray
+	background.ImageColor3 = backgroundColor
+	background.ImageTransparency = 0.05
+	background.ScaleType = Enum.ScaleType.Tile
+	background.TileSize = UDim2.new(0, 48, 0, 48)
+	background.ZIndex = 1
+	background.Parent = card
+
+	-- Corner del fondo
+	local bgCorner = Instance.new("UICorner")
+	bgCorner.CornerRadius = UDim.new(0, cornerRadius)
+	bgCorner.Parent = background
+
+	-- Gradiente sutil (más claro arriba, más oscuro abajo)
+	local bgGradient = Instance.new("UIGradient")
+	bgGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 180, 180))
+	})
+	bgGradient.Rotation = 90
+	bgGradient.Parent = background
+
+	-- Stroke grueso con color de acento
+	local cardStroke = Instance.new("UIStroke")
+	cardStroke.Name = "Stroke"
+	cardStroke.Color = color
+	cardStroke.Thickness = strokeThickness
+	cardStroke.Transparency = 0.1
+	cardStroke.Parent = card
+
+	-- Barra de acento vertical izquierda
+	local accentBar = Instance.new("Frame")
+	accentBar.Name = "AccentBar"
+	accentBar.Size = UDim2.new(0, accentBarWidth, 1, -cornerRadius * 2)
+	accentBar.Position = UDim2.new(0, cornerRadius / 2, 0.5, 0)
+	accentBar.AnchorPoint = Vector2.new(0, 0.5)
+	accentBar.BackgroundColor3 = color
+	accentBar.BorderSizePixel = 0
+	accentBar.ZIndex = 2
+	accentBar.Parent = card
+
+	-- Corner de la barra de acento
+	local accentCorner = Instance.new("UICorner")
+	accentCorner.CornerRadius = UDim.new(0, accentBarWidth / 2)
+	accentCorner.Parent = accentBar
+
+	-- Gradiente en la barra de acento (brillo arriba)
+	local accentGradient = Instance.new("UIGradient")
+	accentGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 200, 200))
+	})
+	accentGradient.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(0.5, 0),
+		NumberSequenceKeypoint.new(1, 0.2)
+	})
+	accentGradient.Rotation = 90
+	accentGradient.Parent = accentBar
+
+	-- Efecto shine que barre de izquierda a derecha
+	if withShine then
+		local shine = Instance.new("Frame")
+		shine.Name = "Shine"
+		shine.Size = UDim2.new(0.15, 0, 1, 0)
+		shine.Position = UDim2.new(-0.2, 0, 0, 0)
+		shine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		shine.BackgroundTransparency = 0.85
+		shine.BorderSizePixel = 0
+		shine.ZIndex = 3
+		shine.Parent = card
+
+		-- Corner del shine
+		local shineCorner = Instance.new("UICorner")
+		shineCorner.CornerRadius = UDim.new(0, cornerRadius)
+		shineCorner.Parent = shine
+
+		-- Gradiente para que el shine se desvanezca en los bordes
+		local shineGradient = Instance.new("UIGradient")
+		shineGradient.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.3, 0.7),
+			NumberSequenceKeypoint.new(0.7, 0.7),
+			NumberSequenceKeypoint.new(1, 1)
+		})
+		shineGradient.Parent = shine
+
+		-- Animación del shine
+		task.spawn(function()
+			-- Delay aleatorio inicial para que no todos brillen al mismo tiempo
+			task.wait(math.random() * 3)
+
+			while shine and shine.Parent do
+				-- Mover shine de izquierda a derecha
+				shine.Position = UDim2.new(-0.2, 0, 0, 0)
+				local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+				local tween = TweenService:Create(shine, tweenInfo, {
+					Position = UDim2.new(1.1, 0, 0, 0)
+				})
+				tween:Play()
+				tween.Completed:Wait()
+
+				-- Esperar antes del próximo shine
+				task.wait(4 + math.random() * 2)
+			end
+		end)
+	end
+
+	-- Frame de contenido (para que el usuario ponga sus elementos)
+	local content = Instance.new("Frame")
+	content.Name = "Content"
+	content.Size = UDim2.new(1, -(accentBarWidth + cornerRadius + 10), 1, 0)
+	content.Position = UDim2.new(0, accentBarWidth + cornerRadius + 5, 0, 0)
+	content.BackgroundTransparency = 1
+	content.ZIndex = 4
+	content.Parent = card
+
+	return card, content
+end
+
+-- ============================================
+-- CARTOON BUTTON
+-- ============================================
+
+--[[
+	Crea un botón cartoon con outline grueso, gradiente, sombra y efectos hover/click
+	@param parent Instance - El padre donde se colocará el botón
+	@param options table - Opciones de personalización {
+		size: UDim2 - Tamaño
+		position: UDim2? - Posición
+		anchorPoint: Vector2? - AnchorPoint
+		layoutOrder: number? - LayoutOrder
+		text: string? - Texto del botón
+		textSize: number? - Tamaño texto (default: 20)
+		font: Enum.Font? - Fuente (default: FredokaOne)
+		color: Color3 - Color principal
+		textColor: Color3? - Color texto (default: blanco)
+		cornerRadius: number? - Radio esquinas (default: 12)
+		strokeThickness: number? - Grosor stroke (default: 4)
+		withShadow: boolean? - Sombra (default: true)
+		shadowOffset: number? - Offset sombra (default: 4)
+		icon: string? - Emoji icono
+		iconImage: string? - Asset ID imagen (para Robux)
+		iconSize: number? - Tamaño icono (default: 24)
+		onClick: function? - Callback click
+	}
+	@return TextButton, Frame - El botón y el frame de contenido
+]]
+function UIComponentsManager.createCartoonButton(parent, options)
+	options = options or {}
+
+	local size = options.size or UDim2.new(0, 120, 0, 45)
+	local position = options.position
+	local anchorPoint = options.anchorPoint
+	local layoutOrder = options.layoutOrder
+	local text = options.text or ""
+	local textSize = options.textSize or 20
+	local font = options.font or Enum.Font.FredokaOne
+	local color = options.color or Color3.fromRGB(100, 200, 100)
+	local textColor = options.textColor or Color3.fromRGB(255, 255, 255)
+	local cornerRadius = options.cornerRadius or 12
+	local strokeThickness = options.strokeThickness or 4
+	local withShadow = options.withShadow ~= false -- default true
+	local shadowOffset = options.shadowOffset or 4
+	local icon = options.icon
+	local iconImage = options.iconImage
+	local iconSize = options.iconSize or 24
+	local onClick = options.onClick
+
+	-- Calcular color más brillante para hover
+	local function brightenColor(c, amount)
+		return Color3.fromRGB(
+			math.min(255, c.R * 255 + amount),
+			math.min(255, c.G * 255 + amount),
+			math.min(255, c.B * 255 + amount)
+		)
+	end
+	local hoverColor = brightenColor(color, 30)
+
+	-- Calcular color del stroke (más oscuro)
+	local strokeColor = Color3.fromRGB(
+		math.max(0, color.R * 255 - 60),
+		math.max(0, color.G * 255 - 60),
+		math.max(0, color.B * 255 - 60)
+	)
+
+	-- Frame contenedor (para la sombra)
+	local container = Instance.new("Frame")
+	container.Name = "CartoonButtonContainer"
+	container.Size = size
+	container.BackgroundTransparency = 1
+	container.Parent = parent
+
+	if position then container.Position = position end
+	if anchorPoint then container.AnchorPoint = anchorPoint end
+	if layoutOrder then container.LayoutOrder = layoutOrder end
+
+	-- Sombra
+	local shadow = nil
+	if withShadow then
+		shadow = Instance.new("Frame")
+		shadow.Name = "Shadow"
+		shadow.Size = UDim2.new(1, 0, 1, 0)
+		shadow.Position = UDim2.new(0, shadowOffset, 0, shadowOffset)
+		shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		shadow.BackgroundTransparency = 0.5
+		shadow.ZIndex = 1
+		shadow.Parent = container
+
+		local shadowCorner = Instance.new("UICorner")
+		shadowCorner.CornerRadius = UDim.new(0, cornerRadius)
+		shadowCorner.Parent = shadow
+	end
+
+	-- Botón principal con textura de studs
+	local button = Instance.new("ImageButton")
+	button.Name = "Button"
+	button.Size = UDim2.new(1, 0, 1, 0)
+	button.Position = UDim2.new(0, 0, 0, 0)
+	button.BackgroundTransparency = 1
+	button.Image = TextureManager.Backgrounds.StudGray
+	button.ImageColor3 = color
+	button.ImageTransparency = 0.1
+	button.ScaleType = Enum.ScaleType.Tile
+	button.TileSize = UDim2.new(0, 32, 0, 32)
+	button.ZIndex = 2
+	button.Parent = container
+
+	-- Corner del botón
+	local buttonCorner = Instance.new("UICorner")
+	buttonCorner.CornerRadius = UDim.new(0, cornerRadius)
+	buttonCorner.Parent = button
+
+	-- Stroke grueso
+	local buttonStroke = Instance.new("UIStroke")
+	buttonStroke.Name = "Stroke"
+	buttonStroke.Color = strokeColor
+	buttonStroke.Thickness = strokeThickness
+	buttonStroke.Transparency = 0
+	buttonStroke.Parent = button
+
+	-- Gradiente (más claro arriba)
+	local buttonGradient = Instance.new("UIGradient")
+	buttonGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 200, 200))
+	})
+	buttonGradient.Rotation = 90
+	buttonGradient.Parent = button
+
+	-- Frame de contenido (icono + texto)
+	local content = Instance.new("Frame")
+	content.Name = "Content"
+	content.Size = UDim2.new(1, -16, 1, 0)
+	content.Position = UDim2.new(0.5, 0, 0.5, 0)
+	content.AnchorPoint = Vector2.new(0.5, 0.5)
+	content.BackgroundTransparency = 1
+	content.ZIndex = 3
+	content.Parent = button
+
+	-- Layout horizontal para contenido
+	local contentLayout = Instance.new("UIListLayout")
+	contentLayout.FillDirection = Enum.FillDirection.Horizontal
+	contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	contentLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	contentLayout.Padding = UDim.new(0, 6)
+	contentLayout.Parent = content
+
+	-- Icono (si hay)
+	if iconImage then
+		local iconLabel = Instance.new("ImageLabel")
+		iconLabel.Name = "Icon"
+		iconLabel.Size = UDim2.new(0, iconSize, 0, iconSize)
+		iconLabel.BackgroundTransparency = 1
+		iconLabel.Image = iconImage
+		iconLabel.ScaleType = Enum.ScaleType.Fit
+		iconLabel.ZIndex = 4
+		iconLabel.LayoutOrder = 1
+		iconLabel.Parent = content
+	elseif icon then
+		local iconLabel = Instance.new("TextLabel")
+		iconLabel.Name = "Icon"
+		iconLabel.Size = UDim2.new(0, iconSize, 0, iconSize)
+		iconLabel.BackgroundTransparency = 1
+		iconLabel.Text = icon
+		iconLabel.TextSize = iconSize
+		iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		iconLabel.Font = Enum.Font.GothamBold
+		iconLabel.ZIndex = 4
+		iconLabel.LayoutOrder = 1
+		iconLabel.Parent = content
+	end
+
+	-- Texto
+	if text and text ~= "" then
+		local textLabel = Instance.new("TextLabel")
+		textLabel.Name = "Text"
+		textLabel.Size = UDim2.new(0, 0, 1, 0)
+		textLabel.AutomaticSize = Enum.AutomaticSize.X
+		textLabel.BackgroundTransparency = 1
+		textLabel.Text = text
+		textLabel.TextColor3 = textColor
+		textLabel.TextSize = textSize
+		textLabel.Font = font
+		textLabel.ZIndex = 4
+		textLabel.LayoutOrder = 2
+		textLabel.Parent = content
+
+		-- Stroke del texto (estilo cartoon)
+		local textStroke = Instance.new("UIStroke")
+		textStroke.Name = "TextStroke"
+		textStroke.Color = Color3.fromRGB(0, 0, 0)
+		textStroke.Thickness = 2
+		textStroke.Parent = textLabel
+	end
+
+	-- Efectos hover
+	button.MouseEnter:Connect(function()
+		SoundManager.playHover()
+
+		-- Color más brillante + scale
+		TweenService:Create(button, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			ImageColor3 = hoverColor
+		}):Play()
+
+		TweenService:Create(container, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.new(size.X.Scale * 1.03, size.X.Offset * 1.03, size.Y.Scale * 1.03, size.Y.Offset * 1.03)
+		}):Play()
+	end)
+
+	button.MouseLeave:Connect(function()
+		-- Volver al estado original
+		TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			ImageColor3 = color
+		}):Play()
+
+		TweenService:Create(container, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = size
+		}):Play()
+	end)
+
+	-- Efecto click
+	button.MouseButton1Down:Connect(function()
+		TweenService:Create(container, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = UDim2.new(size.X.Scale * 0.95, size.X.Offset * 0.95, size.Y.Scale * 0.95, size.Y.Offset * 0.95)
+		}):Play()
+	end)
+
+	button.MouseButton1Up:Connect(function()
+		-- Bounce back
+		TweenService:Create(container, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = size
+		}):Play()
+	end)
+
+	button.MouseButton1Click:Connect(function()
+		SoundManager.playClick()
+		if onClick then
+			onClick()
+		end
+	end)
+
+	return container, button, content
+end
+
 return UIComponentsManager
