@@ -17,6 +17,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 -- ============================================
 -- CREAR BINDABLE EVENTS PARA COMUNICACIÓN
@@ -84,16 +85,30 @@ local MENU_BUTTONS = {
 		text = "PETS",
 		event = TogglePetInventory,
 		closeOthers = {CloseSpinWheel, CloseVIPFart},
+		iconImage = TextureManager.Icons.Pets,
 	},
 	{
 		text = "ROULETTE",
 		event = ToggleSpinWheel,
 		closeOthers = {ClosePetInventory, CloseVIPFart},
+		iconImage = TextureManager.Icons.Roulette,
+		-- Gradiente arcoíris para la ruleta
+		iconGradient = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),    -- Rojo
+			ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 200, 100)),  -- Naranja
+			ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 255, 100)),  -- Amarillo
+			ColorSequenceKeypoint.new(0.6, Color3.fromRGB(100, 255, 150)),  -- Verde
+			ColorSequenceKeypoint.new(0.8, Color3.fromRGB(100, 200, 255)),  -- Azul
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 150, 255)),    -- Violeta
+		}),
 	},
 	{
 		text = "VIP FART",
 		event = ToggleVIPFart,
 		closeOthers = {ClosePetInventory, CloseSpinWheel},
+		iconImage = TextureManager.Icons.VIPFart,
+		-- Color verdoso flatulencia
+		iconColor = Color3.fromRGB(150, 220, 100),
 	},
 }
 
@@ -143,6 +158,9 @@ local function createLeftMenu()
 			layoutOrder = i,
 			text = buttonConfig.text,
 			textSize = textSize,
+			iconImage = buttonConfig.iconImage,
+			iconColor = buttonConfig.iconColor,
+			iconGradient = buttonConfig.iconGradient,
 			hoverRotation = 10,
 			hoverScale = 1.15,
 			onClick = function()

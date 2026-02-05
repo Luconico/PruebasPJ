@@ -20,6 +20,10 @@ TextureManager.Backgrounds = {
 TextureManager.Icons = {
 	-- Monedas y compras
 	Robux = "rbxassetid://18113165803",       -- Icono oficial de Robux
+	-- Menú lateral
+	Pets = "rbxassetid://18109950807",        -- Icono de mascota para botón PETS
+	Roulette = "rbxassetid://7733946818",     -- Icono de regalo/premio para botón ROULETTE
+	VIPFart = "rbxassetid://7743878264",      -- Icono de viento/gas para botón VIP FART
 }
 
 -- ============================================

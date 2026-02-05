@@ -751,6 +751,7 @@ end
 		textSize: number? - Tamaño texto (default: 14)
 		font: Enum.Font? - Fuente (default: FredokaOne)
 		textColor: Color3? - Color texto (default: blanco)
+		iconImage: string? - Asset ID de icono (opcional)
 		hoverRotation: number? - Grados de rotación en hover (default: 10)
 		hoverScale: number? - Escala en hover (default: 1.15)
 		onClick: function? - Callback click
@@ -768,6 +769,9 @@ function UIComponentsManager.createSideMenuButton(parent, options)
 	local textSize = options.textSize or 14
 	local font = options.font or Enum.Font.FredokaOne
 	local textColor = options.textColor or Color3.fromRGB(255, 255, 255)
+	local iconImage = options.iconImage
+	local iconColor = options.iconColor -- Color3 para tintar el icono
+	local iconGradient = options.iconGradient -- ColorSequence para gradiente (ej: arcoíris)
 	local hoverRotation = options.hoverRotation or 10
 	local hoverScale = options.hoverScale or 1.15
 	local onClick = options.onClick
@@ -785,19 +789,46 @@ function UIComponentsManager.createSideMenuButton(parent, options)
 	if anchorPoint then button.AnchorPoint = anchorPoint end
 	if layoutOrder then button.LayoutOrder = layoutOrder end
 
-	-- Texto del botón
+	-- Icono opcional (centrado y grande, el texto se superpone)
+	if iconImage then
+		local icon = Instance.new("ImageLabel")
+		icon.Name = "Icon"
+		icon.Size = UDim2.new(0.75, 0, 0.75, 0)
+		icon.Position = UDim2.new(0.5, 0, 0.45, 0)
+		icon.AnchorPoint = Vector2.new(0.5, 0.5)
+		icon.BackgroundTransparency = 1
+		icon.Image = iconImage
+		icon.ScaleType = Enum.ScaleType.Fit
+		icon.ZIndex = 2
+		icon.Parent = button
+
+		-- Aplicar color al icono si se especifica
+		if iconColor then
+			icon.ImageColor3 = iconColor
+		end
+
+		-- Aplicar gradiente al icono si se especifica (ej: arcoíris)
+		if iconGradient then
+			local gradient = Instance.new("UIGradient")
+			gradient.Color = iconGradient
+			gradient.Rotation = 90 -- Vertical por defecto
+			gradient.Parent = icon
+		end
+	end
+
+	-- Texto del botón (superpuesto en la parte inferior si hay icono)
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Name = "Label"
-	textLabel.Size = UDim2.new(1, 0, 0.4, 0)
-	textLabel.Position = UDim2.new(0.5, 0, 0.55, 0)
+	textLabel.Size = UDim2.new(1, 0, 0.35, 0)
+	textLabel.Position = UDim2.new(0.5, 0, iconImage and 0.75 or 0.55, 0)
 	textLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 	textLabel.BackgroundTransparency = 1
 	textLabel.Text = text
 	textLabel.TextColor3 = textColor
-	textLabel.TextSize = textSize
+	textLabel.TextSize = textSize + 2
 	textLabel.Font = font
 	textLabel.TextScaled = false
-	textLabel.ZIndex = 2
+	textLabel.ZIndex = 3
 	textLabel.Parent = button
 
 	-- Stroke del texto (estilo cartoon)
