@@ -12,9 +12,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Cargar SoundManager
+-- Cargar módulos compartidos
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
 
 -- Variables
 local debugUI = nil
@@ -75,26 +76,14 @@ local function createDebugUI()
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = mainPanel
 
-	-- Botón cerrar
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, 40, 0, 40)
-	closeButton.Position = UDim2.new(1, -50, 0, 10)
-	closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-	closeButton.BorderSizePixel = 0
-	closeButton.Text = "✕"
-	closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	closeButton.TextSize = 20
-	closeButton.Font = Enum.Font.GothamBold
-	closeButton.Parent = mainPanel
-
-	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0, 8)
-	closeCorner.Parent = closeButton
-
-	closeButton.MouseButton1Click:Connect(function()
-		toggleDebugUI(false)
-	end)
+	-- Botón cerrar (usando UIComponentsManager)
+	local closeButton = UIComponentsManager.createCloseButton(mainPanel, {
+		size = 52,
+		position = UDim2.new(1, -58, 0, 4),
+		onClose = function()
+			toggleDebugUI(false)
+		end
+	})
 
 	-- Subtítulo
 	local subtitle = Instance.new("TextLabel")
