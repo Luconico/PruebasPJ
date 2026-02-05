@@ -19,6 +19,7 @@ local Config = require(Shared:WaitForChild("Config"))
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
 local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 -- Esperar Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -470,6 +471,39 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	actionStroke.Thickness = 2
 	actionStroke.Parent = actionButton
 
+	-- Frame para contenido de Robux (icono + precio)
+	local robuxContent = Instance.new("Frame")
+	robuxContent.Name = "RobuxContent"
+	robuxContent.Size = UDim2.new(1, 0, 1, 0)
+	robuxContent.BackgroundTransparency = 1
+	robuxContent.Visible = false
+	robuxContent.Parent = actionButton
+
+	local robuxLayout = Instance.new("UIListLayout")
+	robuxLayout.FillDirection = Enum.FillDirection.Horizontal
+	robuxLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	robuxLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	robuxLayout.Padding = UDim.new(0, 4)
+	robuxLayout.Parent = robuxContent
+
+	local robuxIcon = Instance.new("ImageLabel")
+	robuxIcon.Name = "RobuxIcon"
+	robuxIcon.Size = UDim2.new(0, sizes.ButtonTextSize, 0, sizes.ButtonTextSize)
+	robuxIcon.BackgroundTransparency = 1
+	robuxIcon.Image = TextureManager.Icons.Robux
+	robuxIcon.ScaleType = Enum.ScaleType.Fit
+	robuxIcon.Parent = robuxContent
+
+	local robuxPriceLabel = Instance.new("TextLabel")
+	robuxPriceLabel.Name = "PriceLabel"
+	robuxPriceLabel.Size = UDim2.new(0, 60, 1, 0)
+	robuxPriceLabel.BackgroundTransparency = 1
+	robuxPriceLabel.Text = tostring(cosmeticData.CostRobux)
+	robuxPriceLabel.TextColor3 = Styles.Colors.Text
+	robuxPriceLabel.TextSize = sizes.ButtonTextSize
+	robuxPriceLabel.Font = Styles.Fonts.Body
+	robuxPriceLabel.Parent = robuxContent
+
 	-- Estado del botón
 	local function updateButtonState()
 		isOwned = playerData and playerData.OwnedCosmetics and playerData.OwnedCosmetics[cosmeticId]
@@ -480,21 +514,24 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 			actionButton.BackgroundColor3 = Styles.Colors.Equipped
 			actionButton.TextColor3 = Styles.Colors.TextDark
 			cardStroke.Color = Styles.Colors.Equipped
+			robuxContent.Visible = false
 		elseif isOwned then
 			actionButton.Text = "EQUIP"
 			actionButton.BackgroundColor3 = Styles.Colors.Success
 			actionButton.TextColor3 = Styles.Colors.Text
 			cardStroke.Color = tierData.Color
+			robuxContent.Visible = false
 		elseif isFree then
 			actionButton.Text = "FREE"
 			actionButton.BackgroundColor3 = Styles.Colors.Success
 			actionButton.TextColor3 = Styles.Colors.Text
 			cardStroke.Color = tierData.Color
+			robuxContent.Visible = false
 		else
-			actionButton.Text = "R$ " .. cosmeticData.CostRobux
+			actionButton.Text = ""
 			actionButton.BackgroundColor3 = Styles.Colors.RobuxGreen
-			actionButton.TextColor3 = Styles.Colors.Text
 			cardStroke.Color = tierData.Color
+			robuxContent.Visible = true
 		end
 	end
 

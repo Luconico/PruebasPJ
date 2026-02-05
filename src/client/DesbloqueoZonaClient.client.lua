@@ -5,9 +5,10 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Cargar módulo de sonidos
+-- Cargar módulos
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 -- Esperar a la carpeta Remotes que ya existe
 local remotesFolder = ReplicatedStorage:WaitForChild("Remotes", 30)
@@ -247,16 +248,46 @@ local function createZoneUI(zoneName, coinsCost, robuxCost, vipOnly)
 	robuxButton.Position = UDim2.new(0, 20, 0, robuxButtonY)
 	robuxButton.BackgroundColor3 = Color3.fromRGB(0, 230, 118)
 	robuxButton.BorderSizePixel = 0
-	robuxButton.Text = "💎 " .. formatNumber(robuxCost) .. " R$"
-	robuxButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	robuxButton.TextSize = 24
-	robuxButton.Font = Enum.Font.GothamBold
+	robuxButton.Text = ""
 	robuxButton.AutoButtonColor = false
 	robuxButton.Parent = mainFrame
 
 	local robuxCorner = Instance.new("UICorner")
 	robuxCorner.CornerRadius = UDim.new(0, 10)
 	robuxCorner.Parent = robuxButton
+
+	-- Contenido del botón de Robux (icono + texto)
+	local robuxContent = Instance.new("Frame")
+	robuxContent.Name = "Content"
+	robuxContent.Size = UDim2.new(1, 0, 1, 0)
+	robuxContent.BackgroundTransparency = 1
+	robuxContent.Parent = robuxButton
+
+	local robuxLayout = Instance.new("UIListLayout")
+	robuxLayout.FillDirection = Enum.FillDirection.Horizontal
+	robuxLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	robuxLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	robuxLayout.Padding = UDim.new(0, 8)
+	robuxLayout.Parent = robuxContent
+
+	local robuxIcon = Instance.new("ImageLabel")
+	robuxIcon.Name = "RobuxIcon"
+	robuxIcon.Size = UDim2.new(0, 28, 0, 28)
+	robuxIcon.BackgroundTransparency = 1
+	robuxIcon.Image = TextureManager.Icons.Robux
+	robuxIcon.ScaleType = Enum.ScaleType.Fit
+	robuxIcon.Parent = robuxContent
+
+	local robuxText = Instance.new("TextLabel")
+	robuxText.Name = "PriceText"
+	robuxText.Size = UDim2.new(0, 120, 0, 40)
+	robuxText.BackgroundTransparency = 1
+	robuxText.Text = formatNumber(robuxCost) .. " R$"
+	robuxText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	robuxText.TextSize = 24
+	robuxText.Font = Enum.Font.GothamBold
+	robuxText.TextXAlignment = Enum.TextXAlignment.Left
+	robuxText.Parent = robuxContent
 
 	-- Efecto hover para botón de Robux
 	robuxButton.MouseEnter:Connect(function()

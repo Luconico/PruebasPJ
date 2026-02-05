@@ -19,6 +19,7 @@ local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local Shared = ReplicatedStorage:WaitForChild("Shared", 10)
 local Config = require(Shared:WaitForChild("Config"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 -- ============================================
 -- CONFIGURACIÓN
@@ -219,17 +220,44 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	nameStroke.Transparency = 0.3
 	nameStroke.Parent = nameLabel
 
-	-- Precio
+	-- Precio (con icono de Robux si aplica)
+	local priceContainer = Instance.new("Frame")
+	priceContainer.Name = "PriceContainer"
+	priceContainer.Size = UDim2.new(0.4, 0, 1, 0)
+	priceContainer.Position = UDim2.new(0.58, 0, 0, 0)
+	priceContainer.BackgroundTransparency = 1
+	priceContainer.Parent = header
+
+	local priceLayout = Instance.new("UIListLayout")
+	priceLayout.FillDirection = Enum.FillDirection.Horizontal
+	priceLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	priceLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	priceLayout.Padding = UDim.new(0, 4)
+	priceLayout.Parent = priceContainer
+
+	-- Icono de Robux (solo si es compra con Robux)
+	if eggConfig.CostRobux then
+		local robuxIcon = Instance.new("ImageLabel")
+		robuxIcon.Name = "RobuxIcon"
+		robuxIcon.Size = UDim2.new(0, 24, 0, 24)
+		robuxIcon.BackgroundTransparency = 1
+		robuxIcon.Image = TextureManager.Icons.Robux
+		robuxIcon.ScaleType = Enum.ScaleType.Fit
+		robuxIcon.LayoutOrder = 1
+		robuxIcon.Parent = priceContainer
+	end
+
 	local priceLabel = Instance.new("TextLabel")
-	priceLabel.Size = UDim2.new(0.4, 0, 1, 0)
-	priceLabel.Position = UDim2.new(0.58, 0, 0, 0)
+	priceLabel.Name = "PriceLabel"
+	priceLabel.Size = UDim2.new(0, 60, 1, 0)
 	priceLabel.BackgroundTransparency = 1
-	priceLabel.Text = eggConfig.CostRobux and ("R$ " .. eggConfig.CostRobux) or ("$ " .. eggConfig.Cost)
+	priceLabel.Text = eggConfig.CostRobux and tostring(eggConfig.CostRobux) or ("$ " .. eggConfig.Cost)
 	priceLabel.Font = Styles.Fonts.Title
 	priceLabel.TextScaled = true
 	priceLabel.TextColor3 = Styles.Colors.TextDark
-	priceLabel.TextXAlignment = Enum.TextXAlignment.Right
-	priceLabel.Parent = header
+	priceLabel.TextXAlignment = Enum.TextXAlignment.Left
+	priceLabel.LayoutOrder = 2
+	priceLabel.Parent = priceContainer
 
 	local priceStroke = Instance.new("UIStroke")
 	priceStroke.Color = Color3.fromRGB(0, 0, 0)

@@ -20,6 +20,7 @@ local Config = require(Shared:WaitForChild("Config"))
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
 local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 -- ============================================
 -- TAMAÑOS RESPONSIVE
@@ -301,8 +302,6 @@ local function createShopUI()
 	-- ============================================
 	-- HEADER (con textura stud estilo cartoon)
 	-- ============================================
-
-	local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 	local header = Instance.new("ImageLabel")
 	header.Name = "Header"
@@ -777,11 +776,14 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	robuxButtonContent.ZIndex = 6
 	robuxButtonContent.Parent = robuxButton
 
-	local robuxIcon = Instance.new("TextLabel")
-	robuxIcon.Size = UDim2.new(0, sizes.ButtonHeight, 1, 0)
+	local robuxIcon = Instance.new("ImageLabel")
+	robuxIcon.Name = "RobuxIcon"
+	robuxIcon.Size = UDim2.new(0, sizes.ButtonIconSize, 0, sizes.ButtonIconSize)
+	robuxIcon.Position = UDim2.new(0, (sizes.ButtonHeight - sizes.ButtonIconSize) / 2, 0.5, 0)
+	robuxIcon.AnchorPoint = Vector2.new(0, 0.5)
 	robuxIcon.BackgroundTransparency = 1
-	robuxIcon.Text = "💎"
-	robuxIcon.TextSize = sizes.ButtonIconSize
+	robuxIcon.Image = TextureManager.Icons.Robux
+	robuxIcon.ScaleType = Enum.ScaleType.Fit
 	robuxIcon.ZIndex = 6
 	robuxIcon.Parent = robuxButtonContent
 

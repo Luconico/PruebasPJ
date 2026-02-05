@@ -18,7 +18,8 @@ TextureManager.Backgrounds = {
 -- ICONOS DE UI
 -- ============================================
 TextureManager.Icons = {
-	-- Iconos generales (añadir según se necesiten)
+	-- Monedas y compras
+	Robux = "rbxassetid://18113165803",       -- Icono oficial de Robux
 }
 
 -- ============================================
