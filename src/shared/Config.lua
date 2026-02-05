@@ -754,35 +754,205 @@ Config.PetRarities = {
 	},
 }
 
--- Pet definitions
+-- Boost types for pets
+Config.PetBoostTypes = {
+	CoinBoost = { Name = "Coins", Icon = "💰", Color = Color3.fromRGB(255, 220, 50) },
+	TrophyBoost = { Name = "Trophies", Icon = "🏆", Color = Color3.fromRGB(255, 180, 50) },
+	FatnessBoost = { Name = "Max Size", Icon = "📦", Color = Color3.fromRGB(255, 150, 100) },
+	EatBoost = { Name = "Eat Speed", Icon = "🍔", Color = Color3.fromRGB(255, 200, 100) },
+	PropulsionBoost = { Name = "Fart Power", Icon = "💨", Color = Color3.fromRGB(100, 200, 255) },
+	EfficiencyBoost = { Name = "Efficiency", Icon = "⚡", Color = Color3.fromRGB(150, 255, 150) },
+}
+
+-- Pet definitions with varied boosts
 Config.Pets = {
-	-- Normal pets
-	Axolotl = { Name = "Axolotl", Boost = 0.4, Rarity = "Common", Icon = "🦎" },
-	Lion = { Name = "Lion", Boost = 0.4, Rarity = "Common", Icon = "🦁" },
-	Dog = { Name = "Dog", Boost = 0.4, Rarity = "Common", Icon = "🐕" },
-	Cat = { Name = "Cat", Boost = 0.5, Rarity = "Uncommon", Icon = "🐈" },
-	Bunny = { Name = "Bunny", Boost = 0.4, Rarity = "Common", Icon = "🐰" },
-	Duck = { Name = "Duck", Boost = 0.4, Rarity = "Common", Icon = "🦆" },
-	Monkey = { Name = "Monkey", Boost = 0.4, Rarity = "Common", Icon = "🐵" },
-	Bee = { Name = "Bee", Boost = 0.4, Rarity = "Common", Icon = "🐝" },
-	Parrot = { Name = "Parrot", Boost = 0.4, Rarity = "Common", Icon = "🦜" },
-	Cow = { Name = "Cow", Boost = 0.4, Rarity = "Common", Icon = "🐄" },
-	Chicken = { Name = "Chicken", Boost = 0.4, Rarity = "Common", Icon = "🐔" },
-	Pig = { Name = "Pig", Boost = 0.4, Rarity = "Common", Icon = "🐷" },
-	Lamp = { Name = "Lamp", Boost = 0.4, Rarity = "Common", Icon = "🪔" },
-	Elephant = { Name = "Elephant", Boost = 0.5, Rarity = "Uncommon", Icon = "🐘" },
-	Dragon = { Name = "Dragon", Boost = 0.9, Rarity = "Rare", Icon = "🐉" },
-	-- Golden variants
-	GoldenAxolotl = { Name = "Golden Axolotl", Boost = 0.8, Rarity = "Common", Icon = "✨" },
-	GoldenLion = { Name = "Golden Lion", Boost = 0.8, Rarity = "Common", Icon = "✨" },
-	GoldenDog = { Name = "Golden Dog", Boost = 0.8, Rarity = "Common", Icon = "✨" },
-	GoldenCat = { Name = "Golden Cat", Boost = 0.9, Rarity = "Uncommon", Icon = "✨" },
-	GoldenDragon = { Name = "Golden Dragon", Boost = 1.3, Rarity = "Rare", Icon = "✨" },
-	-- Rainbow variants
-	RainbowAxolotl = { Name = "Rainbow Axolotl", Boost = 1.2, Rarity = "Epic", Icon = "🌈" },
-	RainbowDog = { Name = "Rainbow Dog", Boost = 1.2, Rarity = "Epic", Icon = "🌈" },
-	RainbowCat = { Name = "Rainbow Cat", Boost = 1.4, Rarity = "Rare", Icon = "🌈" },
-	RainbowDragon = { Name = "Rainbow Dragon", Boost = 1.9, Rarity = "Legendary", Icon = "🌈" },
+	-- ============================================
+	-- COMMON PETS (BasicEgg) - Single boost ~15%
+	-- ============================================
+	Dog = {
+		Name = "Dog",
+		Rarity = "Common",
+		Icon = "🐕",
+		Boosts = { CoinBoost = 0.15 },
+	},
+	Bunny = {
+		Name = "Bunny",
+		Rarity = "Common",
+		Icon = "🐰",
+		Boosts = { EatBoost = 0.15 },
+	},
+	Duck = {
+		Name = "Duck",
+		Rarity = "Common",
+		Icon = "🦆",
+		Boosts = { EfficiencyBoost = 0.15 },
+	},
+	Axolotl = {
+		Name = "Axolotl",
+		Rarity = "Common",
+		Icon = "🦎",
+		Boosts = { FatnessBoost = 0.15 },
+	},
+	Lion = {
+		Name = "Lion",
+		Rarity = "Common",
+		Icon = "🦁",
+		Boosts = { PropulsionBoost = 0.15 },
+	},
+	Monkey = {
+		Name = "Monkey",
+		Rarity = "Common",
+		Icon = "🐵",
+		Boosts = { CoinBoost = 0.12, EatBoost = 0.08 },
+	},
+	Bee = {
+		Name = "Bee",
+		Rarity = "Common",
+		Icon = "🐝",
+		Boosts = { EfficiencyBoost = 0.12, CoinBoost = 0.08 },
+	},
+	Cow = {
+		Name = "Cow",
+		Rarity = "Common",
+		Icon = "🐄",
+		Boosts = { FatnessBoost = 0.18 },
+	},
+	Chicken = {
+		Name = "Chicken",
+		Rarity = "Common",
+		Icon = "🐔",
+		Boosts = { EatBoost = 0.12, CoinBoost = 0.06 },
+	},
+	Pig = {
+		Name = "Pig",
+		Rarity = "Common",
+		Icon = "🐷",
+		Boosts = { FatnessBoost = 0.12, EatBoost = 0.08 },
+	},
+	Lamp = {
+		Name = "Lamp",
+		Rarity = "Common",
+		Icon = "🪔",
+		Boosts = { TrophyBoost = 0.15 },
+	},
+
+	-- ============================================
+	-- UNCOMMON PETS (BasicEgg/PremiumEgg) - ~25-30%
+	-- ============================================
+	Cat = {
+		Name = "Cat",
+		Rarity = "Uncommon",
+		Icon = "🐈",
+		Boosts = { EatBoost = 0.25 },
+	},
+	Elephant = {
+		Name = "Elephant",
+		Rarity = "Uncommon",
+		Icon = "🐘",
+		Boosts = { FatnessBoost = 0.30 },
+	},
+	Parrot = {
+		Name = "Parrot",
+		Rarity = "Uncommon",
+		Icon = "🦜",
+		Boosts = { TrophyBoost = 0.25 },
+	},
+
+	-- ============================================
+	-- RARE PETS (PremiumEgg) - ~40-60%
+	-- ============================================
+	Dragon = {
+		Name = "Dragon",
+		Rarity = "Rare",
+		Icon = "🐉",
+		Boosts = { PropulsionBoost = 0.40, CoinBoost = 0.20 },
+	},
+
+	-- ============================================
+	-- GOLDEN PETS (RobuxEgg) - ~60-100%
+	-- ============================================
+	GoldenDog = {
+		Name = "Golden Dog",
+		Rarity = "Rare",
+		Icon = "✨",
+		Boosts = { CoinBoost = 0.40, EatBoost = 0.30 },
+	},
+	GoldenAxolotl = {
+		Name = "Golden Axolotl",
+		Rarity = "Rare",
+		Icon = "✨",
+		Boosts = { FatnessBoost = 0.35, EfficiencyBoost = 0.30 },
+	},
+	GoldenLion = {
+		Name = "Golden Lion",
+		Rarity = "Rare",
+		Icon = "✨",
+		Boosts = { PropulsionBoost = 0.40, CoinBoost = 0.25 },
+	},
+	GoldenCat = {
+		Name = "Golden Cat",
+		Rarity = "Epic",
+		Icon = "✨",
+		Boosts = { EatBoost = 0.45, TrophyBoost = 0.30, CoinBoost = 0.25 },
+	},
+	GoldenDragon = {
+		Name = "Golden Dragon",
+		Rarity = "Legendary",
+		Icon = "✨",
+		Boosts = {
+			CoinBoost = 0.50,
+			PropulsionBoost = 0.40,
+			TrophyBoost = 0.30,
+			FatnessBoost = 0.20,
+		},
+	},
+
+	-- ============================================
+	-- RAINBOW PETS (RobuxEgg - Very Rare) - ~100-200%
+	-- ============================================
+	RainbowAxolotl = {
+		Name = "Rainbow Axolotl",
+		Rarity = "Epic",
+		Icon = "🌈",
+		Boosts = {
+			FatnessBoost = 0.50,
+			EfficiencyBoost = 0.40,
+			CoinBoost = 0.30,
+		},
+	},
+	RainbowDog = {
+		Name = "Rainbow Dog",
+		Rarity = "Epic",
+		Icon = "🌈",
+		Boosts = {
+			CoinBoost = 0.50,
+			EatBoost = 0.40,
+			TrophyBoost = 0.30,
+		},
+	},
+	RainbowCat = {
+		Name = "Rainbow Cat",
+		Rarity = "Epic",
+		Icon = "🌈",
+		Boosts = {
+			EatBoost = 0.55,
+			TrophyBoost = 0.40,
+			CoinBoost = 0.35,
+		},
+	},
+	RainbowDragon = {
+		Name = "Rainbow Dragon",
+		Rarity = "Legendary",
+		Icon = "🌈",
+		Boosts = {
+			CoinBoost = 0.60,
+			TrophyBoost = 0.50,
+			PropulsionBoost = 0.50,
+			EfficiencyBoost = 0.40,
+			FatnessBoost = 0.30,
+			EatBoost = 0.30,
+		},
+	},
 }
 
 -- Eggs

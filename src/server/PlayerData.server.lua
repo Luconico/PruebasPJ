@@ -299,16 +299,51 @@ local function getUpgradeValue(upgradeName, level)
 	return upgradeConfig.BaseValue + ((upgradeConfig.IncrementPerLevel or 0) * level)
 end
 
--- Obtener todos los valores calculados de upgrades del jugador
+-- Calcula todos los boosts de mascotas equipadas (definida aquí para uso en getPlayerUpgradeValues)
+local function calculatePetBoosts(player)
+	local data = getPlayerData(player)
+	if not data or not data.PetSystem then return {} end
+
+	local boosts = {}
+	for _, pet in ipairs(data.PetSystem.Pets) do
+		if pet.Equiped then
+			local petConfig = Config.Pets[pet.PetName]
+			if petConfig then
+				-- Nueva estructura con Boosts
+				if petConfig.Boosts then
+					for boostType, value in pairs(petConfig.Boosts) do
+						boosts[boostType] = (boosts[boostType] or 0) + value
+					end
+				-- Compatibilidad con estructura antigua (Boost simple)
+				elseif petConfig.Boost then
+					boosts.CoinBoost = (boosts.CoinBoost or 0) + petConfig.Boost
+				end
+			end
+		end
+	end
+	return boosts
+end
+
+-- Obtener todos los valores calculados de upgrades del jugador (con boosts de mascotas)
 local function getPlayerUpgradeValues(player)
 	local data = getPlayerData(player)
 	if not data then return nil end
 
+	-- Valores base de upgrades
+	local baseMaxFatness = getUpgradeValue("MaxFatness", data.Upgrades.MaxFatness)
+	local baseEatSpeed = getUpgradeValue("EatSpeed", data.Upgrades.EatSpeed)
+	local basePropulsion = getUpgradeValue("PropulsionForce", data.Upgrades.PropulsionForce)
+	local baseFuelEff = getUpgradeValue("FuelEfficiency", data.Upgrades.FuelEfficiency)
+
+	-- Aplicar boosts de mascotas
+	local petBoosts = calculatePetBoosts(player)
+
 	return {
-		MaxFatness = getUpgradeValue("MaxFatness", data.Upgrades.MaxFatness),
-		EatSpeed = getUpgradeValue("EatSpeed", data.Upgrades.EatSpeed),
-		PropulsionForce = getUpgradeValue("PropulsionForce", data.Upgrades.PropulsionForce),
-		FuelEfficiency = getUpgradeValue("FuelEfficiency", data.Upgrades.FuelEfficiency),
+		MaxFatness = baseMaxFatness * (1 + (petBoosts.FatnessBoost or 0)),
+		EatSpeed = baseEatSpeed * (1 + (petBoosts.EatBoost or 0)),
+		PropulsionForce = basePropulsion * (1 + (petBoosts.PropulsionBoost or 0)),
+		-- EfficiencyBoost reduce la perdida de grasa (menor es mejor)
+		FuelEfficiency = baseFuelEff * (1 - (petBoosts.EfficiencyBoost or 0)),
 	}
 end
 
@@ -497,20 +532,10 @@ local function generateUUID()
 	return HttpService:GenerateGUID(false)
 end
 
+-- Mantener compatibilidad: retorna solo CoinBoost para sistemas antiguos
 local function calculatePetBoost(player)
-	local data = getPlayerData(player)
-	if not data or not data.PetSystem then return 0 end
-
-	local totalBoost = 0
-	for _, pet in ipairs(data.PetSystem.Pets) do
-		if pet.Equiped then
-			local petConfig = Config.Pets[pet.PetName]
-			if petConfig then
-				totalBoost = totalBoost + petConfig.Boost
-			end
-		end
-	end
-	return totalBoost
+	local boosts = calculatePetBoosts(player)
+	return boosts.CoinBoost or 0
 end
 
 local function openEgg(player, eggName)
@@ -939,19 +964,24 @@ local function collectCoin(player, coinValue)
 end
 
 -- Recoger un trofeo
+-- Recoger un trofeo (con boost de pets)
 local function collectTrophy(player, trophyValue)
 	local data = getPlayerData(player)
 	if not data then return false end
 
 	trophyValue = trophyValue or 1
 
-	data.Trophies = (data.Trophies or 0) + trophyValue
+	-- Aplicar boost de pets para trofeos
+	local petBoosts = calculatePetBoosts(player)
+	local boostedValue = math.floor(trophyValue * (1 + (petBoosts.TrophyBoost or 0)))
+
+	data.Trophies = (data.Trophies or 0) + boostedValue
 
 	updatePlayerData(player, {
 		Trophies = data.Trophies
 	})
 
-	Remotes.OnTrophyCollected:FireClient(player, trophyValue, data.Trophies)
+	Remotes.OnTrophyCollected:FireClient(player, boostedValue, data.Trophies)
 	return true
 end
 
@@ -1079,7 +1109,7 @@ end
 Remotes.GetPetStats.OnServerInvoke = function(player)
 	local data = getPlayerData(player)
 	if not data or not data.PetSystem then
-		return {TotalPets = 0, EquippedPets = 0, TotalBoost = 0}
+		return {TotalPets = 0, EquippedPets = 0, TotalBoost = 0, Boosts = {}}
 	end
 
 	local equippedCount = 0
@@ -1087,12 +1117,15 @@ Remotes.GetPetStats.OnServerInvoke = function(player)
 		if pet.Equiped then equippedCount = equippedCount + 1 end
 	end
 
+	local allBoosts = calculatePetBoosts(player)
+
 	return {
 		TotalPets = #data.PetSystem.Pets,
 		EquippedPets = equippedCount,
 		InventorySlots = data.PetSystem.InventorySlots,
 		EquipSlots = data.PetSystem.EquipSlots,
-		TotalBoost = calculatePetBoost(player),
+		TotalBoost = allBoosts.CoinBoost or 0, -- Compatibilidad
+		Boosts = allBoosts, -- Todos los boosts
 	}
 end
 

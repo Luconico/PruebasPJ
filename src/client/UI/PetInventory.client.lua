@@ -227,7 +227,7 @@ contentPadding.PaddingRight = UDim.new(0, 20)
 contentPadding.Parent = contentContainer
 
 local contentLayout = Instance.new("UIGridLayout")
-contentLayout.CellSize = UDim2.new(0, sizes.CardSize, 0, sizes.CardSize + 60)
+contentLayout.CellSize = UDim2.new(0, sizes.CardSize, 0, sizes.CardSize + 90) -- +90 para boosts mas grandes
 contentLayout.CellPadding = UDim2.new(0, sizes.CardPadding, 0, sizes.CardPadding)
 contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -288,8 +288,8 @@ local function createPetCard(pet)
 
 	-- Nombre
 	local name = Instance.new("TextLabel")
-	name.Size = UDim2.new(1, -10, 0, 25)
-	name.Position = UDim2.new(0.5, 0, 0, sizes.IconSize + 15)
+	name.Size = UDim2.new(1, -10, 0, 22)
+	name.Position = UDim2.new(0.5, 0, 0, sizes.IconSize + 12)
 	name.AnchorPoint = Vector2.new(0.5, 0)
 	name.BackgroundTransparency = 1
 	name.Text = petConfig.Name
@@ -304,22 +304,112 @@ local function createPetCard(pet)
 	nameStroke.Thickness = 2
 	nameStroke.Parent = name
 
-	-- Boost
-	local boost = Instance.new("TextLabel")
-	boost.Size = UDim2.new(1, -10, 0, 20)
-	boost.Position = UDim2.new(0.5, 0, 0, sizes.IconSize + 40)
-	boost.AnchorPoint = Vector2.new(0.5, 0)
-	boost.BackgroundTransparency = 1
-	boost.Text = "+" .. math.floor(petConfig.Boost * 100) .. "% 💰"
-	boost.Font = Styles.Fonts.Body
-	boost.TextSize = sizes.TextSize - 4
-	boost.TextColor3 = Color3.fromRGB(100, 255, 100)
-	boost.Parent = card
+	-- Rareza
+	local rarityConfig = Config.PetRarities[petConfig.Rarity]
+	local rarityLabel = Instance.new("TextLabel")
+	rarityLabel.Size = UDim2.new(1, -10, 0, 16)
+	rarityLabel.Position = UDim2.new(0.5, 0, 0, sizes.IconSize + 32)
+	rarityLabel.AnchorPoint = Vector2.new(0.5, 0)
+	rarityLabel.BackgroundTransparency = 1
+	rarityLabel.Text = petConfig.Rarity
+	rarityLabel.Font = Styles.Fonts.Body
+	rarityLabel.TextSize = sizes.TextSize - 4
+	rarityLabel.TextColor3 = rarityConfig and rarityConfig.Color or Color3.fromRGB(180, 180, 180)
+	rarityLabel.Parent = card
 
-	local boostStroke = Instance.new("UIStroke")
-	boostStroke.Color = Color3.fromRGB(0, 0, 0)
-	boostStroke.Thickness = 2
-	boostStroke.Parent = boost
+	local rarityStroke = Instance.new("UIStroke")
+	rarityStroke.Color = Color3.fromRGB(0, 0, 0)
+	rarityStroke.Thickness = 1.5
+	rarityStroke.Parent = rarityLabel
+
+	-- Boosts container (para múltiples boosts)
+	local boostsContainer = Instance.new("Frame")
+	boostsContainer.Name = "BoostsContainer"
+	boostsContainer.Size = UDim2.new(1, -6, 0, 50)
+	boostsContainer.Position = UDim2.new(0.5, 0, 0, sizes.IconSize + 48)
+	boostsContainer.AnchorPoint = Vector2.new(0.5, 0)
+	boostsContainer.BackgroundTransparency = 1
+	boostsContainer.Parent = card
+
+	-- Obtener boosts de la mascota
+	local boostsToShow = {}
+	if petConfig.Boosts then
+		for boostType, value in pairs(petConfig.Boosts) do
+			local boostInfo = Config.PetBoostTypes[boostType]
+			if boostInfo then
+				table.insert(boostsToShow, {
+					Type = boostType,
+					Value = value,
+					Icon = boostInfo.Icon,
+					Color = boostInfo.Color,
+					Name = boostInfo.Name,
+				})
+			end
+		end
+	elseif petConfig.Boost then
+		-- Compatibilidad con estructura antigua
+		table.insert(boostsToShow, {
+			Type = "CoinBoost",
+			Value = petConfig.Boost,
+			Icon = "💰",
+			Color = Color3.fromRGB(255, 220, 50),
+			Name = "Coins",
+		})
+	end
+
+	-- Crear texto de boosts (formato compacto)
+	local boostTexts = {}
+	for _, b in ipairs(boostsToShow) do
+		table.insert(boostTexts, b.Icon .. "+" .. math.floor(b.Value * 100) .. "%")
+	end
+
+	-- Si hay muchos boosts, mostrar en 2 lineas
+	local boostText1 = ""
+	local boostText2 = ""
+	if #boostTexts <= 2 then
+		boostText1 = table.concat(boostTexts, "  ")
+	else
+		-- Primera linea: primeros 2-3 boosts
+		local mid = math.ceil(#boostTexts / 2)
+		for i = 1, mid do
+			boostText1 = boostText1 .. (i > 1 and "  " or "") .. boostTexts[i]
+		end
+		for i = mid + 1, #boostTexts do
+			boostText2 = boostText2 .. (i > mid + 1 and "  " or "") .. boostTexts[i]
+		end
+	end
+
+	local boost1 = Instance.new("TextLabel")
+	boost1.Size = UDim2.new(1, 0, 0, 24)
+	boost1.Position = UDim2.new(0, 0, 0, 0)
+	boost1.BackgroundTransparency = 1
+	boost1.Text = boostText1
+	boost1.Font = Styles.Fonts.Body
+	boost1.TextSize = sizes.TextSize + 2
+	boost1.TextColor3 = Color3.fromRGB(100, 255, 100)
+	boost1.Parent = boostsContainer
+
+	local boost1Stroke = Instance.new("UIStroke")
+	boost1Stroke.Color = Color3.fromRGB(0, 0, 0)
+	boost1Stroke.Thickness = 2.5
+	boost1Stroke.Parent = boost1
+
+	if boostText2 ~= "" then
+		local boost2 = Instance.new("TextLabel")
+		boost2.Size = UDim2.new(1, 0, 0, 24)
+		boost2.Position = UDim2.new(0, 0, 0, 22)
+		boost2.BackgroundTransparency = 1
+		boost2.Text = boostText2
+		boost2.Font = Styles.Fonts.Body
+		boost2.TextSize = sizes.TextSize + 2
+		boost2.TextColor3 = Color3.fromRGB(100, 255, 100)
+		boost2.Parent = boostsContainer
+
+		local boost2Stroke = Instance.new("UIStroke")
+		boost2Stroke.Color = Color3.fromRGB(0, 0, 0)
+		boost2Stroke.Thickness = 2.5
+		boost2Stroke.Parent = boost2
+	end
 
 	-- Botones container
 	local buttonsContainer = Instance.new("Frame")

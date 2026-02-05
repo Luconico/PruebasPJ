@@ -418,16 +418,30 @@ local function playEggOpenAnimation(eggName, petName)
 	rarityStroke.Thickness = 2
 	rarityStroke.Parent = rarityLabel
 
-	-- Perk/Boost
+	-- Perk/Boosts
+	local boostTexts = {}
+	if petConfig.Boosts then
+		for boostType, value in pairs(petConfig.Boosts) do
+			local boostInfo = Config.PetBoostTypes and Config.PetBoostTypes[boostType]
+			if boostInfo then
+				table.insert(boostTexts, boostInfo.Icon .. "+" .. math.floor(value * 100) .. "%")
+			else
+				table.insert(boostTexts, "+" .. math.floor(value * 100) .. "%")
+			end
+		end
+	elseif petConfig.Boost then
+		table.insert(boostTexts, "💰+" .. math.floor(petConfig.Boost * 100) .. "%")
+	end
+
 	local perkLabel = Instance.new("TextLabel")
 	perkLabel.Name = "Perk"
 	perkLabel.Size = UDim2.new(1, 0, 0, 32)
 	perkLabel.Position = UDim2.new(0.5, 0, 0.85, 0)
 	perkLabel.AnchorPoint = Vector2.new(0.5, 0)
 	perkLabel.BackgroundTransparency = 1
-	perkLabel.Text = "+" .. (petConfig.Boost * 100) .. "% Coin Boost"
+	perkLabel.Text = table.concat(boostTexts, "  ")
 	perkLabel.TextColor3 = Color3.fromRGB(255, 220, 100)
-	perkLabel.TextSize = 28
+	perkLabel.TextSize = 26
 	perkLabel.Font = Enum.Font.GothamBold
 	perkLabel.TextTransparency = 1
 	perkLabel.Parent = mainContainer
