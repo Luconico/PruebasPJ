@@ -36,12 +36,9 @@ local function getResponsiveSizes()
 	local mobileScale = math.max(0.85, scale)
 
 	return {
-		-- Contenedor principal (más ancho en PC para usar más espacio)
+		-- Contenedor principal (siempre usa escala para ser responsive)
 		ContainerWidth = isMobile and 0.95 or (isTablet and 0.85 or 0.75),
-		ContainerWidthOffset = isMobile and 0 or (isTablet and 0 or 1100),
 		ContainerHeight = isMobile and 0.92 or (isTablet and 0.85 or 0.85),
-		ContainerHeightOffset = isMobile and 0 or (isTablet and 0 or 750),
-		UseScale = isMobile or isTablet,
 
 		-- Header
 		HeaderHeight = isMobile and 80 or math.floor(110 * scale),
@@ -238,11 +235,7 @@ local function createShopUI()
 	-- Contenedor principal de la tienda (responsive)
 	local mainContainer = Instance.new("Frame")
 	mainContainer.Name = "MainContainer"
-	if sizes.UseScale then
-		mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
-	else
-		mainContainer.Size = UDim2.new(0, sizes.ContainerWidthOffset, 0, sizes.ContainerHeightOffset)
-	end
+	mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
 	mainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
 	mainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
 	mainContainer.BackgroundColor3 = Styles.Colors.Background
@@ -874,12 +867,7 @@ local function openShop()
 		mainContainer.Size = UDim2.new(0, 0, 0, 0)
 		mainContainer.BackgroundTransparency = 1
 
-		local targetSize
-		if sizes.UseScale then
-			targetSize = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
-		else
-			targetSize = UDim2.new(0, sizes.ContainerWidthOffset, 0, sizes.ContainerHeightOffset)
-		end
+		local targetSize = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
 
 		TweenService:Create(mainContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 			Size = targetSize,
@@ -1058,17 +1046,11 @@ ResponsiveUI.onViewportChanged(function(info)
 	-- Actualizar tamaños
 	sizes = getResponsiveSizes()
 
-	-- Si la tienda está abierta, cerrarla y volverla a abrir para reconstruir
-	-- (solución simple para evitar tener que actualizar todos los elementos manualmente)
+	-- Si la tienda está abierta, actualizar el tamaño del contenedor
 	if isShopOpen then
-		-- Solo actualizar el contenedor principal por ahora
 		local mainContainer = shopGui:FindFirstChild("MainContainer")
 		if mainContainer then
-			if sizes.UseScale then
-				mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
-			else
-				mainContainer.Size = UDim2.new(0, sizes.ContainerWidthOffset, 0, sizes.ContainerHeightOffset)
-			end
+			mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
 		end
 	end
 end)

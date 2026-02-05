@@ -34,10 +34,9 @@ local function getResponsiveSizes()
 	local isTablet = info.IsTablet
 
 	return {
-		-- Contenedor principal
+		-- Contenedor principal (siempre usa escala para ser responsive)
 		ContainerWidth = isMobile and 0.95 or (isTablet and 0.85 or 0.6),
 		ContainerHeight = isMobile and 0.92 or (isTablet and 0.85 or 0.8),
-		UseScale = isMobile or isTablet,
 
 		-- Header
 		HeaderHeight = isMobile and 70 or math.floor(90 * scale),
@@ -167,11 +166,7 @@ local function createShopUI()
 	-- Contenedor principal
 	mainContainer = Instance.new("Frame")
 	mainContainer.Name = "MainContainer"
-	if sizes.UseScale then
-		mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
-	else
-		mainContainer.Size = UDim2.new(0, 1000, 0, 700)
-	end
+	mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
 	mainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
 	mainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
 	mainContainer.BackgroundColor3 = Styles.Colors.Background
@@ -672,12 +667,7 @@ toggleShop = function(open)
 
 		-- Animar entrada
 		mainContainer.Size = UDim2.new(0, 0, 0, 0)
-		local targetSize
-		if sizes.UseScale then
-			targetSize = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
-		else
-			targetSize = UDim2.new(0, 1000, 0, 700)
-		end
+		local targetSize = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
 
 		TweenService:Create(mainContainer, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
 			Size = targetSize
