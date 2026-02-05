@@ -336,6 +336,18 @@ Config.Rewards = {
 		{ Height = 2000, Bonus = 600,   Message = "2 KILOMETERS!!!!!", Tier = "mythic" },
 		{ Height = 3000, Bonus = 1000,  Message = "3 KM!!!!!", Tier = "mythic" },
 		{ Height = 5000, Bonus = 2000,  Message = "5 KILOMETERS!!!!!!", Tier = "mythic" },
+
+		-- Extended milestones (5km - 30km / SPACE)
+		{ Height = 6000,  Bonus = 2500,   Message = "6 KM!!!!!", Tier = "mythic" },
+		{ Height = 7000,  Bonus = 3000,   Message = "7 KM!!!!!", Tier = "mythic" },
+		{ Height = 8000,  Bonus = 4000,   Message = "8 KM!!!!!", Tier = "mythic" },
+		{ Height = 10000, Bonus = 5000,   Message = "10 KILOMETERS!!!!!", Tier = "mythic" },
+		{ Height = 12000, Bonus = 7000,   Message = "12 KM!!!!!", Tier = "mythic" },
+		{ Height = 15000, Bonus = 10000,  Message = "15 KILOMETERS!!!!!", Tier = "mythic" },
+		{ Height = 18000, Bonus = 12000,  Message = "18 KM!!!!!", Tier = "mythic" },
+		{ Height = 20000, Bonus = 15000,  Message = "20 KILOMETERS!!!!!", Tier = "mythic" },
+		{ Height = 25000, Bonus = 20000,  Message = "25 KM!!!!!", Tier = "mythic" },
+		{ Height = 30000, Bonus = 30000,  Message = "🚀 SPACE REACHED!!! 🚀", Tier = "mythic" },
 	},
 
 	-- Colors and effects per reward tier
