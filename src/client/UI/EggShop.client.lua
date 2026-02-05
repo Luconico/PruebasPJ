@@ -22,8 +22,9 @@ local Config = require(Shared:WaitForChild("Config"))
 local TextureManager = require(Shared:WaitForChild("TextureManager"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
 
--- Carpeta de modelos de mascotas
+-- Carpeta de modelos de mascotas y huevos
 local PetsFolder = ReplicatedStorage:WaitForChild("Pets", 10)
+local EggsFolder = ReplicatedStorage:WaitForChild("Eggs", 10)
 
 -- ============================================
 -- VIEWPORT FRAME HELPER
@@ -138,6 +139,377 @@ local RarityColors = {
 }
 
 -- ============================================
+-- VIEWPORT PARA HUEVO 3D (Animación de apertura)
+-- ============================================
+
+local function createEggViewport(parent, eggIndex, size)
+	local viewport = Instance.new("ViewportFrame")
+	viewport.Name = "EggViewport"
+	viewport.Size = size or UDim2.new(1, 0, 1, 0)
+	viewport.BackgroundTransparency = 1
+	viewport.Parent = parent
+
+	if not EggsFolder then
+		warn("[EggShop] No se encontró carpeta Eggs")
+		return viewport, nil, nil
+	end
+
+	-- Buscar el modelo del huevo (Egg1, Egg2, etc.)
+	local eggModelName = "Egg" .. tostring(eggIndex)
+	local eggModel = EggsFolder:FindFirstChild(eggModelName)
+
+	if not eggModel then
+		-- Fallback al primer huevo disponible
+		eggModel = EggsFolder:FindFirstChildWhichIsA("Model") or EggsFolder:FindFirstChild("Egg1")
+		if not eggModel then
+			warn("[EggShop] No se encontró modelo de huevo:", eggModelName)
+			return viewport, nil, nil
+		end
+	end
+
+	local worldModel = Instance.new("WorldModel")
+	worldModel.Parent = viewport
+
+	local clonedEgg = eggModel:Clone()
+	clonedEgg.Parent = worldModel
+
+	-- Calcular bounding box
+	local _, size3d = clonedEgg:GetBoundingBox()
+	local maxSize = math.max(size3d.X, size3d.Y, size3d.Z)
+
+	-- Posicionar en origen
+	if clonedEgg.PrimaryPart then
+		clonedEgg:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
+	else
+		clonedEgg:MoveTo(Vector3.new(0, 0, 0))
+	end
+
+	-- Cámara
+	local camera = Instance.new("Camera")
+	camera.FieldOfView = 50
+	local distance = maxSize * 2.2
+	camera.CFrame = CFrame.new(Vector3.new(0, distance * 0.2, distance), Vector3.new(0, 0, 0))
+	camera.Parent = viewport
+	viewport.CurrentCamera = camera
+
+	return viewport, clonedEgg, camera
+end
+
+-- ============================================
+-- ANIMACIÓN DE APERTURA DE HUEVO
+-- ============================================
+
+-- Mapeo de tipo de huevo a índice de modelo
+local EggModelMapping = {
+	BasicEgg = 1,
+	PremiumEgg = 5,
+	RobuxEgg = 10,
+}
+
+local isAnimationPlaying = false
+
+local function playEggOpenAnimation(eggName, petName)
+	if isAnimationPlaying then return end
+	isAnimationPlaying = true
+
+	local petConfig = Config.Pets[petName]
+	if not petConfig then
+		warn("[EggShop] No se encontró config de mascota:", petName)
+		isAnimationPlaying = false
+		return
+	end
+
+	local rarityColor = RarityColors[petConfig.Rarity] or RarityColors.Common
+	local eggIndex = EggModelMapping[eggName] or 1
+
+	-- ========== CREAR SCREENGUI DE ANIMACIÓN ==========
+	local animGui = Instance.new("ScreenGui")
+	animGui.Name = "EggOpenAnimation"
+	animGui.DisplayOrder = 100
+	animGui.IgnoreGuiInset = true
+	animGui.ResetOnSpawn = false
+	animGui.Parent = playerGui
+
+	-- Fondo oscuro
+	local backdrop = Instance.new("Frame")
+	backdrop.Name = "Backdrop"
+	backdrop.Size = UDim2.new(1, 0, 1, 0)
+	backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	backdrop.BackgroundTransparency = 1
+	backdrop.BorderSizePixel = 0
+	backdrop.Parent = animGui
+
+	-- Animar aparición del fondo
+	TweenService:Create(backdrop, TweenInfo.new(0.3), {
+		BackgroundTransparency = 0.6
+	}):Play()
+
+	-- ========== CONTENEDOR PRINCIPAL ==========
+	local mainContainer = Instance.new("Frame")
+	mainContainer.Name = "MainContainer"
+	mainContainer.Size = UDim2.new(0, 400, 0, 500)
+	mainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
+	mainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+	mainContainer.BackgroundTransparency = 1
+	mainContainer.Parent = animGui
+
+	-- ========== VIEWPORT DEL HUEVO ==========
+	local eggViewportContainer = Instance.new("Frame")
+	eggViewportContainer.Name = "EggViewportContainer"
+	eggViewportContainer.Size = UDim2.new(0, 300, 0, 300)
+	eggViewportContainer.Position = UDim2.new(0.5, 0, 0.4, 0)
+	eggViewportContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+	eggViewportContainer.BackgroundTransparency = 1
+	eggViewportContainer.Parent = mainContainer
+
+	local _eggViewport, _eggModel, _eggCamera = createEggViewport(eggViewportContainer, eggIndex, UDim2.new(1, 0, 1, 0))
+
+	-- Efecto de brillo detrás del huevo
+	local glow = Instance.new("ImageLabel")
+	glow.Name = "Glow"
+	glow.Size = UDim2.new(1.5, 0, 1.5, 0)
+	glow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	glow.AnchorPoint = Vector2.new(0.5, 0.5)
+	glow.BackgroundTransparency = 1
+	glow.Image = "rbxassetid://5028857084" -- Radial gradient
+	glow.ImageColor3 = rarityColor
+	glow.ImageTransparency = 0.5
+	glow.ZIndex = 0
+	glow.Parent = eggViewportContainer
+
+	-- Animar entrada del huevo (desde abajo)
+	eggViewportContainer.Position = UDim2.new(0.5, 0, 1.5, 0)
+	TweenService:Create(eggViewportContainer, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, 0, 0.4, 0)
+	}):Play()
+
+	-- 🔊 Sonido de aparición
+	SoundManager.play("Sparkle", 0.5, 1.0)
+
+	task.wait(0.6)
+
+	-- ========== ANIMACIÓN DE SHAKE ==========
+	local shakeCount = 6
+	local shakeDuration = 0.15
+
+	for i = 1, shakeCount do
+		local direction = (i % 2 == 0) and 1 or -1
+		local intensity = 12 + (i * 2) -- Incrementa intensidad
+
+		TweenService:Create(eggViewportContainer, TweenInfo.new(shakeDuration, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+			Rotation = direction * intensity
+		}):Play()
+
+		-- 🔊 Sonido de crack
+		if i == 3 or i == 5 then
+			SoundManager.play("ButtonClick", 0.3, 0.8)
+		end
+
+		task.wait(shakeDuration)
+	end
+
+	-- Volver a posición neutral
+	TweenService:Create(eggViewportContainer, TweenInfo.new(0.1), {
+		Rotation = 0
+	}):Play()
+
+	task.wait(0.15)
+
+	-- ========== EFECTO DE EXPLOSIÓN ==========
+	-- Flash blanco
+	local flash = Instance.new("Frame")
+	flash.Name = "Flash"
+	flash.Size = UDim2.new(1, 0, 1, 0)
+	flash.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	flash.BackgroundTransparency = 1
+	flash.ZIndex = 10
+	flash.Parent = animGui
+
+	TweenService:Create(flash, TweenInfo.new(0.1), {
+		BackgroundTransparency = 0.3
+	}):Play()
+
+	-- 🔊 Sonido de apertura
+	SoundManager.play("ShopOpen", 0.6, 1.2)
+
+	-- Ocultar huevo
+	eggViewportContainer.Visible = false
+
+	-- Expandir glow
+	TweenService:Create(glow, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = UDim2.new(3, 0, 3, 0),
+		ImageTransparency = 0.2
+	}):Play()
+
+	task.wait(0.15)
+
+	-- Desvanecer flash
+	TweenService:Create(flash, TweenInfo.new(0.3), {
+		BackgroundTransparency = 1
+	}):Play()
+
+	-- ========== MOSTRAR MASCOTA ==========
+	local petViewportContainer = Instance.new("Frame")
+	petViewportContainer.Name = "PetViewportContainer"
+	petViewportContainer.Size = UDim2.new(0, 280, 0, 280)
+	petViewportContainer.Position = UDim2.new(0.5, 0, 0.35, 0)
+	petViewportContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+	petViewportContainer.BackgroundTransparency = 1
+	petViewportContainer.Parent = mainContainer
+
+	-- Escalar desde pequeño
+	petViewportContainer.Size = UDim2.new(0, 0, 0, 0)
+
+	local _petViewport = createPetViewport(petViewportContainer, petName, UDim2.new(1, 0, 1, 0))
+
+	TweenService:Create(petViewportContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, 280, 0, 280)
+	}):Play()
+
+	-- 🔊 Sonido de revelación
+	task.delay(0.1, function()
+		SoundManager.play("Sparkle", 0.6, 1.3)
+	end)
+
+	task.wait(0.3)
+
+	-- Normalizar glow
+	TweenService:Create(glow, TweenInfo.new(0.5), {
+		Size = UDim2.new(1.8, 0, 1.8, 0),
+		ImageTransparency = 0.4
+	}):Play()
+
+	-- ========== TEXTOS DE INFORMACIÓN ==========
+	-- Nombre de la mascota
+	local petNameLabel = Instance.new("TextLabel")
+	petNameLabel.Name = "PetName"
+	petNameLabel.Size = UDim2.new(1, 0, 0, 50)
+	petNameLabel.Position = UDim2.new(0.5, 0, 0.65, 0)
+	petNameLabel.AnchorPoint = Vector2.new(0.5, 0)
+	petNameLabel.BackgroundTransparency = 1
+	petNameLabel.Text = petConfig.Name
+	petNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	petNameLabel.TextSize = 42
+	petNameLabel.Font = Enum.Font.FredokaOne
+	petNameLabel.TextTransparency = 1
+	petNameLabel.Parent = mainContainer
+
+	local nameStroke = Instance.new("UIStroke")
+	nameStroke.Color = Color3.fromRGB(0, 0, 0)
+	nameStroke.Thickness = 3
+	nameStroke.Parent = petNameLabel
+
+	-- Rareza
+	local rarityLabel = Instance.new("TextLabel")
+	rarityLabel.Name = "Rarity"
+	rarityLabel.Size = UDim2.new(1, 0, 0, 30)
+	rarityLabel.Position = UDim2.new(0.5, 0, 0.75, 0)
+	rarityLabel.AnchorPoint = Vector2.new(0.5, 0)
+	rarityLabel.BackgroundTransparency = 1
+	rarityLabel.Text = petConfig.Rarity
+	rarityLabel.TextColor3 = rarityColor
+	rarityLabel.TextSize = 28
+	rarityLabel.Font = Enum.Font.GothamBold
+	rarityLabel.TextTransparency = 1
+	rarityLabel.Parent = mainContainer
+
+	local rarityStroke = Instance.new("UIStroke")
+	rarityStroke.Color = Color3.fromRGB(0, 0, 0)
+	rarityStroke.Thickness = 2
+	rarityStroke.Parent = rarityLabel
+
+	-- Perk/Boost
+	local perkLabel = Instance.new("TextLabel")
+	perkLabel.Name = "Perk"
+	perkLabel.Size = UDim2.new(1, 0, 0, 28)
+	perkLabel.Position = UDim2.new(0.5, 0, 0.82, 0)
+	perkLabel.AnchorPoint = Vector2.new(0.5, 0)
+	perkLabel.BackgroundTransparency = 1
+	perkLabel.Text = "+" .. (petConfig.Boost * 100) .. "% Coin Boost"
+	perkLabel.TextColor3 = Color3.fromRGB(255, 220, 100)
+	perkLabel.TextSize = 24
+	perkLabel.Font = Enum.Font.GothamBold
+	perkLabel.TextTransparency = 1
+	perkLabel.Parent = mainContainer
+
+	local perkStroke = Instance.new("UIStroke")
+	perkStroke.Color = Color3.fromRGB(0, 0, 0)
+	perkStroke.Thickness = 2
+	perkStroke.Parent = perkLabel
+
+	-- Animar textos
+	task.wait(0.2)
+	TweenService:Create(petNameLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+		TextTransparency = 0
+	}):Play()
+
+	task.wait(0.1)
+	TweenService:Create(rarityLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+		TextTransparency = 0
+	}):Play()
+
+	task.wait(0.1)
+	TweenService:Create(perkLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+		TextTransparency = 0
+	}):Play()
+
+	-- ========== BOTÓN DE CERRAR / TAP TO CLOSE ==========
+	local closeHint = Instance.new("TextLabel")
+	closeHint.Name = "CloseHint"
+	closeHint.Size = UDim2.new(1, 0, 0, 25)
+	closeHint.Position = UDim2.new(0.5, 0, 0.92, 0)
+	closeHint.AnchorPoint = Vector2.new(0.5, 0)
+	closeHint.BackgroundTransparency = 1
+	closeHint.Text = "Tap anywhere to close"
+	closeHint.TextColor3 = Color3.fromRGB(200, 200, 200)
+	closeHint.TextSize = 18
+	closeHint.Font = Enum.Font.Gotham
+	closeHint.TextTransparency = 1
+	closeHint.Parent = mainContainer
+
+	task.wait(0.5)
+	TweenService:Create(closeHint, TweenInfo.new(0.3), {
+		TextTransparency = 0.3
+	}):Play()
+
+	-- ========== CERRAR AL HACER CLICK ==========
+	local function closeAnimation()
+		-- Evitar doble click
+		backdrop.Active = false
+
+		-- Animar salida
+		TweenService:Create(mainContainer, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+			Size = UDim2.new(0, 0, 0, 0)
+		}):Play()
+
+		TweenService:Create(backdrop, TweenInfo.new(0.3), {
+			BackgroundTransparency = 1
+		}):Play()
+
+		task.wait(0.35)
+		animGui:Destroy()
+		isAnimationPlaying = false
+	end
+
+	backdrop.Active = true
+	backdrop.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			closeAnimation()
+		end
+	end)
+
+	-- También cerrar con tecla E o Escape
+	local inputConnection
+	inputConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end
+		if input.KeyCode == Enum.KeyCode.E or input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.Return then
+			inputConnection:Disconnect()
+			closeAnimation()
+		end
+	end)
+end
+
+-- ============================================
 -- ESTADO
 -- ============================================
 
@@ -216,6 +588,10 @@ local function buyEgg(eggName)
 	end
 
 	print("[EggShop] Huevo abierto! Obtenido:", petNameOrError)
+
+	-- 🎬 Reproducir animación de apertura
+	playEggOpenAnimation(eggName, petNameOrError)
+
 	return true
 end
 
