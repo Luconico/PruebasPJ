@@ -325,18 +325,18 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	nameLabel.Text = eggConfig.Name
 	nameLabel.Font = Styles.Fonts.Title
 	nameLabel.TextScaled = true
-	nameLabel.TextColor3 = Styles.Colors.TextDark
+	nameLabel.TextColor3 = Styles.Colors.Text
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.ZIndex = 3
 	nameLabel.Parent = header
-	createStroke(nameLabel, Color3.fromRGB(255, 255, 255), 2).Transparency = 0.5
+	createStroke(nameLabel, Color3.fromRGB(0, 0, 0), 2)
 
 	-- Precio container
 	local priceContainer = Instance.new("Frame")
 	priceContainer.Name = "PriceContainer"
 	priceContainer.Size = UDim2.new(0.32, 0, 0.7, 0)
 	priceContainer.Position = UDim2.new(0.66, 0, 0.15, 0)
-	priceContainer.BackgroundColor3 = isRobux and Color3.fromRGB(80, 180, 100) or Color3.fromRGB(100, 80, 50)
+	priceContainer.BackgroundColor3 = isRobux and Color3.fromRGB(80, 180, 100) or Color3.fromRGB(180, 140, 50)
 	priceContainer.ZIndex = 3
 	priceContainer.Parent = header
 	createCorner(priceContainer, UDim.new(0, 8))
@@ -349,7 +349,7 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	priceLayout.Padding = UDim.new(0, 4)
 	priceLayout.Parent = priceContainer
 
-	-- Icono de moneda/robux
+	-- Icono de moneda/robux/trofeo
 	if isRobux then
 		local robuxIcon = Instance.new("ImageLabel")
 		robuxIcon.Name = "RobuxIcon"
@@ -361,22 +361,22 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 		robuxIcon.LayoutOrder = 1
 		robuxIcon.Parent = priceContainer
 	else
-		local coinIcon = Instance.new("TextLabel")
-		coinIcon.Name = "CoinIcon"
-		coinIcon.Size = UDim2.new(0, 20, 0, 20)
-		coinIcon.BackgroundTransparency = 1
-		coinIcon.Text = "💰"
-		coinIcon.TextScaled = true
-		coinIcon.ZIndex = 4
-		coinIcon.LayoutOrder = 1
-		coinIcon.Parent = priceContainer
+		local trophyIcon = Instance.new("TextLabel")
+		trophyIcon.Name = "TrophyIcon"
+		trophyIcon.Size = UDim2.new(0, 20, 0, 20)
+		trophyIcon.BackgroundTransparency = 1
+		trophyIcon.Text = "🏆"
+		trophyIcon.TextScaled = true
+		trophyIcon.ZIndex = 4
+		trophyIcon.LayoutOrder = 1
+		trophyIcon.Parent = priceContainer
 	end
 
 	local priceLabel = Instance.new("TextLabel")
 	priceLabel.Name = "PriceLabel"
 	priceLabel.Size = UDim2.new(0, 45, 1, 0)
 	priceLabel.BackgroundTransparency = 1
-	priceLabel.Text = isRobux and tostring(eggConfig.CostRobux) or tostring(eggConfig.Cost)
+	priceLabel.Text = isRobux and tostring(eggConfig.CostRobux) or tostring(eggConfig.TrophyCost)
 	priceLabel.Font = Styles.Fonts.Title
 	priceLabel.TextScaled = true
 	priceLabel.TextColor3 = Styles.Colors.Text
@@ -504,7 +504,7 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	-- Botón principal con studs
 	local btnColor = isRobux and Styles.Colors.ButtonRobux or Styles.Colors.ButtonCoin
 	local btnStrokeColor = isRobux and Color3.fromRGB(40, 150, 80) or Color3.fromRGB(180, 140, 40)
-	local txtColor = isRobux and Styles.Colors.Text or Styles.Colors.TextDark
+	local txtColor = Styles.Colors.Text
 
 	local openButton = Instance.new("ImageButton")
 	openButton.Name = "OpenButton"
@@ -546,7 +546,7 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	contentLayout.Padding = UDim.new(0, 8)
 	contentLayout.Parent = btnContent
 
-	-- Icono en el botón (Robux si es de pago, huevo si es de monedas)
+	-- Icono en el botón (Robux si es de pago, trofeo si es de trofeos)
 	if isRobux then
 		local robuxIcon = Instance.new("ImageLabel")
 		robuxIcon.Name = "Icon"
@@ -562,7 +562,7 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 		btnIcon.Name = "Icon"
 		btnIcon.Size = UDim2.new(0, 30, 0, 30)
 		btnIcon.BackgroundTransparency = 1
-		btnIcon.Text = "🥚"
+		btnIcon.Text = "🏆"
 		btnIcon.TextScaled = true
 		btnIcon.ZIndex = 5
 		btnIcon.LayoutOrder = 1

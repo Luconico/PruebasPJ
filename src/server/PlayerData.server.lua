@@ -551,11 +551,12 @@ local function openEgg(player, eggName)
 			MarketplaceService:PromptProductPurchase(player, productId)
 			return false, "ROBUX_PROMPT", productId
 		end
-	elseif data.Coins < eggConfig.Cost then
-		return false, "Monedas insuficientes"
-	else
-		-- Restar monedas (solo para huevos de monedas)
-		data.Coins = data.Coins - eggConfig.Cost
+	elseif eggConfig.TrophyCost then
+		-- Huevo de trofeos
+		if data.Trophies < eggConfig.TrophyCost then
+			return false, "Trofeos insuficientes"
+		end
+		data.Trophies = data.Trophies - eggConfig.TrophyCost
 	end
 
 	-- Selección aleatoria ponderada

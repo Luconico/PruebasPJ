@@ -789,7 +789,7 @@ Config.Pets = {
 Config.Eggs = {
 	BasicEgg = {
 		Name = "Basic Egg",
-		Cost = 100,
+		TrophyCost = 2,
 		Icon = "🥚",
 		Description = "Common pets",
 		Pets = {
@@ -803,7 +803,7 @@ Config.Eggs = {
 
 	PremiumEgg = {
 		Name = "Premium Egg",
-		Cost = 500,
+		TrophyCost = 20,
 		Icon = "🥇",
 		Description = "Better pets with rare chances",
 		Pets = {
