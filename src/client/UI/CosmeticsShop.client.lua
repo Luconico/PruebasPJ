@@ -50,14 +50,14 @@ local function getResponsiveSizes()
 		IconTextSize = isMobile and 36 or math.floor(48 * scale),
 
 		-- Textos
-		NameTextSize = isMobile and 14 or math.floor(18 * scale),
+		NameTextSize = isMobile and 18 or math.floor(24 * scale),
 		DescTextSize = isMobile and 11 or math.floor(13 * scale),
 		TierTextSize = isMobile and 10 or math.floor(12 * scale),
 		PriceTextSize = isMobile and 14 or math.floor(18 * scale),
 
 		-- Botones
-		ButtonHeight = isMobile and 32 or math.floor(40 * scale),
-		ButtonTextSize = isMobile and 12 or math.floor(16 * scale),
+		ButtonHeight = isMobile and 36 or math.floor(44 * scale),
+		ButtonTextSize = isMobile and 16 or math.floor(20 * scale),
 
 		-- General
 		CornerRadius = isMobile and 10 or math.floor(14 * scale),
