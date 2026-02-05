@@ -76,10 +76,9 @@ local function createDebugUI()
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = mainPanel
 
-	-- Botón cerrar (usando UIComponentsManager)
+	-- Botón cerrar (usando UIComponentsManager) - sobresale por la esquina
 	local closeButton = UIComponentsManager.createCloseButton(mainPanel, {
 		size = 52,
-		position = UDim2.new(1, -58, 0, 4),
 		onClose = function()
 			toggleDebugUI(false)
 		end

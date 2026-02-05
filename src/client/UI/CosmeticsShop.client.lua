@@ -18,6 +18,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
 
 -- Esperar Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -209,28 +210,14 @@ local function createShopUI()
 		constraint.Parent = title
 	end
 
-	-- Botón cerrar
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, sizes.CloseButtonSize, 0, sizes.CloseButtonSize)
-	closeButton.Position = UDim2.new(1, -10, 0.5, 0)
-	closeButton.AnchorPoint = Vector2.new(1, 0.5)
-	closeButton.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
-	closeButton.Text = "X"
-	closeButton.TextColor3 = Styles.Colors.Text
-	closeButton.TextSize = math.floor(sizes.CloseButtonSize * 0.5)
-	closeButton.Font = Styles.Fonts.Title
-	closeButton.Parent = header
-	createCorner(closeButton)
-
-	closeButton.MouseButton1Click:Connect(function()
-		SoundManager.play("ButtonClick", 0.4, 1.1)
-		toggleShop(false)
-	end)
-
-	closeButton.MouseEnter:Connect(function()
-		SoundManager.play("ButtonHover", 0.2, 1.2)
-	end)
+	-- Botón cerrar (usando UIComponentsManager)
+	local closeButton = UIComponentsManager.createCloseButton(mainContainer, {
+		size = sizes.CloseButtonSize,
+		onClose = function()
+			toggleShop(false)
+		end
+	})
+	closeButton.ZIndex = 10
 
 	-- Área de scroll para cosméticos
 	local scrollArea = Instance.new("ScrollingFrame")

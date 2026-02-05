@@ -19,6 +19,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared", 10)
 local Config = require(Shared:WaitForChild("Config"))
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
 
 -- ============================================
 -- TAMAÑOS RESPONSIVE
@@ -353,29 +354,6 @@ local function createShopUI()
 		titleConstraint.Parent = title
 	end
 
-	-- Botón de cerrar (responsive con más estilo)
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, sizes.CloseButtonSize, 0, sizes.CloseButtonSize)
-	closeButton.Position = UDim2.new(1, -(sizes.CloseButtonSize + sizes.Padding), 0.5, 0)
-	closeButton.AnchorPoint = Vector2.new(0, 0.5)
-	closeButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-	closeButton.Text = "X"
-	closeButton.TextColor3 = Color3.new(1, 1, 1)
-	closeButton.TextSize = sizes.CloseButtonTextSize
-	closeButton.Font = Enum.Font.GothamBlack
-	closeButton.TextStrokeTransparency = 0.5
-	closeButton.TextStrokeColor3 = Color3.fromRGB(150, 40, 40)
-	closeButton.ZIndex = 4
-	closeButton.Parent = header
-
-	createCorner(closeButton)
-	createStroke(closeButton, Color3.fromRGB(200, 50, 50), 4)
-	createGradient(closeButton,
-		Color3.fromRGB(255, 100, 100),
-		Color3.fromRGB(220, 60, 60),
-		90)
-
 	-- Mostrar monedas del jugador (responsive con más estilo)
 	local coinsDisplay = Instance.new("Frame")
 	coinsDisplay.Name = "CoinsDisplay"
@@ -443,7 +421,7 @@ local function createShopUI()
 	upgradesLayout.Padding = UDim.new(0, sizes.CardPadding)
 	upgradesLayout.Parent = upgradesContainer
 
-	return screenGui, mainContainer, upgradesContainer, coinsText, closeButton, backdrop
+	return screenGui, mainContainer, upgradesContainer, coinsText, backdrop
 end
 
 -- ============================================
@@ -1117,8 +1095,17 @@ end
 
 local function initialize()
 	-- Crear UI
-	local gui, mainContainer, upgradesContainer, coinsText, closeButton, backdrop = createShopUI()
+	local gui, mainContainer, upgradesContainer, coinsText, backdrop = createShopUI()
 	shopGui = gui
+
+	-- Botón de cerrar (usando UIComponentsManager) - sobresale por la esquina
+	local closeButton = UIComponentsManager.createCloseButton(mainContainer, {
+		size = sizes.CloseButtonSize,
+		onClose = function()
+			closeShop()
+		end
+	})
+	closeButton.ZIndex = 10
 
 	-- Crear tarjetas para cada upgrade
 	local layoutOrder = 1
@@ -1187,17 +1174,6 @@ local function initialize()
 			end)
 		end
 	end
-
-	-- Botón de cerrar
-	closeButton.MouseButton1Click:Connect(function()
-		SoundManager.play("ButtonClick", 0.4, 1.1)
-		animateButtonPress(closeButton)
-		closeShop()
-	end)
-
-	closeButton.MouseEnter:Connect(function()
-		SoundManager.play("ButtonHover", 0.2, 1.2)
-	end)
 
 	-- Click/tap en backdrop cierra (soporte para mouse y touch)
 	backdrop.InputBegan:Connect(function(input)

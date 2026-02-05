@@ -32,7 +32,8 @@ function UIComponentsManager.createCloseButton(parent, options)
 	options = options or {}
 
 	local size = options.size or 52
-	local position = options.position or UDim2.new(1, -(size + 6), 0, 4)
+	-- Por defecto, sobresale por la esquina superior derecha
+	local position = options.position or UDim2.new(1, -size * 0.75, 0, -size * 0.25)
 	local color = options.color or Color3.fromRGB(200, 60, 60)
 	local colorHover = options.colorHover or Color3.fromRGB(255, 80, 80)
 	local strokeColor = options.strokeColor or Color3.fromRGB(80, 20, 20)

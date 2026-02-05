@@ -16,6 +16,8 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local Shared = ReplicatedStorage:WaitForChild("Shared", 10)
 local Config = require(Shared:WaitForChild("Config"))
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
+local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
 
 -- Tamaños responsive
 local function getResponsiveSizes()
@@ -139,27 +141,16 @@ statsLabel.TextColor3 = Styles.Colors.TextDark
 statsLabel.TextXAlignment = Enum.TextXAlignment.Right
 statsLabel.Parent = header
 
--- Close button
-local closeButton = Instance.new("TextButton")
-closeButton.Name = "CloseButton"
-closeButton.AnchorPoint = Vector2.new(1, 0.5)
-closeButton.Position = UDim2.new(1, -15, 0.5, 0)
-closeButton.Size = UDim2.new(0, 60, 0, 60)
-closeButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-closeButton.Text = "✕"
-closeButton.Font = Styles.Fonts.Title
-closeButton.TextSize = 36
-closeButton.TextColor3 = Styles.Colors.Text
-closeButton.Parent = header
-
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(1, 0)
-closeCorner.Parent = closeButton
-
-closeButton.MouseButton1Click:Connect(function()
-	backdrop.Visible = false
-	inventoryOpen = false
-end)
+-- Close button (usando UIComponentsManager)
+local closeButton = UIComponentsManager.createCloseButton(mainContainer, {
+	size = 52,
+	onClose = function()
+		SoundManager.playClose()
+		backdrop.Visible = false
+		inventoryOpen = false
+	end
+})
+closeButton.ZIndex = 10
 
 -- Content container
 local contentContainer = Instance.new("ScrollingFrame")

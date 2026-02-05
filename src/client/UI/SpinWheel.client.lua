@@ -18,6 +18,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
 
 -- Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -879,30 +880,14 @@ local function createWheelUI()
 	createSidePanel(wheelArea)
 	createBottomPanel(wheelArea)
 
-	-- Botón de cerrar
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, sizes.CloseButtonSize, 0, sizes.CloseButtonSize)
-	closeButton.Position = UDim2.new(1, 20, 0, -20)
-	closeButton.AnchorPoint = Vector2.new(0, 0)
-	closeButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-	closeButton.Text = "X"
-	closeButton.TextColor3 = Color3.new(1, 1, 1)
-	closeButton.TextSize = sizes.FontSizeLarge
-	closeButton.Font = Enum.Font.GothamBlack
+	-- Botón de cerrar (usando UIComponentsManager)
+	local closeButton = UIComponentsManager.createCloseButton(wheelContainer, {
+		size = sizes.CloseButtonSize,
+		onClose = function()
+			toggleWheel(false)
+		end
+	})
 	closeButton.ZIndex = 10
-	closeButton.Parent = wheelArea
-
-	createCorner(closeButton, UDim.new(0, 10))
-
-	closeButton.MouseButton1Click:Connect(function()
-		SoundManager.play("ButtonClick", 0.4, 1.1)
-		toggleWheel(false)
-	end)
-
-	closeButton.MouseEnter:Connect(function()
-		SoundManager.play("ButtonHover", 0.2, 1.2)
-	end)
 
 	-- Conectar botón de spin
 	spinButton.MouseButton1Click:Connect(function()
