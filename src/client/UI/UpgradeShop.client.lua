@@ -227,12 +227,11 @@ local function createShopUI()
 	screenGui.Enabled = false
 	screenGui.Parent = playerGui
 
-	-- Fondo oscuro semi-transparente
+	-- Backdrop invisible (solo para detectar clicks fuera del menú)
 	local backdrop = Instance.new("Frame")
 	backdrop.Name = "Backdrop"
 	backdrop.Size = UDim2.new(1, 0, 1, 0)
-	backdrop.BackgroundColor3 = Color3.new(0, 0, 0)
-	backdrop.BackgroundTransparency = 0.5
+	backdrop.BackgroundTransparency = 1
 	backdrop.BorderSizePixel = 0
 	backdrop.Parent = screenGui
 
