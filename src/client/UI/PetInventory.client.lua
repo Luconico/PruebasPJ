@@ -102,44 +102,18 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, sizes.CornerRadius)
 mainCorner.Parent = mainContainer
 
--- Header
-local header = Instance.new("Frame")
-header.Name = "Header"
-header.Size = UDim2.new(1, 0, 0, sizes.HeaderHeight)
-header.BackgroundColor3 = Styles.Colors.Header
-header.BorderSizePixel = 0
-header.Parent = mainContainer
-
-local headerCorner = Instance.new("UICorner")
-headerCorner.CornerRadius = UDim.new(0, sizes.CornerRadius)
-headerCorner.Parent = header
-
--- Title
-local title = Instance.new("TextLabel")
-title.Name = "Title"
-title.Size = UDim2.new(0, 400, 1, 0)
-title.Position = UDim2.new(0, 20, 0, 0)
-title.BackgroundTransparency = 1
-title.Text = "🐾 PET INVENTORY 🐾"
-title.Font = Styles.Fonts.Title
-title.TextSize = sizes.TitleSize
-title.TextColor3 = Styles.Colors.TextDark
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = header
-
--- Stats display
-local statsLabel = Instance.new("TextLabel")
-statsLabel.Name = "StatsLabel"
-statsLabel.AnchorPoint = Vector2.new(1, 0.5)
-statsLabel.Position = UDim2.new(1, -100, 0.5, 0)
-statsLabel.Size = UDim2.new(0, 200, 0, 30)
-statsLabel.BackgroundTransparency = 1
-statsLabel.Text = "0/50 | 0/3 equipped"
-statsLabel.Font = Styles.Fonts.Body
-statsLabel.TextSize = sizes.TextSize
-statsLabel.TextColor3 = Styles.Colors.TextDark
-statsLabel.TextXAlignment = Enum.TextXAlignment.Right
-statsLabel.Parent = header
+-- Header (usando UIComponentsManager)
+local navbar, titleLabel, statsLabel = UIComponentsManager.createNavbar(mainContainer, {
+	height = sizes.HeaderHeight,
+	color = Styles.Colors.Header,
+	cornerRadius = sizes.CornerRadius,
+	title = "🐾 PET INVENTORY 🐾",
+	titleSize = sizes.TitleSize,
+	titleFont = Styles.Fonts.Title,
+	rightText = "0/50 | 0/3 equipped",
+	rightTextSize = sizes.TextSize,
+	rightTextFont = Styles.Fonts.Body,
+})
 
 -- Close button (usando UIComponentsManager)
 local closeButton = UIComponentsManager.createCloseButton(mainContainer, {

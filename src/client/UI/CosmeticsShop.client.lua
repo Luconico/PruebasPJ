@@ -181,34 +181,15 @@ local function createShopUI()
 	createCorner(mainContainer, UDim.new(0, sizes.CornerRadius + 4))
 	createStroke(mainContainer, Styles.Colors.Primary, sizes.StrokeThickness + 1)
 
-	-- Header
-	local header = Instance.new("Frame")
-	header.Name = "Header"
-	header.Size = UDim2.new(1, 0, 0, sizes.HeaderHeight)
-	header.BackgroundColor3 = Styles.Colors.BackgroundLight
-	header.Parent = mainContainer
-	createCorner(header, UDim.new(0, sizes.CornerRadius + 4))
-
-	-- Título
-	local title = Instance.new("TextLabel")
-	title.Name = "Title"
-	title.Size = UDim2.new(1, -(sizes.CloseButtonSize + 30), 1, 0)
-	title.Position = UDim2.new(0, 20, 0, 0)
-	title.BackgroundTransparency = 1
-	title.Text = "✨ FART COSMETICS ✨"
-	title.TextColor3 = Styles.Colors.Primary
-	title.TextSize = sizes.TitleSize
-	title.Font = Styles.Fonts.Title
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.TextScaled = sizes.IsMobile
-	title.Parent = header
-
-	if sizes.IsMobile then
-		local constraint = Instance.new("UITextSizeConstraint")
-		constraint.MaxTextSize = sizes.TitleSize
-		constraint.MinTextSize = 16
-		constraint.Parent = title
-	end
+	-- Header (usando UIComponentsManager)
+	local navbar, titleLabel = UIComponentsManager.createNavbar(mainContainer, {
+		height = sizes.HeaderHeight,
+		color = Color3.fromRGB(120, 80, 180), -- Púrpura para contrastar con rojo
+		cornerRadius = sizes.CornerRadius + 4,
+		title = "✨ FART COSMETICS ✨",
+		titleSize = sizes.TitleSize,
+		titleFont = Styles.Fonts.Title,
+	})
 
 	-- Botón cerrar (usando UIComponentsManager)
 	local closeButton = UIComponentsManager.createCloseButton(mainContainer, {

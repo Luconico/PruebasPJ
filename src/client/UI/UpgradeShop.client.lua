@@ -299,53 +299,46 @@ local function createShopUI()
 		180)
 
 	-- ============================================
-	-- HEADER
+	-- HEADER (con textura stud estilo cartoon)
 	-- ============================================
 
-	local header = Instance.new("Frame")
+	local TextureManager = require(Shared:WaitForChild("TextureManager"))
+
+	local header = Instance.new("ImageLabel")
 	header.Name = "Header"
 	header.Size = UDim2.new(1, 0, 0, sizes.HeaderHeight)
-	header.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+	header.BackgroundTransparency = 1
+	header.Image = TextureManager.Backgrounds.StudGray
+	header.ImageColor3 = Color3.fromRGB(255, 200, 50) -- Amarillo dorado
+	header.ImageTransparency = 0.1
+	header.ScaleType = Enum.ScaleType.Tile
+	header.TileSize = UDim2.new(0, 64, 0, 64)
 	header.ZIndex = 2
 	header.Parent = mainContainer
 
 	createCorner(header, UDim.new(0, sizes.IsMobile and 16 or 24))
-	createStroke(header, Color3.fromRGB(200, 140, 20), sizes.IsMobile and 5 or 7)
-	createGradient(header,
-		Color3.fromRGB(255, 240, 120),
-		Color3.fromRGB(255, 160, 30),
-		135)
+	createStroke(header, Color3.fromRGB(180, 140, 20), sizes.IsMobile and 5 or 7)
 
-	-- Parche inferior para que no se vea el corner abajo
-	local headerPatch = Instance.new("Frame")
-	headerPatch.Name = "HeaderPatch"
-	headerPatch.Size = UDim2.new(1, 0, 0, 30)
-	headerPatch.Position = UDim2.new(0, 0, 1, -30)
-	headerPatch.BackgroundColor3 = Color3.fromRGB(255, 180, 40)
-	headerPatch.BorderSizePixel = 0
-	headerPatch.ZIndex = 2
-	headerPatch.Parent = header
-	createGradient(headerPatch,
-		Color3.fromRGB(255, 210, 80),
-		Color3.fromRGB(255, 160, 30),
-		135)
-
-	-- Título (responsive con sombra)
+	-- Título (responsive con sombra estilo cartoon)
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
 	title.Size = UDim2.new(1, -(sizes.CloseButtonSize + sizes.CoinsDisplayWidth + 40), 1, 0)
 	title.Position = UDim2.new(0, sizes.Padding, 0, 0)
 	title.BackgroundTransparency = 1
 	title.Text = "🛒 SHOP 🛒"
-	title.TextColor3 = Styles.Colors.TextDark
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
 	title.TextSize = sizes.TitleSize
 	title.Font = Styles.Fonts.Title
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.TextScaled = sizes.IsMobile
-	title.TextStrokeTransparency = 0.5
-	title.TextStrokeColor3 = Color3.fromRGB(180, 120, 20)
 	title.ZIndex = 3
 	title.Parent = header
+
+	-- Stroke del título estilo cartoon
+	local titleStroke = Instance.new("UIStroke")
+	titleStroke.Color = Color3.fromRGB(0, 0, 0)
+	titleStroke.Thickness = 3
+	titleStroke.Parent = title
 
 	if sizes.IsMobile then
 		local titleConstraint = Instance.new("UITextSizeConstraint")

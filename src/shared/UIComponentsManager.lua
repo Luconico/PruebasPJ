@@ -192,4 +192,124 @@ function UIComponentsManager.createCloseButton(parent, options)
 	return closeButton
 end
 
+-- ============================================
+-- NAVBAR / HEADER
+-- ============================================
+
+--[[
+	Crea una barra de navegación/header estilizada con textura de stud
+	@param parent Instance - El padre donde se colocará el navbar
+	@param options table? - Opciones de personalización {
+		height: number (default: 80) - Altura del navbar
+		color: Color3 (default: azul claro) - Color del fondo
+		strokeColor: Color3 (default: más oscuro que color) - Color del borde
+		strokeThickness: number (default: 4) - Grosor del borde
+		cornerRadius: number (default: 16) - Radio de esquinas
+		title: string - Texto del título (izquierda)
+		titleSize: number (default: 28) - Tamaño del título
+		titleFont: Enum.Font (default: FredokaOne)
+		rightText: string? - Texto opcional a la derecha
+		rightTextSize: number (default: 16) - Tamaño del texto derecho
+		rightTextFont: Enum.Font (default: GothamBold)
+		padding: number (default: 20) - Padding horizontal
+	}
+	@return Frame, TextLabel, TextLabel? - El navbar, título, y texto derecho (si existe)
+]]
+function UIComponentsManager.createNavbar(parent, options)
+	options = options or {}
+
+	local height = options.height or 80
+	local color = options.color or Color3.fromRGB(100, 180, 255)
+	local strokeColor = options.strokeColor or Color3.fromRGB(
+		math.max(0, color.R * 255 - 40),
+		math.max(0, color.G * 255 - 40),
+		math.max(0, color.B * 255 - 40)
+	)
+	if type(strokeColor) == "table" then
+		strokeColor = Color3.fromRGB(strokeColor[1] or 60, strokeColor[2] or 140, strokeColor[3] or 215)
+	end
+	local strokeThickness = options.strokeThickness or 4
+	local cornerRadius = options.cornerRadius or 16
+	local title = options.title or "TITLE"
+	local titleSize = options.titleSize or 28
+	local titleFont = options.titleFont or Enum.Font.FredokaOne
+	local rightText = options.rightText
+	local rightTextSize = options.rightTextSize or 16
+	local rightTextFont = options.rightTextFont or Enum.Font.GothamBold
+	local padding = options.padding or 20
+
+	-- Frame principal del navbar con textura
+	local navbar = Instance.new("ImageLabel")
+	navbar.Name = "Navbar"
+	navbar.Size = UDim2.new(1, 0, 0, height)
+	navbar.Position = UDim2.new(0, 0, 0, 0)
+	navbar.BackgroundTransparency = 1
+	navbar.Image = TextureManager.Backgrounds.StudGray
+	navbar.ImageColor3 = color
+	navbar.ImageTransparency = 0.1
+	navbar.ScaleType = Enum.ScaleType.Tile
+	navbar.TileSize = UDim2.new(0, 64, 0, 64)
+	navbar.Parent = parent
+
+	-- Esquinas redondeadas (solo arriba)
+	local navCorner = Instance.new("UICorner")
+	navCorner.CornerRadius = UDim.new(0, cornerRadius)
+	navCorner.Parent = navbar
+
+	-- Stroke/borde
+	local navStroke = Instance.new("UIStroke")
+	navStroke.Name = "Stroke"
+	navStroke.Color = strokeColor
+	navStroke.Thickness = strokeThickness
+	navStroke.Transparency = 0
+	navStroke.Parent = navbar
+
+	-- Título (izquierda)
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Name = "Title"
+	titleLabel.Size = UDim2.new(0.7, -padding, 1, 0)
+	titleLabel.Position = UDim2.new(0, padding, 0, 0)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Text = title
+	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	titleLabel.TextSize = titleSize
+	titleLabel.Font = titleFont
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+	titleLabel.Parent = navbar
+
+	-- Stroke del título (estilo cartoon)
+	local titleStroke = Instance.new("UIStroke")
+	titleStroke.Name = "TitleStroke"
+	titleStroke.Color = Color3.fromRGB(0, 0, 0)
+	titleStroke.Thickness = 3
+	titleStroke.Parent = titleLabel
+
+	-- Texto derecho (opcional)
+	local rightLabel = nil
+	if rightText then
+		rightLabel = Instance.new("TextLabel")
+		rightLabel.Name = "RightText"
+		rightLabel.Size = UDim2.new(0.3, -padding - 60, 1, 0) -- 60 es espacio para el botón cerrar
+		rightLabel.Position = UDim2.new(0.7, 0, 0, 0)
+		rightLabel.BackgroundTransparency = 1
+		rightLabel.Text = rightText
+		rightLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		rightLabel.TextSize = rightTextSize
+		rightLabel.Font = rightTextFont
+		rightLabel.TextXAlignment = Enum.TextXAlignment.Right
+		rightLabel.TextYAlignment = Enum.TextYAlignment.Center
+		rightLabel.Parent = navbar
+
+		-- Stroke del texto derecho
+		local rightStroke = Instance.new("UIStroke")
+		rightStroke.Name = "RightStroke"
+		rightStroke.Color = Color3.fromRGB(0, 0, 0)
+		rightStroke.Thickness = 2
+		rightStroke.Parent = rightLabel
+	end
+
+	return navbar, titleLabel, rightLabel
+end
+
 return UIComponentsManager
