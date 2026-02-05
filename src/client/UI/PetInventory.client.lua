@@ -18,6 +18,7 @@ local Config = require(Shared:WaitForChild("Config"))
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
 local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 -- Tamaños responsive
 local function getResponsiveSizes()
@@ -26,8 +27,8 @@ local function getResponsiveSizes()
 	local isMobile = info.IsMobile
 
 	return {
-		ContainerWidth = isMobile and 0.95 or 0.8,
-		ContainerHeight = isMobile and 0.9 or 0.8,
+		ContainerWidth = isMobile and 0.95 or 0.48,
+		ContainerHeight = isMobile and 0.9 or 0.68,
 		HeaderHeight = isMobile and 80 or math.floor(100 * scale),
 		TitleSize = isMobile and 28 or math.floor(42 * scale),
 		CardSize = isMobile and 140 or math.floor(180 * scale),
@@ -78,12 +79,11 @@ screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
--- Backdrop
+-- Backdrop invisible (solo para detectar clicks fuera del menú)
 local backdrop = Instance.new("Frame")
 backdrop.Name = "Backdrop"
 backdrop.Size = UDim2.new(1, 0, 1, 0)
-backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-backdrop.BackgroundTransparency = 0.5
+backdrop.BackgroundTransparency = 1
 backdrop.BorderSizePixel = 0
 backdrop.Visible = false
 backdrop.Parent = screenGui
@@ -160,13 +160,37 @@ local function createPetCard(pet)
 
 	local card = Instance.new("Frame")
 	card.Name = pet.UUID
-	card.BackgroundColor3 = pet.Equiped and Styles.Colors.CardEquipped or Styles.Colors.Card
+	card.BackgroundTransparency = 1
 	card.BorderSizePixel = 0
+	card.ClipsDescendants = true
 	card.Parent = contentContainer
 
 	local cardCorner = Instance.new("UICorner")
 	cardCorner.CornerRadius = UDim.new(0, sizes.CornerRadius)
 	cardCorner.Parent = card
+
+	-- Fondo con textura de studs
+	local studBackground = Instance.new("ImageLabel")
+	studBackground.Name = "StudBackground"
+	studBackground.Size = UDim2.new(1, 0, 1, 0)
+	studBackground.BackgroundTransparency = 1
+	studBackground.Image = TextureManager.Backgrounds.StudGray
+	studBackground.ImageColor3 = pet.Equiped and Styles.Colors.CardEquipped or Styles.Colors.Card
+	studBackground.ScaleType = Enum.ScaleType.Tile
+	studBackground.TileSize = UDim2.new(0, 50, 0, 50)
+	studBackground.ZIndex = 0
+	studBackground.Parent = card
+
+	local bgCorner = Instance.new("UICorner")
+	bgCorner.CornerRadius = UDim.new(0, sizes.CornerRadius)
+	bgCorner.Parent = studBackground
+
+	-- UIStroke del card
+	local cardStroke = Instance.new("UIStroke")
+	cardStroke.Name = "CardStroke"
+	cardStroke.Color = pet.Equiped and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(100, 180, 255)
+	cardStroke.Thickness = 3
+	cardStroke.Parent = card
 
 	-- Icono
 	local icon = Instance.new("TextLabel")
