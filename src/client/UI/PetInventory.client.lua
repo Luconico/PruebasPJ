@@ -477,19 +477,6 @@ local function closeInventory()
 	backdrop.Visible = false
 end
 
--- Toggle con tecla P
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-
-	if input.KeyCode == Enum.KeyCode.P then
-		if inventoryOpen then
-			closeInventory()
-		else
-			openInventory()
-		end
-	end
-end)
-
 -- Actualizar cuando cambien los datos
 Remotes.OnDataUpdated.OnClientEvent:Connect(function(newData)
 	if inventoryOpen then
@@ -497,4 +484,36 @@ Remotes.OnDataUpdated.OnClientEvent:Connect(function(newData)
 	end
 end)
 
-print("[PetInventory] Inicializado - Presiona P para abrir")
+-- Escuchar BindableEvent del menú lateral
+local UIEvents = playerGui:FindFirstChild("UIEvents")
+if UIEvents then
+	local toggleEvent = UIEvents:FindFirstChild("TogglePetInventory")
+	if toggleEvent then
+		toggleEvent.Event:Connect(function()
+			if inventoryOpen then
+				closeInventory()
+			else
+				openInventory()
+			end
+		end)
+	end
+else
+	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
+	task.spawn(function()
+		local events = playerGui:WaitForChild("UIEvents", 5)
+		if events then
+			local toggleEvent = events:WaitForChild("TogglePetInventory", 5)
+			if toggleEvent then
+				toggleEvent.Event:Connect(function()
+					if inventoryOpen then
+						closeInventory()
+					else
+						openInventory()
+					end
+				end)
+			end
+		end
+	end)
+end
+
+print("[PetInventory] Inventario de mascotas inicializado")

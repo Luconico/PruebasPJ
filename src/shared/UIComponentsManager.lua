@@ -735,4 +735,137 @@ function UIComponentsManager.createCartoonButton(parent, options)
 	return container, button, content
 end
 
+-- ============================================
+-- SIDE MENU BUTTON (Botón lateral con imagen)
+-- ============================================
+
+--[[
+	Crea un botón de menú lateral con imagen personalizada y efectos hover
+	@param parent Instance - El padre donde se colocará el botón
+	@param options table - Opciones de personalización {
+		size: UDim2? - Tamaño (default: 80x80)
+		position: UDim2? - Posición
+		anchorPoint: Vector2? - AnchorPoint
+		layoutOrder: number? - LayoutOrder
+		text: string? - Texto corto del botón
+		textSize: number? - Tamaño texto (default: 14)
+		font: Enum.Font? - Fuente (default: FredokaOne)
+		textColor: Color3? - Color texto (default: blanco)
+		hoverRotation: number? - Grados de rotación en hover (default: 10)
+		hoverScale: number? - Escala en hover (default: 1.15)
+		onClick: function? - Callback click
+	}
+	@return ImageButton - El botón creado
+]]
+function UIComponentsManager.createSideMenuButton(parent, options)
+	options = options or {}
+
+	local size = options.size or UDim2.new(0, 80, 0, 80)
+	local position = options.position
+	local anchorPoint = options.anchorPoint
+	local layoutOrder = options.layoutOrder
+	local text = options.text or ""
+	local textSize = options.textSize or 14
+	local font = options.font or Enum.Font.FredokaOne
+	local textColor = options.textColor or Color3.fromRGB(255, 255, 255)
+	local hoverRotation = options.hoverRotation or 10
+	local hoverScale = options.hoverScale or 1.15
+	local onClick = options.onClick
+
+	-- Botón principal con la imagen
+	local button = Instance.new("ImageButton")
+	button.Name = "SideMenuButton"
+	button.Size = size
+	button.BackgroundTransparency = 1
+	button.Image = TextureManager.Buttons.SideMenu
+	button.ScaleType = Enum.ScaleType.Fit
+	button.Parent = parent
+
+	if position then button.Position = position end
+	if anchorPoint then button.AnchorPoint = anchorPoint end
+	if layoutOrder then button.LayoutOrder = layoutOrder end
+
+	-- Texto del botón
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Name = "Label"
+	textLabel.Size = UDim2.new(1, 0, 0.4, 0)
+	textLabel.Position = UDim2.new(0.5, 0, 0.55, 0)
+	textLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+	textLabel.BackgroundTransparency = 1
+	textLabel.Text = text
+	textLabel.TextColor3 = textColor
+	textLabel.TextSize = textSize
+	textLabel.Font = font
+	textLabel.TextScaled = false
+	textLabel.ZIndex = 2
+	textLabel.Parent = button
+
+	-- Stroke del texto (estilo cartoon)
+	local textStroke = Instance.new("UIStroke")
+	textStroke.Name = "TextStroke"
+	textStroke.Color = Color3.fromRGB(0, 0, 0)
+	textStroke.Thickness = 2
+	textStroke.Parent = textLabel
+
+	-- Guardar estado original para animaciones
+	local originalSize = size
+
+	-- Efectos hover
+	button.MouseEnter:Connect(function()
+		SoundManager.playHover()
+
+		-- Crecer y rotar
+		TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.new(
+				originalSize.X.Scale * hoverScale,
+				originalSize.X.Offset * hoverScale,
+				originalSize.Y.Scale * hoverScale,
+				originalSize.Y.Offset * hoverScale
+			),
+			Rotation = hoverRotation
+		}):Play()
+	end)
+
+	button.MouseLeave:Connect(function()
+		-- Volver al estado original
+		TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = originalSize,
+			Rotation = 0
+		}):Play()
+	end)
+
+	-- Efecto click
+	button.MouseButton1Down:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = UDim2.new(
+				originalSize.X.Scale * 0.9,
+				originalSize.X.Offset * 0.9,
+				originalSize.Y.Scale * 0.9,
+				originalSize.Y.Offset * 0.9
+			)
+		}):Play()
+	end)
+
+	button.MouseButton1Up:Connect(function()
+		-- Bounce back al tamaño hover si aún está encima
+		TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.new(
+				originalSize.X.Scale * hoverScale,
+				originalSize.X.Offset * hoverScale,
+				originalSize.Y.Scale * hoverScale,
+				originalSize.Y.Offset * hoverScale
+			)
+		}):Play()
+	end)
+
+	button.MouseButton1Click:Connect(function()
+		SoundManager.playClick()
+		if onClick then
+			onClick()
+		end
+	end)
+
+	return button, textLabel
+end
+
 return UIComponentsManager

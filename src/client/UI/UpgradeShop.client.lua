@@ -1033,22 +1033,13 @@ _G.UpgradeShop = {
 }
 
 -- ============================================
--- TECLA PARA ABRIR TIENDA (P = tienda/Purchase)
+-- TECLA ESCAPE PARA CERRAR
 -- ============================================
 
 local UserInputService = game:GetService("UserInputService")
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
-
-	-- Tecla P para abrir/cerrar tienda
-	if input.KeyCode == Enum.KeyCode.P then
-		if isShopOpen then
-			closeShop()
-		else
-			openShop()
-		end
-	end
 
 	-- Tecla Escape para cerrar
 	if input.KeyCode == Enum.KeyCode.Escape and isShopOpen then
@@ -1082,4 +1073,36 @@ ResponsiveUI.onViewportChanged(function(info)
 	end
 end)
 
-print("[UpgradeShop] Presiona 'P' para abrir la tienda de upgrades (Responsive) - v2.0")
+-- Escuchar BindableEvent del menú lateral
+local UIEvents = playerGui:FindFirstChild("UIEvents")
+if UIEvents then
+	local toggleEvent = UIEvents:FindFirstChild("ToggleUpgradeShop")
+	if toggleEvent then
+		toggleEvent.Event:Connect(function()
+			if isShopOpen then
+				closeShop()
+			else
+				openShop()
+			end
+		end)
+	end
+else
+	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
+	task.spawn(function()
+		local events = playerGui:WaitForChild("UIEvents", 5)
+		if events then
+			local toggleEvent = events:WaitForChild("ToggleUpgradeShop", 5)
+			if toggleEvent then
+				toggleEvent.Event:Connect(function()
+					if isShopOpen then
+						closeShop()
+					else
+						openShop()
+					end
+				end)
+			end
+		end
+	end)
+end
+
+print("[UpgradeShop] Tienda de upgrades inicializada")

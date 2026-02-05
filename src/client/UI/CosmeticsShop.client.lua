@@ -7,7 +7,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
 local player = Players.LocalPlayer
@@ -696,15 +695,6 @@ end
 -- CONEXIONES
 -- ============================================
 
--- Tecla C para abrir tienda de cosméticos
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-
-	if input.KeyCode == Enum.KeyCode.C then
-		toggleShop()
-	end
-end)
-
 -- Datos del jugador
 if Remotes then
 	local OnDataLoaded = Remotes:FindFirstChild("OnDataLoaded")
@@ -741,4 +731,28 @@ ResponsiveUI.onViewportChanged(function(info)
 	end
 end)
 
-print("[CosmeticsShop] Presiona 'C' para abrir la tienda de cosméticos")
+-- Escuchar BindableEvent del menú lateral (VIP Fart)
+local UIEvents = playerGui:FindFirstChild("UIEvents")
+if UIEvents then
+	local toggleEvent = UIEvents:FindFirstChild("ToggleVIPFart")
+	if toggleEvent then
+		toggleEvent.Event:Connect(function()
+			toggleShop()
+		end)
+	end
+else
+	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
+	task.spawn(function()
+		local events = playerGui:WaitForChild("UIEvents", 5)
+		if events then
+			local toggleEvent = events:WaitForChild("ToggleVIPFart", 5)
+			if toggleEvent then
+				toggleEvent.Event:Connect(function()
+					toggleShop()
+				end)
+			end
+		end
+	end)
+end
+
+print("[CosmeticsShop] Tienda de cosméticos inicializada")

@@ -34,6 +34,7 @@ TextureManager.Decorations = {
 -- ============================================
 TextureManager.Buttons = {
 	-- Texturas de botones
+	SideMenu = "rbxassetid://17369693754",    -- Botón lateral estilo cartoon (fondo gris con forma)
 }
 
 -- ============================================
