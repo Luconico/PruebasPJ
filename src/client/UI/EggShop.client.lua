@@ -247,7 +247,7 @@ local function playEggOpenAnimation(eggName, petName)
 	-- ========== CONTENEDOR PRINCIPAL ==========
 	local mainContainer = Instance.new("Frame")
 	mainContainer.Name = "MainContainer"
-	mainContainer.Size = UDim2.new(0, 400, 0, 500)
+	mainContainer.Size = UDim2.new(0, 500, 0, 650)
 	mainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
 	mainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
 	mainContainer.BackgroundTransparency = 1
@@ -256,8 +256,8 @@ local function playEggOpenAnimation(eggName, petName)
 	-- ========== VIEWPORT DEL HUEVO ==========
 	local eggViewportContainer = Instance.new("Frame")
 	eggViewportContainer.Name = "EggViewportContainer"
-	eggViewportContainer.Size = UDim2.new(0, 300, 0, 300)
-	eggViewportContainer.Position = UDim2.new(0.5, 0, 0.4, 0)
+	eggViewportContainer.Size = UDim2.new(0, 450, 0, 450)
+	eggViewportContainer.Position = UDim2.new(0.5, 0, 0.38, 0)
 	eggViewportContainer.AnchorPoint = Vector2.new(0.5, 0.5)
 	eggViewportContainer.BackgroundTransparency = 1
 	eggViewportContainer.Parent = mainContainer
@@ -280,7 +280,7 @@ local function playEggOpenAnimation(eggName, petName)
 	-- Animar entrada del huevo (desde abajo)
 	eggViewportContainer.Position = UDim2.new(0.5, 0, 1.5, 0)
 	TweenService:Create(eggViewportContainer, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Position = UDim2.new(0.5, 0, 0.4, 0)
+		Position = UDim2.new(0.5, 0, 0.38, 0)
 	}):Play()
 
 	-- 🔊 Sonido de aparición
@@ -351,7 +351,7 @@ local function playEggOpenAnimation(eggName, petName)
 	-- ========== MOSTRAR MASCOTA ==========
 	local petViewportContainer = Instance.new("Frame")
 	petViewportContainer.Name = "PetViewportContainer"
-	petViewportContainer.Size = UDim2.new(0, 280, 0, 280)
+	petViewportContainer.Size = UDim2.new(0, 380, 0, 380)
 	petViewportContainer.Position = UDim2.new(0.5, 0, 0.35, 0)
 	petViewportContainer.AnchorPoint = Vector2.new(0.5, 0.5)
 	petViewportContainer.BackgroundTransparency = 1
@@ -363,7 +363,7 @@ local function playEggOpenAnimation(eggName, petName)
 	local _petViewport = createPetViewport(petViewportContainer, petName, UDim2.new(1, 0, 1, 0))
 
 	TweenService:Create(petViewportContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0, 280, 0, 280)
+		Size = UDim2.new(0, 380, 0, 380)
 	}):Play()
 
 	-- 🔊 Sonido de revelación
@@ -383,32 +383,32 @@ local function playEggOpenAnimation(eggName, petName)
 	-- Nombre de la mascota
 	local petNameLabel = Instance.new("TextLabel")
 	petNameLabel.Name = "PetName"
-	petNameLabel.Size = UDim2.new(1, 0, 0, 50)
-	petNameLabel.Position = UDim2.new(0.5, 0, 0.65, 0)
+	petNameLabel.Size = UDim2.new(1, 0, 0, 60)
+	petNameLabel.Position = UDim2.new(0.5, 0, 0.68, 0)
 	petNameLabel.AnchorPoint = Vector2.new(0.5, 0)
 	petNameLabel.BackgroundTransparency = 1
 	petNameLabel.Text = petConfig.Name
 	petNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	petNameLabel.TextSize = 42
+	petNameLabel.TextSize = 52
 	petNameLabel.Font = Enum.Font.FredokaOne
 	petNameLabel.TextTransparency = 1
 	petNameLabel.Parent = mainContainer
 
 	local nameStroke = Instance.new("UIStroke")
 	nameStroke.Color = Color3.fromRGB(0, 0, 0)
-	nameStroke.Thickness = 3
+	nameStroke.Thickness = 4
 	nameStroke.Parent = petNameLabel
 
 	-- Rareza
 	local rarityLabel = Instance.new("TextLabel")
 	rarityLabel.Name = "Rarity"
-	rarityLabel.Size = UDim2.new(1, 0, 0, 30)
-	rarityLabel.Position = UDim2.new(0.5, 0, 0.75, 0)
+	rarityLabel.Size = UDim2.new(1, 0, 0, 35)
+	rarityLabel.Position = UDim2.new(0.5, 0, 0.78, 0)
 	rarityLabel.AnchorPoint = Vector2.new(0.5, 0)
 	rarityLabel.BackgroundTransparency = 1
 	rarityLabel.Text = petConfig.Rarity
 	rarityLabel.TextColor3 = rarityColor
-	rarityLabel.TextSize = 28
+	rarityLabel.TextSize = 32
 	rarityLabel.Font = Enum.Font.GothamBold
 	rarityLabel.TextTransparency = 1
 	rarityLabel.Parent = mainContainer
@@ -421,13 +421,13 @@ local function playEggOpenAnimation(eggName, petName)
 	-- Perk/Boost
 	local perkLabel = Instance.new("TextLabel")
 	perkLabel.Name = "Perk"
-	perkLabel.Size = UDim2.new(1, 0, 0, 28)
-	perkLabel.Position = UDim2.new(0.5, 0, 0.82, 0)
+	perkLabel.Size = UDim2.new(1, 0, 0, 32)
+	perkLabel.Position = UDim2.new(0.5, 0, 0.85, 0)
 	perkLabel.AnchorPoint = Vector2.new(0.5, 0)
 	perkLabel.BackgroundTransparency = 1
 	perkLabel.Text = "+" .. (petConfig.Boost * 100) .. "% Coin Boost"
 	perkLabel.TextColor3 = Color3.fromRGB(255, 220, 100)
-	perkLabel.TextSize = 24
+	perkLabel.TextSize = 28
 	perkLabel.Font = Enum.Font.GothamBold
 	perkLabel.TextTransparency = 1
 	perkLabel.Parent = mainContainer
@@ -456,13 +456,13 @@ local function playEggOpenAnimation(eggName, petName)
 	-- ========== BOTÓN DE CERRAR / TAP TO CLOSE ==========
 	local closeHint = Instance.new("TextLabel")
 	closeHint.Name = "CloseHint"
-	closeHint.Size = UDim2.new(1, 0, 0, 25)
-	closeHint.Position = UDim2.new(0.5, 0, 0.92, 0)
+	closeHint.Size = UDim2.new(1, 0, 0, 28)
+	closeHint.Position = UDim2.new(0.5, 0, 0.94, 0)
 	closeHint.AnchorPoint = Vector2.new(0.5, 0)
 	closeHint.BackgroundTransparency = 1
 	closeHint.Text = "Tap anywhere to close"
 	closeHint.TextColor3 = Color3.fromRGB(200, 200, 200)
-	closeHint.TextSize = 18
+	closeHint.TextSize = 20
 	closeHint.Font = Enum.Font.Gotham
 	closeHint.TextTransparency = 1
 	closeHint.Parent = mainContainer
