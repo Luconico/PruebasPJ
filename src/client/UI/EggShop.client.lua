@@ -22,6 +22,88 @@ local Config = require(Shared:WaitForChild("Config"))
 local TextureManager = require(Shared:WaitForChild("TextureManager"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
 
+-- Carpeta de modelos de mascotas
+local PetsFolder = ReplicatedStorage:WaitForChild("Pets", 10)
+
+-- ============================================
+-- VIEWPORT FRAME HELPER
+-- ============================================
+
+local function createPetViewport(parent, petName, size)
+	-- Crear ViewportFrame
+	local viewport = Instance.new("ViewportFrame")
+	viewport.Name = "PetViewport"
+	viewport.Size = size or UDim2.new(1, 0, 1, 0)
+	viewport.BackgroundTransparency = 1
+	viewport.Parent = parent
+
+	-- Buscar modelo de la mascota
+	if not PetsFolder then
+		warn("[EggShop] No se encontró carpeta Pets")
+		return viewport
+	end
+
+	local petModel = PetsFolder:FindFirstChild(petName)
+	if not petModel then
+		-- Si no hay modelo, mostrar un placeholder
+		local placeholder = Instance.new("TextLabel")
+		placeholder.Size = UDim2.new(1, 0, 1, 0)
+		placeholder.BackgroundTransparency = 1
+		placeholder.Text = "?"
+		placeholder.TextScaled = true
+		placeholder.TextColor3 = Color3.fromRGB(200, 200, 200)
+		placeholder.Parent = viewport
+		return viewport
+	end
+
+	-- Crear WorldModel para contener el modelo
+	local worldModel = Instance.new("WorldModel")
+	worldModel.Parent = viewport
+
+	-- Clonar y agregar el modelo
+	local clonedPet = petModel:Clone()
+	clonedPet.Parent = worldModel
+
+	-- Calcular bounding box del modelo
+	local _, size3d = clonedPet:GetBoundingBox()
+	local maxSize = math.max(size3d.X, size3d.Y, size3d.Z)
+
+	-- Posicionar modelo en origen
+	if clonedPet.PrimaryPart then
+		clonedPet:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
+	else
+		clonedPet:MoveTo(Vector3.new(0, 0, 0))
+	end
+
+	-- Crear cámara
+	local camera = Instance.new("Camera")
+	camera.FieldOfView = 50
+
+	-- Posicionar cámara para ver el modelo completo
+	local distance = maxSize * 1.8
+	camera.CFrame = CFrame.new(Vector3.new(distance * 0.7, distance * 0.3, distance * 0.7), Vector3.new(0, 0, 0))
+	camera.Parent = viewport
+	viewport.CurrentCamera = camera
+
+	-- Animación de rotación suave
+	local rotation = 0
+	local connection
+	connection = RunService.RenderStepped:Connect(function(dt)
+		if not viewport or not viewport.Parent then
+			connection:Disconnect()
+			return
+		end
+		rotation = rotation + dt * 30
+		local rad = math.rad(rotation)
+		camera.CFrame = CFrame.new(
+			Vector3.new(math.cos(rad) * distance * 0.7, distance * 0.3, math.sin(rad) * distance * 0.7),
+			Vector3.new(0, 0, 0)
+		)
+	end)
+
+	return viewport
+end
+
 -- ============================================
 -- CONFIGURACIÓN
 -- ============================================
@@ -372,15 +454,17 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 			chanceLabel.Parent = petCard
 			createStroke(chanceLabel, Color3.fromRGB(0, 0, 0), 2)
 
-			-- Icono
-			local petIcon = Instance.new("TextLabel")
-			petIcon.Size = UDim2.new(1, 0, 0.45, 0)
-			petIcon.Position = UDim2.new(0, 0, 0.22, 0)
-			petIcon.BackgroundTransparency = 1
-			petIcon.Text = petConfig.Icon
-			petIcon.TextScaled = true
-			petIcon.ZIndex = 3
-			petIcon.Parent = petCard
+			-- ViewportFrame con modelo 3D de la mascota
+			local viewportContainer = Instance.new("Frame")
+			viewportContainer.Name = "ViewportContainer"
+			viewportContainer.Size = UDim2.new(1, -8, 0.45, 0)
+			viewportContainer.Position = UDim2.new(0, 4, 0.22, 0)
+			viewportContainer.BackgroundTransparency = 1
+			viewportContainer.ZIndex = 3
+			viewportContainer.Parent = petCard
+
+			local petViewport = createPetViewport(viewportContainer, petData.name, UDim2.new(1, 0, 1, 0))
+			petViewport.ZIndex = 3
 
 			-- Nombre
 			local petNameLabel = Instance.new("TextLabel")
