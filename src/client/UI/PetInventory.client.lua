@@ -192,6 +192,11 @@ local function createPetCard(pet)
 	name.TextTruncate = Enum.TextTruncate.AtEnd
 	name.Parent = card
 
+	local nameStroke = Instance.new("UIStroke")
+	nameStroke.Color = Color3.fromRGB(0, 0, 0)
+	nameStroke.Thickness = 2
+	nameStroke.Parent = name
+
 	-- Boost
 	local boost = Instance.new("TextLabel")
 	boost.Size = UDim2.new(1, -10, 0, 20)
@@ -203,6 +208,11 @@ local function createPetCard(pet)
 	boost.TextSize = sizes.TextSize - 4
 	boost.TextColor3 = Color3.fromRGB(100, 255, 100)
 	boost.Parent = card
+
+	local boostStroke = Instance.new("UIStroke")
+	boostStroke.Color = Color3.fromRGB(0, 0, 0)
+	boostStroke.Thickness = 2
+	boostStroke.Parent = boost
 
 	-- Botones container
 	local buttonsContainer = Instance.new("Frame")
@@ -232,6 +242,11 @@ local function createPetCard(pet)
 	equipCorner.CornerRadius = UDim.new(0, sizes.CornerRadius * 0.7)
 	equipCorner.Parent = equipButton
 
+	local equipStroke = Instance.new("UIStroke")
+	equipStroke.Color = Color3.fromRGB(0, 0, 0)
+	equipStroke.Thickness = 2
+	equipStroke.Parent = equipButton
+
 	equipButton.MouseButton1Click:Connect(function()
 		local remoteName = pet.Equiped and "UnequipPet" or "EquipPet"
 		local success, result = pcall(function()
@@ -257,6 +272,11 @@ local function createPetCard(pet)
 	lockCorner.CornerRadius = UDim.new(0, sizes.CornerRadius * 0.7)
 	lockCorner.Parent = lockButton
 
+	local lockStroke = Instance.new("UIStroke")
+	lockStroke.Color = Color3.fromRGB(0, 0, 0)
+	lockStroke.Thickness = 2
+	lockStroke.Parent = lockButton
+
 	lockButton.MouseButton1Click:Connect(function()
 		local success = pcall(function()
 			return Remotes.LockPet:InvokeServer(pet.UUID)
@@ -276,6 +296,11 @@ local function createPetCard(pet)
 	local deleteCorner = Instance.new("UICorner")
 	deleteCorner.CornerRadius = UDim.new(0, sizes.CornerRadius * 0.7)
 	deleteCorner.Parent = deleteButton
+
+	local deleteStroke = Instance.new("UIStroke")
+	deleteStroke.Color = Color3.fromRGB(0, 0, 0)
+	deleteStroke.Thickness = 2
+	deleteStroke.Parent = deleteButton
 
 	deleteButton.MouseButton1Click:Connect(function()
 		if pet.Locked then

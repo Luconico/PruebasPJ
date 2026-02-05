@@ -356,6 +356,12 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	tierLabel.Font = Styles.Fonts.Body
 	tierLabel.Parent = tierBadge
 
+	local tierStroke = Instance.new("UIStroke")
+	tierStroke.Color = Color3.fromRGB(0, 0, 0)
+	tierStroke.Thickness = 1
+	tierStroke.Transparency = 0.5
+	tierStroke.Parent = tierLabel
+
 	-- Icono del cosmético
 	local iconContainer = Instance.new("Frame")
 	iconContainer.Name = "IconContainer"
@@ -423,6 +429,11 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	nameConstraint.MinTextSize = 10
 	nameConstraint.Parent = nameLabel
 
+	local nameStroke = Instance.new("UIStroke")
+	nameStroke.Color = Color3.fromRGB(0, 0, 0)
+	nameStroke.Thickness = 2
+	nameStroke.Parent = nameLabel
+
 	-- Descripción
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Name = "DescLabel"
@@ -437,6 +448,12 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	descLabel.TextYAlignment = Enum.TextYAlignment.Top
 	descLabel.Parent = card
 
+	local descStroke = Instance.new("UIStroke")
+	descStroke.Color = Color3.fromRGB(0, 0, 0)
+	descStroke.Thickness = 1
+	descStroke.Transparency = 0.3
+	descStroke.Parent = descLabel
+
 	-- Botón de acción (comprar/equipar)
 	local actionButton = Instance.new("TextButton")
 	actionButton.Name = "ActionButton"
@@ -447,6 +464,11 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	actionButton.TextSize = sizes.ButtonTextSize
 	actionButton.Parent = card
 	createCorner(actionButton, UDim.new(0, 8))
+
+	local actionStroke = Instance.new("UIStroke")
+	actionStroke.Color = Color3.fromRGB(0, 0, 0)
+	actionStroke.Thickness = 2
+	actionStroke.Parent = actionButton
 
 	-- Estado del botón
 	local function updateButtonState()

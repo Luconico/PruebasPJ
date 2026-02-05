@@ -814,6 +814,11 @@ local function createBottomPanel(parent)
 	spinsCountLabel.Font = Enum.Font.GothamBlack
 	spinsCountLabel.Parent = panel
 
+	local spinsStroke = Instance.new("UIStroke")
+	spinsStroke.Color = Color3.fromRGB(0, 0, 0)
+	spinsStroke.Thickness = 3
+	spinsStroke.Parent = spinsCountLabel
+
 	-- Timer de giro gratis
 	timerLabel = Instance.new("TextLabel")
 	timerLabel.Name = "Timer"
@@ -962,6 +967,11 @@ showPrizeNotification = function(prize)
 	prizeText.ZIndex = 101
 	prizeText.Parent = notification
 
+	local prizeStroke = Instance.new("UIStroke")
+	prizeStroke.Color = Color3.fromRGB(0, 0, 0)
+	prizeStroke.Thickness = 2
+	prizeStroke.Parent = prizeText
+
 	local goldText = Instance.new("TextLabel")
 	goldText.Size = UDim2.new(1, -20, 0, 35)
 	goldText.Position = UDim2.new(0.5, 0, 0.75, 0)
@@ -973,6 +983,11 @@ showPrizeNotification = function(prize)
 	goldText.Font = Enum.Font.GothamBlack
 	goldText.ZIndex = 101
 	goldText.Parent = notification
+
+	local goldStroke = Instance.new("UIStroke")
+	goldStroke.Color = Color3.fromRGB(0, 0, 0)
+	goldStroke.Thickness = 3
+	goldStroke.Parent = goldText
 
 	notification.Size = UDim2.new(0, 0, 0, 0)
 	local showTween = TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {

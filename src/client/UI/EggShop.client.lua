@@ -213,6 +213,12 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.Parent = header
 
+	local nameStroke = Instance.new("UIStroke")
+	nameStroke.Color = Color3.fromRGB(0, 0, 0)
+	nameStroke.Thickness = 2
+	nameStroke.Transparency = 0.3
+	nameStroke.Parent = nameLabel
+
 	-- Precio
 	local priceLabel = Instance.new("TextLabel")
 	priceLabel.Size = UDim2.new(0.4, 0, 1, 0)
@@ -224,6 +230,12 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	priceLabel.TextColor3 = Styles.Colors.TextDark
 	priceLabel.TextXAlignment = Enum.TextXAlignment.Right
 	priceLabel.Parent = header
+
+	local priceStroke = Instance.new("UIStroke")
+	priceStroke.Color = Color3.fromRGB(0, 0, 0)
+	priceStroke.Thickness = 2
+	priceStroke.Transparency = 0.3
+	priceStroke.Parent = priceLabel
 
 	-- Container de mascotas
 	local petsContainer = Instance.new("Frame")
@@ -266,6 +278,11 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 			chanceLabel.TextColor3 = Styles.Colors.Text
 			chanceLabel.Parent = petCard
 
+			local chanceStroke = Instance.new("UIStroke")
+			chanceStroke.Color = Color3.fromRGB(0, 0, 0)
+			chanceStroke.Thickness = 2
+			chanceStroke.Parent = chanceLabel
+
 			-- Icono
 			local petIcon = Instance.new("TextLabel")
 			petIcon.Size = UDim2.new(1, 0, 0.5, 0)
@@ -285,6 +302,11 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 			petNameLabel.TextScaled = true
 			petNameLabel.TextColor3 = Styles.Colors.Text
 			petNameLabel.Parent = petCard
+
+			local petNameStroke = Instance.new("UIStroke")
+			petNameStroke.Color = Color3.fromRGB(0, 0, 0)
+			petNameStroke.Thickness = 2
+			petNameStroke.Parent = petNameLabel
 		end
 	end
 
@@ -318,6 +340,11 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	btnX1.Parent = buttonsContainer
 	Instance.new("UICorner", btnX1).CornerRadius = UDim.new(0.2, 0)
 
+	local btnX1Stroke = Instance.new("UIStroke")
+	btnX1Stroke.Color = Color3.fromRGB(0, 0, 0)
+	btnX1Stroke.Thickness = 2
+	btnX1Stroke.Parent = btnX1
+
 	btnX1.Activated:Connect(function()
 		buyEgg(eggName, 1)
 	end)
@@ -334,6 +361,11 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	btnX3.AutoButtonColor = true
 	btnX3.Parent = buttonsContainer
 	Instance.new("UICorner", btnX3).CornerRadius = UDim.new(0.2, 0)
+
+	local btnX3Stroke = Instance.new("UIStroke")
+	btnX3Stroke.Color = Color3.fromRGB(0, 0, 0)
+	btnX3Stroke.Thickness = 2
+	btnX3Stroke.Parent = btnX3
 
 	btnX3.Activated:Connect(function()
 		buyEgg(eggName, 3)
@@ -352,6 +384,11 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	btnAuto.Parent = buttonsContainer
 	Instance.new("UICorner", btnAuto).CornerRadius = UDim.new(0.2, 0)
 
+	local btnAutoStroke = Instance.new("UIStroke")
+	btnAutoStroke.Color = Color3.fromRGB(0, 0, 0)
+	btnAutoStroke.Thickness = 2
+	btnAutoStroke.Parent = btnAuto
+
 	btnAuto.Activated:Connect(function()
 		toggleAuto(eggName, btnAuto)
 	end)
@@ -366,6 +403,12 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	helpText.TextScaled = true
 	helpText.TextColor3 = Color3.fromRGB(150, 150, 170)
 	helpText.Parent = mainFrame
+
+	local helpStroke = Instance.new("UIStroke")
+	helpStroke.Color = Color3.fromRGB(0, 0, 0)
+	helpStroke.Thickness = 1
+	helpStroke.Transparency = 0.3
+	helpStroke.Parent = helpText
 
 	return billboard
 end
