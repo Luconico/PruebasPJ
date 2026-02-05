@@ -468,13 +468,44 @@ end
 local function openInventory()
 	if inventoryOpen then return end
 	inventoryOpen = true
+
+	-- Sonido de apertura
+	SoundManager.play("ShopOpen", 0.4, 0.9)
+	task.delay(0.15, function()
+		SoundManager.play("Sparkle", 0.3, 1.2)
+	end)
+
+	-- Preparar animación de entrada
+	mainContainer.Size = UDim2.new(0, 0, 0, 0)
+	mainContainer.BackgroundTransparency = 1
 	backdrop.Visible = true
+
+	-- Animación de entrada (colapso inverso)
+	local targetSize = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
+	TweenService:Create(mainContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = targetSize,
+		BackgroundTransparency = 0
+	}):Play()
+
 	updateInventory()
 end
 
 local function closeInventory()
-	inventoryOpen = false
+	if not inventoryOpen then return end
+
+	-- Sonido de cierre
+	SoundManager.play("ShopClose", 0.3, 1.3)
+
+	-- Animación de salida (colapso)
+	local tween = TweenService:Create(mainContainer, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+		Size = UDim2.new(0, 0, 0, 0),
+		BackgroundTransparency = 1
+	})
+	tween:Play()
+	tween.Completed:Wait()
+
 	backdrop.Visible = false
+	inventoryOpen = false
 end
 
 -- Actualizar cuando cambien los datos
@@ -485,9 +516,8 @@ Remotes.OnDataUpdated.OnClientEvent:Connect(function(newData)
 end)
 
 -- Escuchar BindableEvent del menú lateral
-local UIEvents = playerGui:FindFirstChild("UIEvents")
-if UIEvents then
-	local toggleEvent = UIEvents:FindFirstChild("TogglePetInventory")
+local function setupUIEvents(events)
+	local toggleEvent = events:FindFirstChild("TogglePetInventory")
 	if toggleEvent then
 		toggleEvent.Event:Connect(function()
 			if inventoryOpen then
@@ -497,21 +527,27 @@ if UIEvents then
 			end
 		end)
 	end
+
+	-- Escuchar evento de cierre (para exclusividad de menús)
+	local closeEvent = events:FindFirstChild("ClosePetInventory")
+	if closeEvent then
+		closeEvent.Event:Connect(function()
+			if inventoryOpen then
+				closeInventory()
+			end
+		end)
+	end
+end
+
+local UIEvents = playerGui:FindFirstChild("UIEvents")
+if UIEvents then
+	setupUIEvents(UIEvents)
 else
 	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
 	task.spawn(function()
 		local events = playerGui:WaitForChild("UIEvents", 5)
 		if events then
-			local toggleEvent = events:WaitForChild("TogglePetInventory", 5)
-			if toggleEvent then
-				toggleEvent.Event:Connect(function()
-					if inventoryOpen then
-						closeInventory()
-					else
-						openInventory()
-					end
-				end)
-			end
+			setupUIEvents(events)
 		end
 	end)
 end

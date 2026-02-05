@@ -732,25 +732,34 @@ ResponsiveUI.onViewportChanged(function(info)
 end)
 
 -- Escuchar BindableEvent del menú lateral (VIP Fart)
-local UIEvents = playerGui:FindFirstChild("UIEvents")
-if UIEvents then
-	local toggleEvent = UIEvents:FindFirstChild("ToggleVIPFart")
+local function setupUIEvents(events)
+	local toggleEvent = events:FindFirstChild("ToggleVIPFart")
 	if toggleEvent then
 		toggleEvent.Event:Connect(function()
 			toggleShop()
 		end)
 	end
+
+	-- Escuchar evento de cierre (para exclusividad de menús)
+	local closeEvent = events:FindFirstChild("CloseVIPFart")
+	if closeEvent then
+		closeEvent.Event:Connect(function()
+			if shopOpen then
+				toggleShop(false)
+			end
+		end)
+	end
+end
+
+local UIEvents = playerGui:FindFirstChild("UIEvents")
+if UIEvents then
+	setupUIEvents(UIEvents)
 else
 	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
 	task.spawn(function()
 		local events = playerGui:WaitForChild("UIEvents", 5)
 		if events then
-			local toggleEvent = events:WaitForChild("ToggleVIPFart", 5)
-			if toggleEvent then
-				toggleEvent.Event:Connect(function()
-					toggleShop()
-				end)
-			end
+			setupUIEvents(events)
 		end
 	end)
 end

@@ -53,6 +53,28 @@ if not ToggleVIPFart then
 	ToggleVIPFart.Parent = UIEvents
 end
 
+-- Eventos para CERRAR menús (para exclusividad)
+local ClosePetInventory = UIEvents:FindFirstChild("ClosePetInventory")
+if not ClosePetInventory then
+	ClosePetInventory = Instance.new("BindableEvent")
+	ClosePetInventory.Name = "ClosePetInventory"
+	ClosePetInventory.Parent = UIEvents
+end
+
+local CloseSpinWheel = UIEvents:FindFirstChild("CloseSpinWheel")
+if not CloseSpinWheel then
+	CloseSpinWheel = Instance.new("BindableEvent")
+	CloseSpinWheel.Name = "CloseSpinWheel"
+	CloseSpinWheel.Parent = UIEvents
+end
+
+local CloseVIPFart = UIEvents:FindFirstChild("CloseVIPFart")
+if not CloseVIPFart then
+	CloseVIPFart = Instance.new("BindableEvent")
+	CloseVIPFart.Name = "CloseVIPFart"
+	CloseVIPFart.Parent = UIEvents
+end
+
 -- ============================================
 -- CONFIGURACIÓN DE BOTONES
 -- ============================================
@@ -61,14 +83,17 @@ local MENU_BUTTONS = {
 	{
 		text = "PETS",
 		event = TogglePetInventory,
+		closeOthers = {CloseSpinWheel, CloseVIPFart},
 	},
 	{
 		text = "ROULETTE",
 		event = ToggleSpinWheel,
+		closeOthers = {ClosePetInventory, CloseVIPFart},
 	},
 	{
 		text = "VIP FART",
 		event = ToggleVIPFart,
+		closeOthers = {ClosePetInventory, CloseSpinWheel},
 	},
 }
 
@@ -121,6 +146,13 @@ local function createLeftMenu()
 			hoverRotation = 10,
 			hoverScale = 1.15,
 			onClick = function()
+				-- Cerrar otros menús primero
+				if buttonConfig.closeOthers then
+					for _, closeEvent in ipairs(buttonConfig.closeOthers) do
+						closeEvent:Fire()
+					end
+				end
+				-- Abrir/cerrar el menú seleccionado
 				buttonConfig.event:Fire()
 			end
 		})

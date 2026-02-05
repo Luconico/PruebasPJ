@@ -1015,25 +1015,34 @@ ResponsiveUI.onViewportChanged(function()
 end)
 
 -- Escuchar BindableEvent del menú lateral
-local UIEvents = playerGui:FindFirstChild("UIEvents")
-if UIEvents then
-	local toggleEvent = UIEvents:FindFirstChild("ToggleSpinWheel")
+local function setupUIEvents(events)
+	local toggleEvent = events:FindFirstChild("ToggleSpinWheel")
 	if toggleEvent then
 		toggleEvent.Event:Connect(function()
 			toggleWheel()
 		end)
 	end
+
+	-- Escuchar evento de cierre (para exclusividad de menús)
+	local closeEvent = events:FindFirstChild("CloseSpinWheel")
+	if closeEvent then
+		closeEvent.Event:Connect(function()
+			if isWheelOpen then
+				toggleWheel(false)
+			end
+		end)
+	end
+end
+
+local UIEvents = playerGui:FindFirstChild("UIEvents")
+if UIEvents then
+	setupUIEvents(UIEvents)
 else
 	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
 	task.spawn(function()
 		local events = playerGui:WaitForChild("UIEvents", 5)
 		if events then
-			local toggleEvent = events:WaitForChild("ToggleSpinWheel", 5)
-			if toggleEvent then
-				toggleEvent.Event:Connect(function()
-					toggleWheel()
-				end)
-			end
+			setupUIEvents(events)
 		end
 	end)
 end
