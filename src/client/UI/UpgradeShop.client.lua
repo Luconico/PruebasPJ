@@ -100,9 +100,9 @@ print("[DEBUG] IsMobile:", sizes.IsMobile, "IsTablet:", sizes.IsTablet, "Progres
 
 local Styles = {
 	Colors = {
-		-- Fondo principal
-		Background = Color3.fromRGB(25, 25, 45),
-		BackgroundLight = Color3.fromRGB(45, 45, 75),
+		-- Fondo principal (púrpura vibrante cartoon)
+		Background = Color3.fromRGB(60, 45, 110),
+		BackgroundLight = Color3.fromRGB(75, 60, 130),
 
 		-- Colores de acento
 		Primary = Color3.fromRGB(255, 200, 50),      -- Amarillo dorado
@@ -252,10 +252,10 @@ local function createShopUI()
 	createCorner(mainContainer, UDim.new(0, sizes.IsMobile and 16 or 24))
 	createStroke(mainContainer, Styles.Colors.Primary, sizes.IsMobile and 4 or 6)
 
-	-- Gradiente de fondo sutil
+	-- Gradiente de fondo sutil (púrpura cartoon)
 	createGradient(mainContainer,
-		Color3.fromRGB(35, 35, 65),
-		Color3.fromRGB(25, 25, 45),
+		Color3.fromRGB(80, 60, 140),
+		Color3.fromRGB(50, 35, 95),
 		180)
 
 	-- ============================================
@@ -423,7 +423,37 @@ local function createUpgradeCard(parent, upgradeName, upgradeConfig, layoutOrder
 	icon.ZIndex = 3
 	icon.Parent = cardContent
 	createCorner(icon, UDim.new(0, sizes.CornerRadius))
-	createStroke(icon, Color3.new(1, 1, 1), 3)
+
+	-- Stroke arcoíris animado
+	local iconStroke = Instance.new("UIStroke")
+	iconStroke.Name = "RainbowStroke"
+	iconStroke.Thickness = sizes.IsMobile and 4 or 5
+	iconStroke.Color = Color3.new(1, 1, 1) -- El gradiente lo sobreescribirá
+	iconStroke.Parent = icon
+
+	-- Gradiente arcoíris en el stroke
+	local rainbowGradient = Instance.new("UIGradient")
+	rainbowGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),       -- Rojo
+		ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 165, 0)),  -- Naranja
+		ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)),  -- Amarillo
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)),     -- Verde
+		ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 200, 255)),  -- Cian
+		ColorSequenceKeypoint.new(0.83, Color3.fromRGB(100, 100, 255)), -- Azul
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255)),     -- Magenta
+	})
+	rainbowGradient.Rotation = 0
+	rainbowGradient.Parent = iconStroke
+
+	-- Animación de rotación del arcoíris
+	task.spawn(function()
+		local rotation = 0
+		while icon and icon.Parent do
+			rotation = (rotation + 2) % 360
+			rainbowGradient.Rotation = rotation
+			task.wait(0.03)
+		end
+	end)
 
 	-- Gradiente en el icono para más profundidad
 	createGradient(icon,
