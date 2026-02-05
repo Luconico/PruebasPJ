@@ -250,12 +250,25 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 
 	local card = Instance.new("Frame")
 	card.Name = "Card_" .. cosmeticId
-	card.BackgroundColor3 = Styles.Colors.CardBackground
+	card.BackgroundTransparency = 1
 	card.LayoutOrder = layoutOrder
 	card.ClipsDescendants = true -- Necesario para el efecto shine
 	card.Parent = parent
 
 	createCorner(card)
+
+	-- Fondo con textura de studs
+	local studBackground = Instance.new("ImageLabel")
+	studBackground.Name = "StudBackground"
+	studBackground.Size = UDim2.new(1, 0, 1, 0)
+	studBackground.BackgroundTransparency = 1
+	studBackground.Image = TextureManager.Backgrounds.StudGray
+	studBackground.ImageColor3 = Styles.Colors.CardBackground
+	studBackground.ScaleType = Enum.ScaleType.Tile
+	studBackground.TileSize = UDim2.new(0, 60, 0, 60)
+	studBackground.ZIndex = 0
+	studBackground.Parent = card
+	createCorner(studBackground)
 	local cardStroke = createStroke(card, tierData.Color, sizes.StrokeThickness)
 
 	-- ========== EFECTO SHINE ==========
