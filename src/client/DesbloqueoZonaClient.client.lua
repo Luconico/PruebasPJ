@@ -118,7 +118,8 @@ end
 
 -- Función para crear la UI de desbloqueo
 -- vipOnly: si es true, solo muestra el botón de Robux (para zonas VIP)
-local function createZoneUI(zoneName, coinsCost, robuxCost, vipOnly)
+-- trophyCost: ahora las zonas normales usan trofeos en lugar de monedas
+local function createZoneUI(zoneName, trophyCost, robuxCost, vipOnly)
 	print("[ZonasClient] Creando UI para zona: " .. zoneName .. (vipOnly and " (VIP)" or ""))
 
 	-- Si ya existe una UI, destruirla
@@ -199,43 +200,43 @@ local function createZoneUI(zoneName, coinsCost, robuxCost, vipOnly)
 
 	local hoverTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-	-- Botón de monedas (solo si NO es VIP)
-	local coinsButton = nil
+	-- Botón de trofeos (solo si NO es VIP)
+	local trophiesButton = nil
 	if not vipOnly then
-		coinsButton = Instance.new("TextButton")
-		coinsButton.Name = "CoinsButton"
-		coinsButton.Size = UDim2.new(1, -40, 0, 60)
-		coinsButton.Position = UDim2.new(0, 20, 0, 130)
-		coinsButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-		coinsButton.BorderSizePixel = 0
-		coinsButton.Text = "💰 " .. formatNumber(coinsCost) .. "$"
-		coinsButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-		coinsButton.TextSize = 24
-		coinsButton.Font = Enum.Font.GothamBold
-		coinsButton.AutoButtonColor = false
-		coinsButton.Parent = mainFrame
+		trophiesButton = Instance.new("TextButton")
+		trophiesButton.Name = "TrophiesButton"
+		trophiesButton.Size = UDim2.new(1, -40, 0, 60)
+		trophiesButton.Position = UDim2.new(0, 20, 0, 130)
+		trophiesButton.BackgroundColor3 = Color3.fromRGB(255, 180, 50)
+		trophiesButton.BorderSizePixel = 0
+		trophiesButton.Text = "🏆 " .. formatNumber(trophyCost) .. " Trofeos"
+		trophiesButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+		trophiesButton.TextSize = 24
+		trophiesButton.Font = Enum.Font.GothamBold
+		trophiesButton.AutoButtonColor = false
+		trophiesButton.Parent = mainFrame
 
-		local coinsCorner = Instance.new("UICorner")
-		coinsCorner.CornerRadius = UDim.new(0, 10)
-		coinsCorner.Parent = coinsButton
+		local trophiesCorner = Instance.new("UICorner")
+		trophiesCorner.CornerRadius = UDim.new(0, 10)
+		trophiesCorner.Parent = trophiesButton
 
-		-- Efecto hover para botón de monedas
-		coinsButton.MouseEnter:Connect(function()
+		-- Efecto hover para botón de trofeos
+		trophiesButton.MouseEnter:Connect(function()
 			SoundManager.play("ButtonHover", 0.2, 1.1)
-			TweenService:Create(coinsButton, hoverTweenInfo, {
-				BackgroundColor3 = Color3.fromRGB(255, 230, 100)
+			TweenService:Create(trophiesButton, hoverTweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(255, 200, 100)
 			}):Play()
 		end)
 
-		coinsButton.MouseLeave:Connect(function()
-			TweenService:Create(coinsButton, hoverTweenInfo, {
-				BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+		trophiesButton.MouseLeave:Connect(function()
+			TweenService:Create(trophiesButton, hoverTweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(255, 180, 50)
 			}):Play()
 		end)
 
-		coinsButton.MouseButton1Click:Connect(function()
+		trophiesButton.MouseButton1Click:Connect(function()
 			SoundManager.play("ButtonClick", 0.5, 1.0)
-			unlockZoneRemote:FireServer(currentZoneName, "coins")
+			unlockZoneRemote:FireServer(currentZoneName, "trophies")
 			screenGui:Destroy()
 			currentZoneUI = nil
 		end)
@@ -443,8 +444,12 @@ if not insufficientFundsRemote then
 end
 
 if insufficientFundsRemote then
-	insufficientFundsRemote.OnClientEvent:Connect(function(zoneName, required, current)
-		showNotification(false, "Monedas insuficientes! Necesitas " .. formatNumber(required) .. "$")
+	insufficientFundsRemote.OnClientEvent:Connect(function(zoneName, required, current, currencyType)
+		if currencyType == "trophies" then
+			showNotification(false, "Trofeos insuficientes! Necesitas " .. formatNumber(required) .. " 🏆")
+		else
+			showNotification(false, "Monedas insuficientes! Necesitas " .. formatNumber(required) .. "$")
+		end
 	end)
 end
 

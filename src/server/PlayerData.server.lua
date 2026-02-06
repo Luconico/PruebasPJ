@@ -1303,6 +1303,10 @@ local modifyCoinsBindable = Instance.new("BindableFunction")
 modifyCoinsBindable.Name = "ModifyCoinsServer"
 modifyCoinsBindable.Parent = serverFolder
 
+local modifyTrophiesBindable = Instance.new("BindableFunction")
+modifyTrophiesBindable.Name = "ModifyTrophiesServer"
+modifyTrophiesBindable.Parent = serverFolder
+
 local unlockZoneBindable = Instance.new("BindableFunction")
 unlockZoneBindable.Name = "UnlockZoneServer"
 unlockZoneBindable.Parent = serverFolder
@@ -1350,6 +1354,25 @@ modifyCoinsBindable.OnInvoke = function(player, amount)
 	})
 
 	return true, data.Coins
+end
+
+-- Modificar trofeos del jugador (para otros scripts del servidor)
+modifyTrophiesBindable.OnInvoke = function(player, amount)
+	local data = getPlayerData(player)
+	if not data then return false end
+
+	-- Verificar si tiene suficientes trofeos (si es negativo)
+	if amount < 0 and data.Trophies < math.abs(amount) then
+		return false, "Trofeos insuficientes"
+	end
+
+	data.Trophies = data.Trophies + amount
+
+	updatePlayerData(player, {
+		Trophies = data.Trophies
+	})
+
+	return true, data.Trophies
 end
 
 -- Desbloquear zona del jugador (para otros scripts del servidor)

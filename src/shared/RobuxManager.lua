@@ -215,42 +215,42 @@ RobuxManager.Pets = {
 }
 
 -- ============================================
--- ZONES
+-- ZONES (Zonas normales usan Trofeos, zonas VIP solo Robux)
 -- ============================================
 RobuxManager.Zones = {
 	Zona1 = {
 		Name = "Zone 1",
 		Description = "Unlock Zone 1",
 		RobuxCost = 19,
-		AlternativeCoinsCost = 5000,
+		TrophyCost = 10,
 		DevProductId = 0, -- TODO: Configurar en Roblox
 	},
 	Zona2 = {
 		Name = "Zone 2",
 		Description = "Unlock Zone 2",
 		RobuxCost = 39,
-		AlternativeCoinsCost = 10000,
+		TrophyCost = 25,
 		DevProductId = 0,
 	},
 	Zona3 = {
 		Name = "Zone 3",
 		Description = "Unlock Zone 3",
 		RobuxCost = 69,
-		AlternativeCoinsCost = 15000,
+		TrophyCost = 50,
 		DevProductId = 0,
 	},
 	Zona4 = {
 		Name = "Zone 4",
 		Description = "Unlock Zone 4",
 		RobuxCost = 99,
-		AlternativeCoinsCost = 25000,
+		TrophyCost = 100,
 		DevProductId = 0,
 	},
 	Zona5 = {
 		Name = "Zone 5",
 		Description = "Unlock Zone 5",
 		RobuxCost = 399,
-		AlternativeCoinsCost = 50000,
+		TrophyCost = 250,
 		DevProductId = 0,
 	},
 	VIP1 = {
@@ -284,14 +284,14 @@ RobuxManager.Zones = {
 }
 
 -- ============================================
--- BASES
+-- BASES (usan Trofeos)
 -- ============================================
 RobuxManager.Bases = {
 	Base1 = {
 		Name = "Secret Base",
 		Description = "Unlock Secret Base",
 		RobuxCost = 500,
-		AlternativeCoinsCost = 100000,
+		TrophyCost = 500,
 		DevProductId = 0, -- TODO: Configurar en Roblox
 	},
 }
