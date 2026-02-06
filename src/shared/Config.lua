@@ -22,7 +22,7 @@ Config.Fatness = {
 	BaseShrinkSpeed = 0.04,    -- Fat loss speed when propelling
 
 	-- Propulsion
-	BasePropulsionForce = 50,  -- Base propulsion force
+	BasePropulsionForce = 150,  -- Base propulsion force (tripled)
 }
 
 -- ============================================
