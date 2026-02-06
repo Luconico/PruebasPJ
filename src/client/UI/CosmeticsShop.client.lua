@@ -516,9 +516,9 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 		isEquipped = playerData and playerData.EquippedCosmetic == cosmeticId
 
 		if isEquipped then
-			actionButton.Text = "✓ EQUIPPED"
+			actionButton.Text = "EQUIPPED"
 			actionButton.BackgroundColor3 = Styles.Colors.Equipped
-			actionButton.TextColor3 = Styles.Colors.TextDark
+			actionButton.TextColor3 = Styles.Colors.Text
 			cardStroke.Color = Styles.Colors.Equipped
 			robuxContent.Visible = false
 		elseif isOwned then
@@ -627,6 +627,10 @@ purchaseCosmetic = function(cosmeticId, cosmeticData)
 		if success then
 			-- Compra iniciada o completada
 			print("[CosmeticsShop] Compra:", message)
+			-- Auto-equipar el cosmético comprado
+			task.delay(0.1, function()
+				equipCosmetic(cosmeticId)
+			end)
 		else
 			warn("[CosmeticsShop] Error:", message)
 		end
