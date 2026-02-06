@@ -851,19 +851,19 @@ Config.Pets = {
 		Name = "Cat",
 		Rarity = "Uncommon",
 		Icon = "🐈",
-		Boosts = { EatBoost = 0.35 },
+		Boosts = { EatBoost = 0.35, TrophyBoost = 0.18 },
 	},
 	Elephant = {
 		Name = "Elephant",
 		Rarity = "Uncommon",
 		Icon = "🐘",
-		Boosts = { FatnessBoost = 0.38 },
+		Boosts = { FatnessBoost = 0.38, TrophyBoost = 0.18 },
 	},
 	Parrot = {
 		Name = "Parrot",
 		Rarity = "Uncommon",
 		Icon = "🦜",
-		Boosts = { TrophyBoost = 0.35 },
+		Boosts = { TrophyBoost = 0.35,FatnessBoost = 0.15 },
 	},
 	Monkey = {
 		Name = "Monkey",
@@ -879,7 +879,7 @@ Config.Pets = {
 		Name = "Dragon",
 		Rarity = "Rare",
 		Icon = "🐉",
-		Boosts = { PropulsionBoost = 0.40, CoinBoost = 0.20 },
+		Boosts = { PropulsionBoost = 0.40, CoinBoost = 0.30 },
 	},
 
 	-- ============================================

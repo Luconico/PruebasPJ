@@ -4,19 +4,9 @@
 	Sistema de leaderboard para mostrar los jugadores que más
 	Robux han gastado en el juego.
 
-	Configuración:
-	- Coloca un Model llamado "RobuxLeaderboard" en Workspace
-	- Dentro del Model, debe haber una Part con SurfaceGui llamado "LeaderboardDisplay"
-	- El SurfaceGui debe contener un Frame con los elementos del leaderboard
-
-	Estructura esperada del GUI:
-	- RobuxLeaderboard (Model)
-	  - Display (Part)
-	    - SurfaceGui
-	      - Background (Frame)
-	        - Title (TextLabel)
-	        - ScrollingFrame o Frame con los slots
-	          - Slot1, Slot2, ..., Slot10 (cada uno con: Rank, Avatar, Name, Amount)
+	INSTRUCCIONES:
+	1. El script crea automáticamente un tablero si no existe "RobuxLeaderboard" en Workspace
+	2. O puedes crear manualmente un Model llamado "RobuxLeaderboard" con un Part y SurfaceGui
 ]]
 
 local Players = game:GetService("Players")
@@ -40,6 +30,9 @@ local CONFIG = {
 	-- Nombre del Model en Workspace
 	LEADERBOARD_MODEL_NAME = "RobuxLeaderboard",
 
+	-- Posición del leaderboard si se crea automáticamente
+	AUTO_POSITION = Vector3.new(0, 10, -50),
+
 	-- Debug mode
 	DEBUG = true,
 }
@@ -50,6 +43,8 @@ local CONFIG = {
 local robuxLeaderboardStore = DataStoreService:GetOrderedDataStore(CONFIG.DATA_STORE_NAME)
 local leaderboardModel = nil
 local leaderboardGui = nil
+local timerLabel = nil
+local nextUpdateTime = 0
 
 -- Cache para nombres y avatares
 local usernameCache = {}
@@ -112,33 +107,6 @@ local function formatRobux(amount)
 end
 
 -- ============================================
--- BUSCAR EL LEADERBOARD EN WORKSPACE
--- ============================================
-
-local function findLeaderboardGui()
-	-- Buscar el modelo del leaderboard
-	leaderboardModel = workspace:FindFirstChild(CONFIG.LEADERBOARD_MODEL_NAME)
-
-	if not leaderboardModel then
-		debugPrint("No se encontró el Model '" .. CONFIG.LEADERBOARD_MODEL_NAME .. "' en Workspace")
-		debugPrint("Creando leaderboard de ejemplo...")
-		return false
-	end
-
-	-- Buscar el SurfaceGui
-	for _, child in pairs(leaderboardModel:GetDescendants()) do
-		if child:IsA("SurfaceGui") then
-			leaderboardGui = child
-			debugPrint("SurfaceGui encontrado")
-			return true
-		end
-	end
-
-	debugPrint("No se encontró SurfaceGui dentro del leaderboard")
-	return false
-end
-
--- ============================================
 -- OBTENER DATOS DEL LEADERBOARD
 -- ============================================
 
@@ -175,6 +143,239 @@ local function getLeaderboardData()
 end
 
 -- ============================================
+-- CREAR GUI DEL LEADERBOARD
+-- ============================================
+
+local function createLeaderboardGui()
+	debugPrint("Creando leaderboard en Workspace...")
+
+	-- Crear el modelo
+	local model = Instance.new("Model")
+	model.Name = CONFIG.LEADERBOARD_MODEL_NAME
+
+	-- Crear la Part principal
+	local part = Instance.new("Part")
+	part.Name = "Display"
+	part.Size = Vector3.new(14, 10, 0.5)
+	part.Position = CONFIG.AUTO_POSITION
+	part.Anchored = true
+	part.CanCollide = false
+	part.Material = Enum.Material.SmoothPlastic
+	part.Color = Color3.fromRGB(20, 20, 30)
+	part.Parent = model
+
+	-- Crear SurfaceGui
+	local surfaceGui = Instance.new("SurfaceGui")
+	surfaceGui.Name = "LeaderboardGui"
+	surfaceGui.Face = Enum.NormalId.Front
+	surfaceGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	surfaceGui.PixelsPerStud = 50
+	surfaceGui.Parent = part
+
+	-- Crear Background principal
+	local background = Instance.new("Frame")
+	background.Name = "Background"
+	background.Size = UDim2.new(1, 0, 1, 0)
+	background.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+	background.BorderSizePixel = 0
+	background.Parent = surfaceGui
+
+	-- Gradiente de fondo
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 40)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20)),
+	})
+	gradient.Rotation = 90
+	gradient.Parent = background
+
+	-- Header con icono
+	local header = Instance.new("Frame")
+	header.Name = "Header"
+	header.Size = UDim2.new(1, 0, 0.12, 0)
+	header.Position = UDim2.new(0, 0, 0.01, 0)
+	header.BackgroundTransparency = 1
+	header.Parent = background
+
+	local robuxIcon = Instance.new("TextLabel")
+	robuxIcon.Name = "Icon"
+	robuxIcon.Size = UDim2.new(0.1, 0, 1, 0)
+	robuxIcon.Position = UDim2.new(0.02, 0, 0, 0)
+	robuxIcon.BackgroundTransparency = 1
+	robuxIcon.Text = "R$"
+	robuxIcon.TextColor3 = Color3.fromRGB(0, 255, 127)
+	robuxIcon.TextScaled = true
+	robuxIcon.Font = Enum.Font.GothamBold
+	robuxIcon.Parent = header
+
+	local title = Instance.new("TextLabel")
+	title.Name = "Title"
+	title.Size = UDim2.new(0.75, 0, 1, 0)
+	title.Position = UDim2.new(0.12, 0, 0, 0)
+	title.BackgroundTransparency = 1
+	title.Text = "TOP ROBUX GASTADOS"
+	title.TextColor3 = Color3.fromRGB(255, 215, 0)
+	title.TextScaled = true
+	title.Font = Enum.Font.GothamBold
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Parent = header
+
+	-- Timer de actualización
+	local timer = Instance.new("TextLabel")
+	timer.Name = "Timer"
+	timer.Size = UDim2.new(0.25, 0, 0.6, 0)
+	timer.Position = UDim2.new(0.73, 0, 0.2, 0)
+	timer.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+	timer.BorderSizePixel = 0
+	timer.Text = "Actualiza en: 60s"
+	timer.TextColor3 = Color3.fromRGB(150, 150, 180)
+	timer.TextScaled = true
+	timer.Font = Enum.Font.Gotham
+	timer.Parent = header
+	timerLabel = timer
+
+	local timerCorner = Instance.new("UICorner")
+	timerCorner.CornerRadius = UDim.new(0.3, 0)
+	timerCorner.Parent = timer
+
+	-- Línea separadora
+	local separator = Instance.new("Frame")
+	separator.Name = "Separator"
+	separator.Size = UDim2.new(0.96, 0, 0.003, 0)
+	separator.Position = UDim2.new(0.02, 0, 0.13, 0)
+	separator.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+	separator.BorderSizePixel = 0
+	separator.Parent = background
+
+	-- Contenedor de slots
+	local slotsContainer = Instance.new("Frame")
+	slotsContainer.Name = "SlotsContainer"
+	slotsContainer.Size = UDim2.new(0.96, 0, 0.82, 0)
+	slotsContainer.Position = UDim2.new(0.02, 0, 0.15, 0)
+	slotsContainer.BackgroundTransparency = 1
+	slotsContainer.Parent = background
+
+	-- Layout para los slots
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0.008, 0)
+	listLayout.Parent = slotsContainer
+
+	-- Crear 10 slots
+	for i = 1, 10 do
+		local slot = Instance.new("Frame")
+		slot.Name = "Slot" .. i
+		slot.Size = UDim2.new(1, 0, 0.092, 0)
+		slot.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+		slot.BorderSizePixel = 0
+		slot.LayoutOrder = i
+		slot.Visible = false
+		slot.Parent = slotsContainer
+
+		-- Esquinas redondeadas
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0.25, 0)
+		corner.Parent = slot
+
+		-- Borde para top 3
+		if i <= 3 then
+			local stroke = Instance.new("UIStroke")
+			stroke.Thickness = 2
+			if i == 1 then
+				stroke.Color = Color3.fromRGB(255, 215, 0) -- Oro
+			elseif i == 2 then
+				stroke.Color = Color3.fromRGB(192, 192, 192) -- Plata
+			else
+				stroke.Color = Color3.fromRGB(205, 127, 50) -- Bronce
+			end
+			stroke.Parent = slot
+		end
+
+		-- Rank
+		local rank = Instance.new("TextLabel")
+		rank.Name = "Rank"
+		rank.Size = UDim2.new(0.08, 0, 1, 0)
+		rank.Position = UDim2.new(0.02, 0, 0, 0)
+		rank.BackgroundTransparency = 1
+		rank.Text = "#" .. i
+		rank.TextColor3 = Color3.fromRGB(255, 255, 255)
+		rank.TextScaled = true
+		rank.Font = Enum.Font.GothamBold
+		rank.Parent = slot
+
+		-- Avatar
+		local avatar = Instance.new("ImageLabel")
+		avatar.Name = "Avatar"
+		avatar.Size = UDim2.new(0.07, 0, 0.8, 0)
+		avatar.Position = UDim2.new(0.11, 0, 0.1, 0)
+		avatar.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+		avatar.BorderSizePixel = 0
+		avatar.Image = ""
+		avatar.Parent = slot
+
+		local avatarCorner = Instance.new("UICorner")
+		avatarCorner.CornerRadius = UDim.new(0.5, 0)
+		avatarCorner.Parent = avatar
+
+		-- Nombre
+		local name = Instance.new("TextLabel")
+		name.Name = "Name"
+		name.Size = UDim2.new(0.48, 0, 1, 0)
+		name.Position = UDim2.new(0.2, 0, 0, 0)
+		name.BackgroundTransparency = 1
+		name.Text = "Loading..."
+		name.TextColor3 = Color3.fromRGB(255, 255, 255)
+		name.TextScaled = true
+		name.TextXAlignment = Enum.TextXAlignment.Left
+		name.Font = Enum.Font.Gotham
+		name.Parent = slot
+
+		-- Cantidad con icono
+		local amountFrame = Instance.new("Frame")
+		amountFrame.Name = "AmountFrame"
+		amountFrame.Size = UDim2.new(0.28, 0, 0.7, 0)
+		amountFrame.Position = UDim2.new(0.7, 0, 0.15, 0)
+		amountFrame.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+		amountFrame.BorderSizePixel = 0
+		amountFrame.Parent = slot
+
+		local amountCorner = Instance.new("UICorner")
+		amountCorner.CornerRadius = UDim.new(0.3, 0)
+		amountCorner.Parent = amountFrame
+
+		local amount = Instance.new("TextLabel")
+		amount.Name = "Amount"
+		amount.Size = UDim2.new(1, 0, 1, 0)
+		amount.BackgroundTransparency = 1
+		amount.Text = "0 R$"
+		amount.TextColor3 = Color3.fromRGB(255, 255, 255)
+		amount.TextScaled = true
+		amount.Font = Enum.Font.GothamBold
+		amount.Parent = amountFrame
+	end
+
+	-- Mensaje cuando no hay datos
+	local noDataLabel = Instance.new("TextLabel")
+	noDataLabel.Name = "NoData"
+	noDataLabel.Size = UDim2.new(0.8, 0, 0.3, 0)
+	noDataLabel.Position = UDim2.new(0.1, 0, 0.35, 0)
+	noDataLabel.BackgroundTransparency = 1
+	noDataLabel.Text = "No hay datos aun...\nGasta Robux para aparecer aqui!"
+	noDataLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
+	noDataLabel.TextScaled = true
+	noDataLabel.Font = Enum.Font.Gotham
+	noDataLabel.Visible = true
+	noDataLabel.Parent = slotsContainer
+
+	model.Parent = workspace
+	leaderboardModel = model
+	leaderboardGui = surfaceGui
+
+	debugPrint("Leaderboard creado en:", CONFIG.AUTO_POSITION)
+	return surfaceGui
+end
+
+-- ============================================
 -- ACTUALIZAR EL GUI
 -- ============================================
 
@@ -184,14 +385,17 @@ local function updateLeaderboardGui(data)
 		return
 	end
 
-	-- Buscar el contenedor de slots (puede ser ScrollingFrame o Frame)
-	local slotsContainer = leaderboardGui:FindFirstChild("SlotsContainer")
-		or leaderboardGui:FindFirstChild("Slots")
-		or leaderboardGui:FindFirstChild("Background")
+	local background = leaderboardGui:FindFirstChild("Background")
+	if not background then return end
 
-	if not slotsContainer then
-		debugPrint("No se encontró contenedor de slots")
-		return
+	local slotsContainer = background:FindFirstChild("SlotsContainer")
+	if not slotsContainer then return end
+
+	local noDataLabel = slotsContainer:FindFirstChild("NoData")
+
+	-- Mostrar/ocultar mensaje de no datos
+	if noDataLabel then
+		noDataLabel.Visible = (#data == 0)
 	end
 
 	-- Actualizar cada slot
@@ -212,32 +416,35 @@ local function updateLeaderboardGui(data)
 					rankLabel.Text = "#" .. playerData.Rank
 					-- Colores especiales para top 3
 					if playerData.Rank == 1 then
-						rankLabel.TextColor3 = Color3.fromRGB(255, 215, 0)  -- Oro
+						rankLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
 					elseif playerData.Rank == 2 then
-						rankLabel.TextColor3 = Color3.fromRGB(192, 192, 192)  -- Plata
+						rankLabel.TextColor3 = Color3.fromRGB(192, 192, 192)
 					elseif playerData.Rank == 3 then
-						rankLabel.TextColor3 = Color3.fromRGB(205, 127, 50)  -- Bronce
+						rankLabel.TextColor3 = Color3.fromRGB(205, 127, 50)
 					else
 						rankLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 					end
 				end
 
 				-- Actualizar Avatar
-				local avatarImage = slot:FindFirstChild("Avatar") or slot:FindFirstChild("Photo")
+				local avatarImage = slot:FindFirstChild("Avatar")
 				if avatarImage then
 					avatarImage.Image = playerData.Avatar
 				end
 
 				-- Actualizar Nombre
-				local nameLabel = slot:FindFirstChild("Name") or slot:FindFirstChild("Username")
+				local nameLabel = slot:FindFirstChild("Name")
 				if nameLabel then
 					nameLabel.Text = playerData.Name
 				end
 
 				-- Actualizar Cantidad de Robux
-				local amountLabel = slot:FindFirstChild("Amount") or slot:FindFirstChild("Score") or slot:FindFirstChild("Robux")
-				if amountLabel then
-					amountLabel.Text = formatRobux(playerData.RobuxSpent)
+				local amountFrame = slot:FindFirstChild("AmountFrame")
+				if amountFrame then
+					local amountLabel = amountFrame:FindFirstChild("Amount")
+					if amountLabel then
+						amountLabel.Text = formatRobux(playerData.RobuxSpent)
+					end
 				end
 			else
 				-- Ocultar slot vacío
@@ -246,165 +453,35 @@ local function updateLeaderboardGui(data)
 		end
 	end
 
-	debugPrint("GUI actualizado")
+	debugPrint("GUI actualizado con", #data, "jugadores")
 end
 
 -- ============================================
--- CREAR GUI DE EJEMPLO (si no existe)
+-- LOOP PRINCIPAL
 -- ============================================
 
-local function createExampleLeaderboard()
-	-- Crear el modelo
-	local model = Instance.new("Model")
-	model.Name = CONFIG.LEADERBOARD_MODEL_NAME
+local function mainLoop()
+	-- Primera actualización
+	debugPrint("Esperando 3 segundos antes de la primera actualización...")
+	task.wait(3)
 
-	-- Crear la Part
-	local part = Instance.new("Part")
-	part.Name = "Display"
-	part.Size = Vector3.new(12, 8, 0.5)
-	part.Position = Vector3.new(0, 10, -50)
-	part.Anchored = true
-	part.CanCollide = false
-	part.Material = Enum.Material.SmoothPlastic
-	part.Color = Color3.fromRGB(30, 30, 40)
-	part.Parent = model
-
-	-- Crear SurfaceGui
-	local surfaceGui = Instance.new("SurfaceGui")
-	surfaceGui.Name = "LeaderboardGui"
-	surfaceGui.Face = Enum.NormalId.Front
-	surfaceGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-	surfaceGui.PixelsPerStud = 50
-	surfaceGui.Parent = part
-
-	-- Crear Background
-	local background = Instance.new("Frame")
-	background.Name = "Background"
-	background.Size = UDim2.new(1, 0, 1, 0)
-	background.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-	background.BorderSizePixel = 0
-	background.Parent = surfaceGui
-
-	-- Crear Título
-	local title = Instance.new("TextLabel")
-	title.Name = "Title"
-	title.Size = UDim2.new(1, 0, 0.12, 0)
-	title.Position = UDim2.new(0, 0, 0.02, 0)
-	title.BackgroundTransparency = 1
-	title.Text = "TOP ROBUX GASTADOS"
-	title.TextColor3 = Color3.fromRGB(255, 215, 0)
-	title.TextScaled = true
-	title.Font = Enum.Font.GothamBold
-	title.Parent = background
-
-	-- Crear contenedor de slots
-	local slotsContainer = Instance.new("Frame")
-	slotsContainer.Name = "SlotsContainer"
-	slotsContainer.Size = UDim2.new(0.95, 0, 0.82, 0)
-	slotsContainer.Position = UDim2.new(0.025, 0, 0.15, 0)
-	slotsContainer.BackgroundTransparency = 1
-	slotsContainer.Parent = background
-
-	-- Layout para los slots
-	local listLayout = Instance.new("UIListLayout")
-	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	listLayout.Padding = UDim.new(0.01, 0)
-	listLayout.Parent = slotsContainer
-
-	-- Crear 10 slots
-	for i = 1, 10 do
-		local slot = Instance.new("Frame")
-		slot.Name = "Slot" .. i
-		slot.Size = UDim2.new(1, 0, 0.09, 0)
-		slot.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-		slot.BorderSizePixel = 0
-		slot.LayoutOrder = i
-		slot.Visible = false
-		slot.Parent = slotsContainer
-
-		-- Esquinas redondeadas
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0.3, 0)
-		corner.Parent = slot
-
-		-- Rank
-		local rank = Instance.new("TextLabel")
-		rank.Name = "Rank"
-		rank.Size = UDim2.new(0.1, 0, 1, 0)
-		rank.Position = UDim2.new(0.02, 0, 0, 0)
-		rank.BackgroundTransparency = 1
-		rank.Text = "#" .. i
-		rank.TextColor3 = Color3.fromRGB(255, 255, 255)
-		rank.TextScaled = true
-		rank.Font = Enum.Font.GothamBold
-		rank.Parent = slot
-
-		-- Avatar
-		local avatar = Instance.new("ImageLabel")
-		avatar.Name = "Avatar"
-		avatar.Size = UDim2.new(0.08, 0, 0.8, 0)
-		avatar.Position = UDim2.new(0.13, 0, 0.1, 0)
-		avatar.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-		avatar.BorderSizePixel = 0
-		avatar.Image = ""
-		avatar.Parent = slot
-
-		local avatarCorner = Instance.new("UICorner")
-		avatarCorner.CornerRadius = UDim.new(0.5, 0)
-		avatarCorner.Parent = avatar
-
-		-- Nombre
-		local name = Instance.new("TextLabel")
-		name.Name = "Name"
-		name.Size = UDim2.new(0.45, 0, 1, 0)
-		name.Position = UDim2.new(0.23, 0, 0, 0)
-		name.BackgroundTransparency = 1
-		name.Text = "Loading..."
-		name.TextColor3 = Color3.fromRGB(255, 255, 255)
-		name.TextScaled = true
-		name.TextXAlignment = Enum.TextXAlignment.Left
-		name.Font = Enum.Font.Gotham
-		name.Parent = slot
-
-		-- Cantidad
-		local amount = Instance.new("TextLabel")
-		amount.Name = "Amount"
-		amount.Size = UDim2.new(0.25, 0, 1, 0)
-		amount.Position = UDim2.new(0.72, 0, 0, 0)
-		amount.BackgroundTransparency = 1
-		amount.Text = "0 R$"
-		amount.TextColor3 = Color3.fromRGB(0, 255, 127)
-		amount.TextScaled = true
-		amount.TextXAlignment = Enum.TextXAlignment.Right
-		amount.Font = Enum.Font.GothamBold
-		amount.Parent = slot
-	end
-
-	model.Parent = workspace
-	leaderboardModel = model
-	leaderboardGui = surfaceGui
-
-	debugPrint("Leaderboard de ejemplo creado en Workspace")
-	return true
-end
-
--- ============================================
--- LOOP DE ACTUALIZACIÓN
--- ============================================
-
-local function startUpdateLoop()
-	-- Primera actualización inmediata
-	task.spawn(function()
-		task.wait(2) -- Esperar a que el DataStore esté listo
-		local data = getLeaderboardData()
-		updateLeaderboardGui(data)
-	end)
-
-	-- Loop de actualización
 	while true do
-		task.wait(CONFIG.UPDATE_INTERVAL)
+		-- Obtener y mostrar datos
+		debugPrint("Actualizando leaderboard...")
 		local data = getLeaderboardData()
 		updateLeaderboardGui(data)
+
+		-- Establecer tiempo de próxima actualización
+		nextUpdateTime = tick() + CONFIG.UPDATE_INTERVAL
+
+		-- Loop del timer
+		while tick() < nextUpdateTime do
+			local remaining = math.ceil(nextUpdateTime - tick())
+			if timerLabel then
+				timerLabel.Text = "Actualiza: " .. remaining .. "s"
+			end
+			task.wait(1)
+		end
 	end
 end
 
@@ -417,21 +494,46 @@ local function init()
 
 	-- Solo ejecutar en el servidor
 	if RunService:IsClient() then
-		debugPrint("Este script debe ejecutarse en el servidor")
+		warn("[RobuxLeaderboard] Este script debe ejecutarse en el servidor")
 		return
 	end
 
-	-- Buscar o crear el leaderboard
-	if not findLeaderboardGui() then
-		-- Si no existe, crear uno de ejemplo
-		createExampleLeaderboard()
+	-- Buscar leaderboard existente o crear uno nuevo
+	local existingModel = workspace:FindFirstChild(CONFIG.LEADERBOARD_MODEL_NAME)
+	if existingModel then
+		debugPrint("Leaderboard existente encontrado")
+		leaderboardModel = existingModel
+
+		-- Buscar el SurfaceGui
+		for _, child in pairs(existingModel:GetDescendants()) do
+			if child:IsA("SurfaceGui") then
+				leaderboardGui = child
+				-- Buscar timer existente
+				local bg = leaderboardGui:FindFirstChild("Background")
+				if bg then
+					local header = bg:FindFirstChild("Header")
+					if header then
+						timerLabel = header:FindFirstChild("Timer")
+					end
+				end
+				break
+			end
+		end
+
+		if not leaderboardGui then
+			debugPrint("SurfaceGui no encontrado, creando nuevo leaderboard...")
+			existingModel:Destroy()
+			createLeaderboardGui()
+		end
+	else
+		createLeaderboardGui()
 	end
 
-	-- Iniciar loop de actualización
-	startUpdateLoop()
+	-- Iniciar loop principal
+	task.spawn(mainLoop)
 end
 
 -- Iniciar
 init()
 
-print("[RobuxLeaderboard] Sistema inicializado correctamente")
+print("[RobuxLeaderboard] Sistema inicializado - Actualiza cada", CONFIG.UPDATE_INTERVAL, "segundos")
