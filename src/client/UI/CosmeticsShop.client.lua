@@ -378,39 +378,65 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	iconContainer.BackgroundTransparency = 1
 	iconContainer.Parent = card
 
-	-- Preview de colores (círculo con gradiente de los colores del pedo)
-	local colorPreview = Instance.new("Frame")
-	colorPreview.Name = "ColorPreview"
-	colorPreview.Size = UDim2.new(1, 0, 1, 0)
-	colorPreview.BackgroundColor3 = cosmeticData.Colors[1] or Color3.new(0.5, 0.5, 0.5)
-	colorPreview.Parent = iconContainer
-	createCorner(colorPreview, UDim.new(0.5, 0))
+	-- Círculo de fondo con los colores del cosmético
+	local colorCircle = Instance.new("Frame")
+	colorCircle.Name = "ColorCircle"
+	colorCircle.Size = UDim2.new(1, 0, 1, 0)
+	colorCircle.Position = UDim2.new(0.5, 0, 0.5, 0)
+	colorCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+	colorCircle.BackgroundColor3 = cosmeticData.Colors[1] or Color3.new(0.5, 0.5, 0.5)
+	colorCircle.Parent = iconContainer
+	createCorner(colorCircle, UDim.new(0.5, 0))
 
+	-- Agregar gradiente si tiene múltiples colores
 	if #cosmeticData.Colors > 1 then
-		createGradient(colorPreview, cosmeticData.Colors[1], cosmeticData.Colors[#cosmeticData.Colors])
+		local gradient = Instance.new("UIGradient")
+
+		-- Para Rainbow, crear un gradiente completo con todos los colores
+		if cosmeticId == "Rainbow" then
+			local rainbowKeypoints = {}
+			local numColors = #cosmeticData.Colors
+			for i, color in ipairs(cosmeticData.Colors) do
+				table.insert(rainbowKeypoints, ColorSequenceKeypoint.new((i-1) / (numColors-1), color))
+			end
+			gradient.Color = ColorSequence.new(rainbowKeypoints)
+			gradient.Rotation = 90
+		else
+			-- Para otros, usar gradiente simple del primer al último color
+			gradient.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, cosmeticData.Colors[1]),
+				ColorSequenceKeypoint.new(1, cosmeticData.Colors[#cosmeticData.Colors]),
+			})
+			gradient.Rotation = 90
+		end
+		gradient.Parent = colorCircle
 	end
 
-	-- Icono emoji encima
-	local iconLabel = Instance.new("TextLabel")
-	iconLabel.Name = "Icon"
-	iconLabel.Size = UDim2.new(1, 0, 1, 0)
-	iconLabel.BackgroundTransparency = 1
-	iconLabel.Text = cosmeticData.Icon or "💨"
-	iconLabel.TextSize = sizes.IconTextSize
-	iconLabel.Parent = iconContainer
+	-- Icono de fart blanco/gris encima del círculo de color
+	local fartIcon = Instance.new("ImageLabel")
+	fartIcon.Name = "FartIcon"
+	fartIcon.Size = UDim2.new(0.75, 0, 0.75, 0)
+	fartIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+	fartIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+	fartIcon.BackgroundTransparency = 1
+	fartIcon.Image = TextureManager.Icons.VIPFart
+	fartIcon.ImageColor3 = Color3.new(1, 1, 1) -- Blanco para máximo contraste
+	fartIcon.ScaleType = Enum.ScaleType.Fit
+	fartIcon.Parent = iconContainer
 
-	-- ========== EFECTO PULSE EN ICONO ==========
+	-- ========== EFECTO PULSE EN TODO EL CONTAINER ==========
 	local pulseDelay = 1.5 + math.random() * 1.5
-	local baseFontSize = sizes.IconTextSize
+	local baseSize = UDim2.new(0, sizes.IconSize, 0, sizes.IconSize)
+	local pulseSize = UDim2.new(0, sizes.IconSize * 1.15, 0, sizes.IconSize * 1.15)
 	task.spawn(function()
 		task.wait(math.random() * 1.5)
-		while iconLabel.Parent do
-			TweenService:Create(iconLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				TextSize = baseFontSize * 1.15
+		while iconContainer.Parent do
+			TweenService:Create(iconContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Size = pulseSize
 			}):Play()
 			task.wait(0.3)
-			TweenService:Create(iconLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-				TextSize = baseFontSize
+			TweenService:Create(iconContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				Size = baseSize
 			}):Play()
 			task.wait(0.3)
 			task.wait(pulseDelay)
