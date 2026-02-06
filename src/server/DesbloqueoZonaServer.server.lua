@@ -15,40 +15,40 @@ local ZONES_CONFIG = {
 	{
 		ZonePath = nil,
 		ZoneName = "BloqueoBase1",
-		CoinsCost = 100000,
+		TrophyCost = 500,
 		RobuxCost = 500,
 		DisplayName = "Base Secreta",
 	},
 
-	-- ========== ZONAS NORMALES (monedas o Robux) ==========
+	-- ========== ZONAS NORMALES (trofeos o Robux) ==========
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona1",
-		CoinsCost = 5000,
+		TrophyCost = 10,
 		RobuxCost = 19,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona2",
-		CoinsCost = 10000,
+		TrophyCost = 25,
 		RobuxCost = 39,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona3",
-		CoinsCost = 15000,
+		TrophyCost = 50,
 		RobuxCost = 69,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona4",
-		CoinsCost = 25000,
+		TrophyCost = 100,
 		RobuxCost = 99,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona5",
-		CoinsCost = 50000,
+		TrophyCost = 250,
 		RobuxCost = 399,
 	},
 
@@ -106,9 +106,10 @@ end
 -- Obtener BindableFunctions para comunicación servidor-servidor
 local getPlayerDataServer = serverFolder:WaitForChild("GetPlayerDataServer", 10)
 local modifyCoinsServer = serverFolder:WaitForChild("ModifyCoinsServer", 10)
+local modifyTrophiesServer = serverFolder:WaitForChild("ModifyTrophiesServer", 10)
 local unlockZoneServer = serverFolder:WaitForChild("UnlockZoneServer", 10)
 
-if not getPlayerDataServer or not modifyCoinsServer or not unlockZoneServer then
+if not getPlayerDataServer or not modifyCoinsServer or not modifyTrophiesServer or not unlockZoneServer then
 	warn("[Zonas] No se encontraron las BindableFunctions del servidor.")
 	return
 end
@@ -285,7 +286,8 @@ for _, config in ipairs(ZONES_CONFIG) do
 		end
 
 		-- Enviar UI al cliente (incluye VIPOnly para zonas que solo aceptan Robux, y DisplayName opcional)
-		showZoneUIRemote:FireClient(player, config.ZoneName, config.CoinsCost or 0, config.RobuxCost, config.VIPOnly or false, config.DisplayName)
+		-- Ahora usa TrophyCost en lugar de CoinsCost para zonas normales
+		showZoneUIRemote:FireClient(player, config.ZoneName, config.TrophyCost or 0, config.RobuxCost, config.VIPOnly or false, config.DisplayName)
 	end)
 
 	zonesConfigured = zonesConfigured + 1
@@ -319,7 +321,7 @@ unlockZoneRemote.OnServerEvent:Connect(function(player, zoneName, paymentType)
 	end
 
 	-- PROCESAR PAGO
-	if paymentType == "coins" then
+	if paymentType == "trophies" then
 		-- Verificar que no sea zona VIP (solo Robux)
 		if config.VIPOnly then
 			warn("[Zonas] " .. zoneName .. " es VIP, solo acepta Robux")
@@ -333,25 +335,25 @@ unlockZoneRemote.OnServerEvent:Connect(function(player, zoneName, paymentType)
 			return
 		end
 
-		local currentCoins = playerInfo.Data.Coins or 0
-		print("[Zonas] Monedas actuales: " .. currentCoins .. " / Costo: " .. config.CoinsCost)
+		local currentTrophies = playerInfo.Data.Trophies or 0
+		print("[Zonas] Trofeos actuales: " .. currentTrophies .. " / Costo: " .. config.TrophyCost)
 
-		-- Verificar que tenga suficientes monedas
-		if currentCoins < config.CoinsCost then
-			warn("[Zonas] Monedas insuficientes: " .. currentCoins .. "/" .. config.CoinsCost)
+		-- Verificar que tenga suficientes trofeos
+		if currentTrophies < config.TrophyCost then
+			warn("[Zonas] Trofeos insuficientes: " .. currentTrophies .. "/" .. config.TrophyCost)
 			-- Enviar notificación al cliente
-			insufficientFundsRemote:FireClient(player, zoneName, config.CoinsCost, currentCoins)
+			insufficientFundsRemote:FireClient(player, zoneName, config.TrophyCost, currentTrophies, "trophies")
 			return
 		end
 
-		-- Descontar monedas
-		local success, result = modifyCoinsServer:Invoke(player, -config.CoinsCost)
+		-- Descontar trofeos
+		local success, result = modifyTrophiesServer:Invoke(player, -config.TrophyCost)
 		if not success then
-			warn("[Zonas] Error al descontar monedas: " .. tostring(result))
+			warn("[Zonas] Error al descontar trofeos: " .. tostring(result))
 			return
 		end
 
-		print("[Zonas] Monedas descontadas. Nuevo balance: " .. tostring(result))
+		print("[Zonas] Trofeos descontados. Nuevo balance: " .. tostring(result))
 
 		-- Desbloquear zona (guarda en persistencia)
 		unlockZone(player, zoneName)
