@@ -1037,6 +1037,8 @@ Config.Eggs = {
 Config.PetSystem = {
 	DefaultEquipSlots = 3,
 	DefaultInventorySlots = 50,
+	MaxEquipSlots = 10,          -- Máximo de slots de equipo
+	MaxInventorySlots = 200,     -- Máximo de slots de inventario
 	Spacing = 5,
 	MaxClimbHeight = 13,
 	WalkAnimationSpeed = 10,
@@ -1044,6 +1046,20 @@ Config.PetSystem = {
 	WalkAmplitude = 0.5,
 	IdleAmplitude = 0.05,
 	FlyingHeightOffset = 2,
+
+	-- Compra de slots con Robux
+	SlotPurchases = {
+		InventorySlots = {
+			RobuxCost = 49,       -- Costo en Robux
+			SlotsPerPurchase = 10, -- Slots ganados por compra
+			DevProductId = 0,     -- ID del Developer Product (configurar en Roblox)
+		},
+		EquipSlots = {
+			RobuxCost = 99,       -- Costo en Robux
+			SlotsPerPurchase = 1, -- Slots ganados por compra
+			DevProductId = 0,     -- ID del Developer Product (configurar en Roblox)
+		},
+	},
 }
 
 -- ============================================

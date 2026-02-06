@@ -143,6 +143,8 @@ local function createRemotes()
 		"LockPet",           -- Cliente → Servidor: bloquear/desbloquear
 		"GetPets",           -- Cliente → Servidor: obtener inventario
 		"GetPetStats",       -- Cliente → Servidor: estadísticas
+		"BuyInventorySlots", -- Cliente → Servidor: comprar slots de inventario
+		"BuyEquipSlots",     -- Cliente → Servidor: comprar slots de equipo
 	}
 
 	for _, name in ipairs(events) do
@@ -1127,6 +1129,78 @@ Remotes.GetPetStats.OnServerInvoke = function(player)
 		TotalBoost = allBoosts.CoinBoost or 0, -- Compatibilidad
 		Boosts = allBoosts, -- Todos los boosts
 	}
+end
+
+-- Comprar slots de inventario con Robux
+Remotes.BuyInventorySlots.OnServerInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data or not data.PetSystem then
+		return false, "Datos no disponibles"
+	end
+
+	local purchaseConfig = Config.PetSystem.SlotPurchases.InventorySlots
+	local maxSlots = Config.PetSystem.MaxInventorySlots
+
+	-- Verificar límite máximo
+	if data.PetSystem.InventorySlots >= maxSlots then
+		return false, "Ya tienes el máximo de slots de inventario"
+	end
+
+	-- TODO: Integrar con MarketplaceService para procesar compra real de Robux
+	-- Por ahora, simulamos la compra exitosa para testing
+	-- En producción, esto debería usar:
+	-- local MarketplaceService = game:GetService("MarketplaceService")
+	-- MarketplaceService:PromptProductPurchase(player, purchaseConfig.DevProductId)
+
+	-- Añadir slots
+	local newSlots = math.min(
+		data.PetSystem.InventorySlots + purchaseConfig.SlotsPerPurchase,
+		maxSlots
+	)
+	data.PetSystem.InventorySlots = newSlots
+
+	updatePlayerData(player, {
+		PetSystem = data.PetSystem
+	})
+
+	print("[PlayerData] Slots de inventario comprados:", player.Name, "->", newSlots)
+	return true, "Slots de inventario añadidos"
+end
+
+-- Comprar slots de equipo con Robux
+Remotes.BuyEquipSlots.OnServerInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data or not data.PetSystem then
+		return false, "Datos no disponibles"
+	end
+
+	local purchaseConfig = Config.PetSystem.SlotPurchases.EquipSlots
+	local maxSlots = Config.PetSystem.MaxEquipSlots
+
+	-- Verificar límite máximo
+	if data.PetSystem.EquipSlots >= maxSlots then
+		return false, "Ya tienes el máximo de slots de equipo"
+	end
+
+	-- TODO: Integrar con MarketplaceService para procesar compra real de Robux
+	-- Por ahora, simulamos la compra exitosa para testing
+	-- En producción, esto debería usar:
+	-- local MarketplaceService = game:GetService("MarketplaceService")
+	-- MarketplaceService:PromptProductPurchase(player, purchaseConfig.DevProductId)
+
+	-- Añadir slots
+	local newSlots = math.min(
+		data.PetSystem.EquipSlots + purchaseConfig.SlotsPerPurchase,
+		maxSlots
+	)
+	data.PetSystem.EquipSlots = newSlots
+
+	updatePlayerData(player, {
+		PetSystem = data.PetSystem
+	})
+
+	print("[PlayerData] Slots de equipo comprados:", player.Name, "->", newSlots)
+	return true, "Slot de equipo añadido"
 end
 
 -- Sistema anti-exploit para height bonus (tracking por vuelo)

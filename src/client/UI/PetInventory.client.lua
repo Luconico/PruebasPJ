@@ -209,11 +209,14 @@ local closeButton = UIComponentsManager.createCloseButton(mainContainer, {
 })
 closeButton.ZIndex = 10
 
--- Content container
+-- Footer height for slot boxes
+local FOOTER_HEIGHT = 90
+
+-- Content container (adjusted for footer)
 local contentContainer = Instance.new("ScrollingFrame")
 contentContainer.Name = "ContentContainer"
 contentContainer.Position = UDim2.new(0, 0, 0, sizes.HeaderHeight)
-contentContainer.Size = UDim2.new(1, 0, 1, -sizes.HeaderHeight)
+contentContainer.Size = UDim2.new(1, 0, 1, -sizes.HeaderHeight - FOOTER_HEIGHT)
 contentContainer.BackgroundTransparency = 1
 contentContainer.BorderSizePixel = 0
 contentContainer.ScrollBarThickness = 8
@@ -232,6 +235,402 @@ contentLayout.CellPadding = UDim2.new(0, sizes.CardPadding, 0, sizes.CardPadding
 contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 contentLayout.Parent = contentContainer
+
+-- ============================================
+-- FOOTER CON SLOTS (INVENTARIO + EQUIP)
+-- ============================================
+
+local footer = Instance.new("Frame")
+footer.Name = "Footer"
+footer.Size = UDim2.new(1, 0, 0, FOOTER_HEIGHT)
+footer.Position = UDim2.new(0, 0, 1, -FOOTER_HEIGHT)
+footer.BackgroundTransparency = 1
+footer.Parent = mainContainer
+
+local footerPadding = Instance.new("UIPadding")
+footerPadding.PaddingLeft = UDim.new(0, 20)
+footerPadding.PaddingRight = UDim.new(0, 20)
+footerPadding.PaddingTop = UDim.new(0, 10)
+footerPadding.PaddingBottom = UDim.new(0, 10)
+footerPadding.Parent = footer
+
+local footerLayout = Instance.new("UIListLayout")
+footerLayout.FillDirection = Enum.FillDirection.Horizontal
+footerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+footerLayout.Padding = UDim.new(0, 20)
+footerLayout.Parent = footer
+
+-- Variables para actualizar dinámicamente
+local inventorySlotsLabel = nil
+local equipSlotsLabel = nil
+
+-- Función para crear un cuadro de slot
+local function createSlotBox(parent, slotType, icon, color, currentSlots, maxSlots, robuxCost)
+	local box = Instance.new("Frame")
+	box.Name = slotType .. "SlotBox"
+	box.Size = UDim2.new(0.45, 0, 1, 0)
+	box.BackgroundTransparency = 1
+	box.Parent = parent
+
+	-- Fondo con studs
+	local studBg = Instance.new("ImageLabel")
+	studBg.Name = "StudBackground"
+	studBg.Size = UDim2.new(1, 0, 1, 0)
+	studBg.BackgroundTransparency = 1
+	studBg.Image = TextureManager.Backgrounds.StudGray
+	studBg.ImageColor3 = color
+	studBg.ScaleType = Enum.ScaleType.Tile
+	studBg.TileSize = UDim2.new(0, 40, 0, 40)
+	studBg.Parent = box
+
+	local bgCorner = Instance.new("UICorner")
+	bgCorner.CornerRadius = UDim.new(0, 12)
+	bgCorner.Parent = studBg
+
+	local boxStroke = Instance.new("UIStroke")
+	boxStroke.Color = color
+	boxStroke.Thickness = 3
+	boxStroke.Parent = box
+
+	local boxCorner = Instance.new("UICorner")
+	boxCorner.CornerRadius = UDim.new(0, 12)
+	boxCorner.Parent = box
+
+	-- Contenido del box (icono + texto + contador)
+	local contentFrame = Instance.new("Frame")
+	contentFrame.Size = UDim2.new(1, -60, 1, 0)
+	contentFrame.Position = UDim2.new(0, 10, 0, 0)
+	contentFrame.BackgroundTransparency = 1
+	contentFrame.Parent = box
+
+	-- Icono
+	local iconLabel = Instance.new("TextLabel")
+	iconLabel.Size = UDim2.new(0, 35, 0, 35)
+	iconLabel.Position = UDim2.new(0, 0, 0.5, 0)
+	iconLabel.AnchorPoint = Vector2.new(0, 0.5)
+	iconLabel.BackgroundTransparency = 1
+	iconLabel.Text = icon
+	iconLabel.TextSize = 28
+	iconLabel.Parent = contentFrame
+
+	-- Texto descriptivo
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Size = UDim2.new(1, -40, 0, 20)
+	titleLabel.Position = UDim2.new(0, 40, 0, 8)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Text = slotType == "Inventory" and "Inventory" or "Following"
+	titleLabel.TextColor3 = Styles.Colors.Text
+	titleLabel.TextSize = 14
+	titleLabel.Font = Styles.Fonts.Body
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.Parent = contentFrame
+
+	local titleStroke = Instance.new("UIStroke")
+	titleStroke.Color = Color3.fromRGB(0, 0, 0)
+	titleStroke.Thickness = 1.5
+	titleStroke.Parent = titleLabel
+
+	-- Contador de slots
+	local slotsLabel = Instance.new("TextLabel")
+	slotsLabel.Name = "SlotsLabel"
+	slotsLabel.Size = UDim2.new(1, -40, 0, 24)
+	slotsLabel.Position = UDim2.new(0, 40, 0, 28)
+	slotsLabel.BackgroundTransparency = 1
+	slotsLabel.Text = currentSlots .. "/" .. maxSlots
+	slotsLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
+	slotsLabel.TextSize = 20
+	slotsLabel.Font = Styles.Fonts.Title
+	slotsLabel.TextXAlignment = Enum.TextXAlignment.Left
+	slotsLabel.Parent = contentFrame
+
+	local slotsStroke = Instance.new("UIStroke")
+	slotsStroke.Color = Color3.fromRGB(0, 0, 0)
+	slotsStroke.Thickness = 2
+	slotsStroke.Parent = slotsLabel
+
+	-- Botón "+" para comprar más
+	local plusButton = Instance.new("TextButton")
+	plusButton.Name = "PlusButton"
+	plusButton.Size = UDim2.new(0, 45, 0, 45)
+	plusButton.Position = UDim2.new(1, -50, 0.5, 0)
+	plusButton.AnchorPoint = Vector2.new(0, 0.5)
+	plusButton.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
+	plusButton.Text = "+"
+	plusButton.TextColor3 = Styles.Colors.Text
+	plusButton.TextSize = 32
+	plusButton.Font = Styles.Fonts.Title
+	plusButton.Parent = box
+
+	local plusCorner = Instance.new("UICorner")
+	plusCorner.CornerRadius = UDim.new(0, 10)
+	plusCorner.Parent = plusButton
+
+	local plusStroke = Instance.new("UIStroke")
+	plusStroke.Color = Color3.fromRGB(0, 0, 0)
+	plusStroke.Thickness = 3
+	plusStroke.Parent = plusButton
+
+	-- Efecto hover
+	plusButton.MouseEnter:Connect(function()
+		TweenService:Create(plusButton, TweenInfo.new(0.15), {
+			BackgroundColor3 = Color3.fromRGB(100, 255, 100),
+			Size = UDim2.new(0, 50, 0, 50)
+		}):Play()
+	end)
+
+	plusButton.MouseLeave:Connect(function()
+		TweenService:Create(plusButton, TweenInfo.new(0.15), {
+			BackgroundColor3 = Color3.fromRGB(80, 200, 80),
+			Size = UDim2.new(0, 45, 0, 45)
+		}):Play()
+	end)
+
+	-- Click para abrir diálogo de compra
+	plusButton.MouseButton1Click:Connect(function()
+		SoundManager.play("ButtonClick", 0.3, 1.0)
+		showPurchaseDialog(slotType, robuxCost)
+	end)
+
+	return slotsLabel
+end
+
+-- Función para mostrar diálogo de compra
+local purchaseDialog = nil
+
+function showPurchaseDialog(slotType, robuxCost)
+	-- Cerrar diálogo existente si hay uno
+	if purchaseDialog then
+		purchaseDialog:Destroy()
+	end
+
+	local isInventory = slotType == "Inventory"
+	local slotsPerPurchase = isInventory
+		and (Config.PetSystem.SlotPurchases and Config.PetSystem.SlotPurchases.InventorySlots.SlotsPerPurchase or 10)
+		or (Config.PetSystem.SlotPurchases and Config.PetSystem.SlotPurchases.EquipSlots.SlotsPerPurchase or 1)
+	local title = isInventory and "Buy Inventory Slots" or "Buy Pet Slots"
+	local description = isInventory and ("+" .. slotsPerPurchase .. " Inventory Slots") or ("+" .. slotsPerPurchase .. " Pet Following Slot")
+	local icon = isInventory and "📦" or "🐾"
+	local color = isInventory and Color3.fromRGB(100, 150, 255) or Color3.fromRGB(255, 150, 100)
+
+	-- Crear diálogo
+	purchaseDialog = Instance.new("Frame")
+	purchaseDialog.Name = "PurchaseDialog"
+	purchaseDialog.Size = UDim2.new(0, 320, 0, 220)
+	purchaseDialog.Position = UDim2.new(0.5, 0, 0.5, 0)
+	purchaseDialog.AnchorPoint = Vector2.new(0.5, 0.5)
+	purchaseDialog.BackgroundColor3 = Styles.Colors.Background
+	purchaseDialog.ZIndex = 100
+	purchaseDialog.Parent = screenGui
+
+	local dialogCorner = Instance.new("UICorner")
+	dialogCorner.CornerRadius = UDim.new(0, 16)
+	dialogCorner.Parent = purchaseDialog
+
+	local dialogStroke = Instance.new("UIStroke")
+	dialogStroke.Color = color
+	dialogStroke.Thickness = 4
+	dialogStroke.Parent = purchaseDialog
+
+	-- Fondo con studs
+	local dialogBg = Instance.new("ImageLabel")
+	dialogBg.Size = UDim2.new(1, 0, 1, 0)
+	dialogBg.BackgroundTransparency = 1
+	dialogBg.Image = TextureManager.Backgrounds.StudGray
+	dialogBg.ImageColor3 = Styles.Colors.Background
+	dialogBg.ImageTransparency = 0.5
+	dialogBg.ScaleType = Enum.ScaleType.Tile
+	dialogBg.TileSize = UDim2.new(0, 40, 0, 40)
+	dialogBg.ZIndex = 100
+	dialogBg.Parent = purchaseDialog
+
+	local dialogBgCorner = Instance.new("UICorner")
+	dialogBgCorner.CornerRadius = UDim.new(0, 16)
+	dialogBgCorner.Parent = dialogBg
+
+	-- Título
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Size = UDim2.new(1, 0, 0, 40)
+	titleLabel.Position = UDim2.new(0, 0, 0, 15)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Text = icon .. " " .. title
+	titleLabel.TextColor3 = Styles.Colors.Text
+	titleLabel.TextSize = 24
+	titleLabel.Font = Styles.Fonts.Title
+	titleLabel.ZIndex = 101
+	titleLabel.Parent = purchaseDialog
+
+	local titleStroke = Instance.new("UIStroke")
+	titleStroke.Color = Color3.fromRGB(0, 0, 0)
+	titleStroke.Thickness = 2
+	titleStroke.Parent = titleLabel
+
+	-- Descripción
+	local descLabel = Instance.new("TextLabel")
+	descLabel.Size = UDim2.new(1, -20, 0, 30)
+	descLabel.Position = UDim2.new(0.5, 0, 0, 60)
+	descLabel.AnchorPoint = Vector2.new(0.5, 0)
+	descLabel.BackgroundTransparency = 1
+	descLabel.Text = description
+	descLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
+	descLabel.TextSize = 20
+	descLabel.Font = Styles.Fonts.Body
+	descLabel.ZIndex = 101
+	descLabel.Parent = purchaseDialog
+
+	local descStroke = Instance.new("UIStroke")
+	descStroke.Color = Color3.fromRGB(0, 0, 0)
+	descStroke.Thickness = 1.5
+	descStroke.Parent = descLabel
+
+	-- Precio con icono de Robux
+	local priceContainer = Instance.new("Frame")
+	priceContainer.Size = UDim2.new(1, 0, 0, 35)
+	priceContainer.Position = UDim2.new(0.5, 0, 0, 95)
+	priceContainer.AnchorPoint = Vector2.new(0.5, 0)
+	priceContainer.BackgroundTransparency = 1
+	priceContainer.ZIndex = 101
+	priceContainer.Parent = purchaseDialog
+
+	local priceLayout = Instance.new("UIListLayout")
+	priceLayout.FillDirection = Enum.FillDirection.Horizontal
+	priceLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	priceLayout.Padding = UDim.new(0, 8)
+	priceLayout.Parent = priceContainer
+
+	local robuxIcon = Instance.new("ImageLabel")
+	robuxIcon.Size = UDim2.new(0, 28, 0, 28)
+	robuxIcon.BackgroundTransparency = 1
+	robuxIcon.Image = "rbxassetid://4458901886" -- Robux icon
+	robuxIcon.ZIndex = 101
+	robuxIcon.LayoutOrder = 1
+	robuxIcon.Parent = priceContainer
+
+	local priceLabel = Instance.new("TextLabel")
+	priceLabel.Size = UDim2.new(0, 80, 0, 30)
+	priceLabel.BackgroundTransparency = 1
+	priceLabel.Text = tostring(robuxCost)
+	priceLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
+	priceLabel.TextSize = 26
+	priceLabel.Font = Styles.Fonts.Title
+	priceLabel.TextXAlignment = Enum.TextXAlignment.Left
+	priceLabel.ZIndex = 101
+	priceLabel.LayoutOrder = 2
+	priceLabel.Parent = priceContainer
+
+	local priceStroke = Instance.new("UIStroke")
+	priceStroke.Color = Color3.fromRGB(0, 0, 0)
+	priceStroke.Thickness = 2
+	priceStroke.Parent = priceLabel
+
+	-- Botones
+	local buttonsContainer = Instance.new("Frame")
+	buttonsContainer.Size = UDim2.new(1, -40, 0, 45)
+	buttonsContainer.Position = UDim2.new(0.5, 0, 1, -60)
+	buttonsContainer.AnchorPoint = Vector2.new(0.5, 0)
+	buttonsContainer.BackgroundTransparency = 1
+	buttonsContainer.ZIndex = 101
+	buttonsContainer.Parent = purchaseDialog
+
+	local buttonsLayout = Instance.new("UIListLayout")
+	buttonsLayout.FillDirection = Enum.FillDirection.Horizontal
+	buttonsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	buttonsLayout.Padding = UDim.new(0, 15)
+	buttonsLayout.Parent = buttonsContainer
+
+	-- Botón Cancelar
+	local cancelButton = Instance.new("TextButton")
+	cancelButton.Size = UDim2.new(0, 120, 0, 42)
+	cancelButton.BackgroundColor3 = Color3.fromRGB(150, 80, 80)
+	cancelButton.Text = "Cancel"
+	cancelButton.TextColor3 = Styles.Colors.Text
+	cancelButton.TextSize = 18
+	cancelButton.Font = Styles.Fonts.Body
+	cancelButton.ZIndex = 101
+	cancelButton.LayoutOrder = 1
+	cancelButton.Parent = buttonsContainer
+
+	local cancelCorner = Instance.new("UICorner")
+	cancelCorner.CornerRadius = UDim.new(0, 10)
+	cancelCorner.Parent = cancelButton
+
+	local cancelStroke = Instance.new("UIStroke")
+	cancelStroke.Color = Color3.fromRGB(0, 0, 0)
+	cancelStroke.Thickness = 2
+	cancelStroke.Parent = cancelButton
+
+	-- Botón Comprar
+	local buyButton = Instance.new("TextButton")
+	buyButton.Size = UDim2.new(0, 120, 0, 42)
+	buyButton.BackgroundColor3 = Color3.fromRGB(80, 180, 80)
+	buyButton.Text = "Buy"
+	buyButton.TextColor3 = Styles.Colors.Text
+	buyButton.TextSize = 18
+	buyButton.Font = Styles.Fonts.Body
+	buyButton.ZIndex = 101
+	buyButton.LayoutOrder = 2
+	buyButton.Parent = buttonsContainer
+
+	local buyCorner = Instance.new("UICorner")
+	buyCorner.CornerRadius = UDim.new(0, 10)
+	buyCorner.Parent = buyButton
+
+	local buyStroke = Instance.new("UIStroke")
+	buyStroke.Color = Color3.fromRGB(0, 0, 0)
+	buyStroke.Thickness = 2
+	buyStroke.Parent = buyButton
+
+	-- Animación de entrada
+	purchaseDialog.Size = UDim2.new(0, 0, 0, 0)
+	TweenService:Create(purchaseDialog, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, 320, 0, 220)
+	}):Play()
+
+	-- Eventos
+	cancelButton.MouseButton1Click:Connect(function()
+		SoundManager.play("ButtonClick", 0.3, 1.2)
+		TweenService:Create(purchaseDialog, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+			Size = UDim2.new(0, 0, 0, 0)
+		}):Play()
+		task.wait(0.25)
+		if purchaseDialog then
+			purchaseDialog:Destroy()
+			purchaseDialog = nil
+		end
+	end)
+
+	buyButton.MouseButton1Click:Connect(function()
+		SoundManager.play("ButtonClick", 0.3, 1.0)
+		-- Llamar al servidor para procesar la compra
+		local remoteName = isInventory and "BuyInventorySlots" or "BuyEquipSlots"
+		local success, result = pcall(function()
+			return Remotes[remoteName]:InvokeServer()
+		end)
+
+		if success and result then
+			SoundManager.play("Sparkle", 0.5, 1.2)
+			-- Actualizar UI
+			updateInventory()
+		else
+			warn("[PetInventory] Error al comprar slots:", result)
+		end
+
+		-- Cerrar diálogo
+		TweenService:Create(purchaseDialog, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+			Size = UDim2.new(0, 0, 0, 0)
+		}):Play()
+		task.wait(0.25)
+		if purchaseDialog then
+			purchaseDialog:Destroy()
+			purchaseDialog = nil
+		end
+	end)
+end
+
+-- Crear los dos cuadros de slots (precios desde Config)
+local inventoryPrice = Config.PetSystem.SlotPurchases and Config.PetSystem.SlotPurchases.InventorySlots.RobuxCost or 49
+local equipPrice = Config.PetSystem.SlotPurchases and Config.PetSystem.SlotPurchases.EquipSlots.RobuxCost or 99
+inventorySlotsLabel = createSlotBox(footer, "Inventory", "📦", Color3.fromRGB(100, 150, 255), 0, 50, inventoryPrice)
+equipSlotsLabel = createSlotBox(footer, "Equip", "🐾", Color3.fromRGB(255, 150, 100), 0, 3, equipPrice)
 
 -- ============================================
 -- CREAR TARJETA DE MASCOTA
@@ -538,8 +937,16 @@ function updateInventory()
 		return Remotes.GetPetStats:InvokeServer()
 	end)
 
-	if statsSuccess then
+	if statsSuccess and stats then
 		statsLabel.Text = stats.TotalPets .. "/" .. stats.InventorySlots .. " | " .. stats.EquippedPets .. "/" .. stats.EquipSlots .. " equipped"
+
+		-- Actualizar labels del footer
+		if inventorySlotsLabel then
+			inventorySlotsLabel.Text = stats.TotalPets .. "/" .. stats.InventorySlots
+		end
+		if equipSlotsLabel then
+			equipSlotsLabel.Text = stats.EquippedPets .. "/" .. stats.EquipSlots
+		end
 	end
 
 	-- Crear tarjetas
