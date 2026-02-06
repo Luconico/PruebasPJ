@@ -44,7 +44,7 @@ local WHEEL_PRIZES = {
 	},
 	{
 		Name = "Grand Prize",
-		Icon = "🌈",
+		Icon = "🌯",
 		Gold = 2500,
 		Chance = 9.99,
 		Color = Color3.fromRGB(255, 150, 200), -- Rosa
@@ -58,14 +58,14 @@ local WHEEL_PRIZES = {
 	},
 	{
 		Name = "Medium Prize",
-		Icon = "💨",
+		Icon = "🥤",
 		Gold = 500,
 		Chance = 45,
 		Color = Color3.fromRGB(255, 150, 200), -- Rosa claro
 	},
 	{
 		Name = "Minor Prize",
-		Icon = "🍣",
+		Icon = "🌭",
 		Gold = 250,
 		Chance = 5,
 		Color = Color3.fromRGB(255, 200, 100), -- Naranja claro
@@ -202,23 +202,83 @@ local function createWheel(parent)
 	wheelFrame.BackgroundTransparency = 1
 	wheelFrame.Parent = parent
 
-	-- Fondo circular de la rueda con borde
+	-- Borde exterior arcoíris/dorado (capa más externa)
+	local outerRainbowBorder = Instance.new("Frame")
+	outerRainbowBorder.Name = "OuterRainbowBorder"
+	outerRainbowBorder.Size = UDim2.new(1, 0, 1, 0)
+	outerRainbowBorder.Position = UDim2.new(0.5, 0, 0.5, 0)
+	outerRainbowBorder.AnchorPoint = Vector2.new(0.5, 0.5)
+	outerRainbowBorder.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- Dorado base
+	outerRainbowBorder.ZIndex = 1
+	outerRainbowBorder.Parent = wheelFrame
+
+	local outerCorner = Instance.new("UICorner")
+	outerCorner.CornerRadius = UDim.new(0.5, 0)
+	outerCorner.Parent = outerRainbowBorder
+
+	-- Gradiente arcoíris con tonos dorados
+	local rainbowGradient = Instance.new("UIGradient")
+	rainbowGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),      -- Rojo
+		ColorSequenceKeypoint.new(0.15, Color3.fromRGB(255, 180, 0)),   -- Naranja/Dorado
+		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 230, 50)),   -- Amarillo dorado
+		ColorSequenceKeypoint.new(0.45, Color3.fromRGB(100, 255, 100)), -- Verde
+		ColorSequenceKeypoint.new(0.6, Color3.fromRGB(50, 200, 255)),   -- Cyan
+		ColorSequenceKeypoint.new(0.75, Color3.fromRGB(150, 100, 255)), -- Púrpura
+		ColorSequenceKeypoint.new(0.9, Color3.fromRGB(255, 100, 200)),  -- Rosa
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50)),      -- Rojo (cierre)
+	})
+	rainbowGradient.Rotation = 0
+	rainbowGradient.Parent = outerRainbowBorder
+
+	-- Borde dorado brillante exterior
+	local outerGoldStroke = Instance.new("UIStroke")
+	outerGoldStroke.Color = Color3.fromRGB(255, 200, 50)
+	outerGoldStroke.Thickness = 6
+	outerGoldStroke.Parent = outerRainbowBorder
+
+	-- Segunda capa con gradiente dorado
+	local goldenRing = Instance.new("Frame")
+	goldenRing.Name = "GoldenRing"
+	goldenRing.Size = UDim2.new(1, -24, 1, -24)
+	goldenRing.Position = UDim2.new(0.5, 0, 0.5, 0)
+	goldenRing.AnchorPoint = Vector2.new(0.5, 0.5)
+	goldenRing.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+	goldenRing.ZIndex = 2
+	goldenRing.Parent = outerRainbowBorder
+
+	local goldenCorner = Instance.new("UICorner")
+	goldenCorner.CornerRadius = UDim.new(0.5, 0)
+	goldenCorner.Parent = goldenRing
+
+	local goldenGradient = Instance.new("UIGradient")
+	goldenGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 230, 100)),
+		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 180, 50)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 215, 0)),
+		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(255, 180, 50)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 230, 100)),
+	})
+	goldenGradient.Rotation = 45
+	goldenGradient.Parent = goldenRing
+
+	-- Fondo circular de la rueda (interior blanco)
 	local wheelBg = Instance.new("Frame")
 	wheelBg.Name = "WheelBackground"
-	wheelBg.Size = UDim2.new(1, 0, 1, 0)
+	wheelBg.Size = UDim2.new(1, -20, 1, -20)
 	wheelBg.Position = UDim2.new(0.5, 0, 0.5, 0)
 	wheelBg.AnchorPoint = Vector2.new(0.5, 0.5)
-	wheelBg.BackgroundColor3 = Color3.fromRGB(120, 130, 150)
-	wheelBg.ZIndex = 1
-	wheelBg.Parent = wheelFrame
+	wheelBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Blanco
+	wheelBg.ZIndex = 3
+	wheelBg.Parent = goldenRing
 
 	local wheelCorner = Instance.new("UICorner")
 	wheelCorner.CornerRadius = UDim.new(0.5, 0)
 	wheelCorner.Parent = wheelBg
 
 	local wheelStroke = Instance.new("UIStroke")
-	wheelStroke.Color = Color3.fromRGB(80, 80, 100)
-	wheelStroke.Thickness = 8
+	wheelStroke.Color = Color3.fromRGB(200, 170, 50)
+	wheelStroke.Thickness = 4
 	wheelStroke.Parent = wheelBg
 
 	-- Contenedor interno para los segmentos (con ClipsDescendants)
@@ -283,7 +343,7 @@ local function createWheel(parent)
 			mask.Size = UDim2.new(1, 0, 2, 0)
 			mask.Position = UDim2.new(0.5, 0, 1, 0)
 			mask.AnchorPoint = Vector2.new(0.5, 1)
-			mask.BackgroundColor3 = Color3.fromRGB(120, 130, 150) -- Mismo color que el fondo
+			mask.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Blanco (mismo color que el fondo)
 			mask.Rotation = -anglePerSegment / 2
 			mask.ZIndex = 3
 			mask.Parent = halfContainer
@@ -307,7 +367,7 @@ local function createWheel(parent)
 	innerCircle.Size = UDim2.new(1, 0, 1, 0)
 	innerCircle.Position = UDim2.new(0.5, 0, 0.5, 0)
 	innerCircle.AnchorPoint = Vector2.new(0.5, 0.5)
-	innerCircle.BackgroundColor3 = Color3.fromRGB(255, 200, 150) -- Color base
+	innerCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Blanco
 	innerCircle.ZIndex = 2
 	innerCircle.Parent = segmentsContainer
 
@@ -322,8 +382,8 @@ local function createWheel(parent)
 		local midAngle = startAngle + anglePerSegment / 2
 
 		-- Calcular posición usando coordenadas polares
-		-- El contenido está a ~70% del radio desde el centro
-		local radius = 0.35 -- 35% del tamaño total (70% del radio)
+		-- El contenido está a ~76% del radio desde el centro (más alejado para centrar en la sección)
+		local radius = 0.27 -- 38% del tamaño total (76% del radio) - más separado del centro
 		local angleRad = math.rad(midAngle)
 		local posX = 0.5 + math.cos(angleRad) * radius
 		local posY = 0.5 + math.sin(angleRad) * radius
@@ -432,6 +492,8 @@ local function createWheel(parent)
 	spinButton.TextColor3 = Color3.new(1, 1, 1)
 	spinButton.TextSize = sizes.FontSizeLarge
 	spinButton.Font = Enum.Font.GothamBlack
+	spinButton.TextStrokeTransparency = 0
+	spinButton.TextStrokeColor3 = Color3.fromRGB(40, 100, 40)
 	spinButton.ZIndex = 10
 	spinButton.Parent = wheelFrame
 
@@ -531,14 +593,14 @@ local function createSidePanel(parent)
 		gradient.Rotation = 90
 		gradient.Parent = button
 
-		-- Icono de ruleta
+		-- Icono de compra
 		local icon = Instance.new("TextLabel")
 		icon.Name = "Icon"
 		icon.Size = UDim2.new(0, 30, 0, 30)
 		icon.Position = UDim2.new(0, 10, 0.5, 0)
 		icon.AnchorPoint = Vector2.new(0, 0.5)
 		icon.BackgroundColor3 = Color3.new(1, 1, 1)
-		icon.Text = "🌈"
+		icon.Text = "🛒"
 		icon.TextSize = 20
 		icon.Parent = button
 
@@ -620,14 +682,14 @@ local function createBottomPanel(parent)
 	gradient.Rotation = 90
 	gradient.Parent = panel
 
-	-- Icono
+	-- Icono de giros acumulados (ruleta)
 	local icon = Instance.new("TextLabel")
 	icon.Name = "Icon"
 	icon.Size = UDim2.new(0, 40, 0, 40)
 	icon.Position = UDim2.new(0, 15, 0.5, 0)
 	icon.AnchorPoint = Vector2.new(0, 0.5)
 	icon.BackgroundColor3 = Color3.new(1, 1, 1)
-	icon.Text = "🌈"
+	icon.Text = "🎡"
 	icon.TextSize = 28
 	icon.Parent = panel
 
