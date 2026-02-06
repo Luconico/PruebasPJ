@@ -776,24 +776,51 @@ local function createEggBillboard(eggPart, eggName, eggConfig)
 	priceLabel.Parent = priceContainer
 	createStroke(priceLabel, Color3.fromRGB(0, 0, 0), 2)
 
-	-- ========== CONTAINER DE MASCOTAS ==========
+	-- ========== CONTAINER DE MASCOTAS CON SCROLL ==========
+	local sortedPets = sortPetsByChance(eggConfig.Pets)
+	local numPets = #sortedPets
+	local petsPerRow = 3
+	local numRows = math.ceil(numPets / petsPerRow)
+	local visibleRows = 2 -- Solo mostrar 2 filas
+	local needsScroll = numRows > visibleRows
+
+	-- ScrollingFrame para las mascotas
+	local petsScroll = Instance.new("ScrollingFrame")
+	petsScroll.Name = "PetsScroll"
+	petsScroll.Size = UDim2.new(1, -16, 0.55, 0)
+	petsScroll.Position = UDim2.new(0, 8, 0.16, 0)
+	petsScroll.BackgroundTransparency = 1
+	petsScroll.BorderSizePixel = 0
+	petsScroll.ZIndex = 2
+	petsScroll.ScrollBarThickness = needsScroll and 6 or 0
+	petsScroll.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+	petsScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+	petsScroll.CanvasSize = UDim2.new(0, 0, 0, 0) -- Se ajusta después
+	petsScroll.Parent = mainFrame
+
 	local petsContainer = Instance.new("Frame")
 	petsContainer.Name = "PetsContainer"
-	petsContainer.Size = UDim2.new(1, -16, 0.55, 0)
-	petsContainer.Position = UDim2.new(0, 8, 0.16, 0)
+	petsContainer.Size = UDim2.new(1, 0, 1, 0)
 	petsContainer.BackgroundTransparency = 1
 	petsContainer.ZIndex = 2
-	petsContainer.Parent = mainFrame
+	petsContainer.Parent = petsScroll
+
+	-- Calcular tamaño de celda en píxeles para el scroll
+	local cellHeight = 70  -- Altura aproximada por celda
+	local cellPadding = 8  -- Padding entre celdas
 
 	local petsLayout = Instance.new("UIGridLayout")
-	petsLayout.CellSize = UDim2.new(0.31, 0, 0.47, 0)
-	petsLayout.CellPadding = UDim2.new(0.02, 0, 0.03, 0)
+	petsLayout.CellSize = UDim2.new(0.31, 0, 0, cellHeight)
+	petsLayout.CellPadding = UDim2.new(0.02, 0, 0, cellPadding)
 	petsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	petsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	petsLayout.Parent = petsContainer
 
+	-- Ajustar CanvasSize según el número de filas
+	local totalHeight = numRows * (cellHeight + cellPadding)
+	petsScroll.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+
 	-- Crear tarjetas de mascotas con studs
-	local sortedPets = sortPetsByChance(eggConfig.Pets)
 	for i, petData in ipairs(sortedPets) do
 		local petConfig = Config.Pets[petData.name]
 		if petConfig then
