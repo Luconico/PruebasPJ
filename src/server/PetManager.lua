@@ -10,6 +10,20 @@ local Workspace = game:GetService("Workspace")
 
 local PetManager = {}
 
+-- Mapeo de nombres legacy a nombres de modelos actuales
+-- Los datos guardados pueden tener nombres antiguos, pero los modelos tienen nombres nuevos
+local LEGACY_NAME_MAP = {
+	RainbowAxolotl = "RainbowGoldenAxolotl",
+	RainbowDog = "RainbowGoldenDog",
+	RainbowCat = "RainbowGoldenCat",
+	RainbowDragon = "RainbowGoldenDragon",
+}
+
+-- Función para obtener el nombre del modelo correcto
+local function getModelName(petName)
+	return LEGACY_NAME_MAP[petName] or petName
+end
+
 -- Crear carpeta de mascotas
 local ServerPets = Workspace:FindFirstChild("ServerPets")
 if not ServerPets then
@@ -45,11 +59,18 @@ function PetManager:EquipPet(player, petName, uuid)
 		return
 	end
 
-	print("[PetManager] Carpeta Pets encontrada, buscando:", petName)
-	local petModel = petsFolder:FindFirstChild(petName)
+	-- Convertir nombres legacy a nombres de modelos actuales
+	local actualModelName = getModelName(petName)
+	print("[PetManager] Carpeta Pets encontrada, buscando:", actualModelName, "(original:", petName, ")")
+	local petModel = petsFolder:FindFirstChild(actualModelName)
 	if not petModel then
-		warn("[PetManager] No se encontró modelo:", petName)
-		print("[PetManager] Modelos disponibles:", table.concat(petsFolder:GetChildren(), ", "))
+		warn("[PetManager] No se encontró modelo:", actualModelName)
+		local children = petsFolder:GetChildren()
+		local names = {}
+		for _, child in ipairs(children) do
+			table.insert(names, child.Name)
+		end
+		print("[PetManager] Modelos disponibles:", table.concat(names, ", "))
 		return
 	end
 

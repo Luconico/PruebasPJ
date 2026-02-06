@@ -19,6 +19,8 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
 local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
+local RobuxManager = require(Shared:WaitForChild("RobuxManager"))
 
 -- Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -76,11 +78,11 @@ local WHEEL_PRIZES = {
 local FREE_SPINS_PER_HOUR = 3
 local FREE_SPIN_COOLDOWN = 3600 -- 1 hora en segundos
 
--- Precios de Robux para giros
+-- Precios de Robux para giros (desde RobuxManager)
 local SPIN_PRICES = {
-	{Amount = 1, Robux = 25, Sale = false},
-	{Amount = 10, Robux = 200, Sale = false},
-	{Amount = 100, Robux = 1500, Sale = true},
+	{Key = "Spin1", Amount = RobuxManager.Spins.Spin1.Amount, Robux = RobuxManager.Spins.Spin1.RobuxCost, Sale = RobuxManager.Spins.Spin1.Sale, DevProductId = RobuxManager.Spins.Spin1.DevProductId},
+	{Key = "Spin10", Amount = RobuxManager.Spins.Spin10.Amount, Robux = RobuxManager.Spins.Spin10.RobuxCost, Sale = RobuxManager.Spins.Spin10.Sale, DevProductId = RobuxManager.Spins.Spin10.DevProductId},
+	{Key = "Spin100", Amount = RobuxManager.Spins.Spin100.Amount, Robux = RobuxManager.Spins.Spin100.RobuxCost, Sale = RobuxManager.Spins.Spin100.Sale, DevProductId = RobuxManager.Spins.Spin100.DevProductId},
 }
 
 -- ============================================
@@ -567,71 +569,87 @@ local function createSidePanel(parent)
 	layout.Parent = panel
 
 	for i, priceInfo in ipairs(SPIN_PRICES) do
-		local button = Instance.new("TextButton")
+		-- ImageButton con fondo de stud (estilo cartoon como el botón cerrar)
+		local button = Instance.new("ImageButton")
 		button.Name = "BuySpins_" .. priceInfo.Amount
 		button.Size = UDim2.new(1, 0, 0, sizes.ButtonHeight)
-		button.BackgroundColor3 = priceInfo.Sale and Color3.fromRGB(255, 180, 50) or Color3.fromRGB(80, 180, 255)
-		button.Text = ""
 		button.LayoutOrder = i
 		button.Parent = panel
 
-		createCorner(button)
-		createStroke(button, Color3.fromRGB(50, 50, 50), 2)
+		-- Configurar textura de stud
+		button.Image = TextureManager.Backgrounds.StudGray
+		button.ImageColor3 = priceInfo.Sale and Color3.fromRGB(255, 180, 50) or Color3.fromRGB(80, 180, 255)
+		button.ImageTransparency = 0.15
+		button.ScaleType = Enum.ScaleType.Tile
+		button.TileSize = UDim2.new(0, 32, 0, 32)
+		button.BackgroundColor3 = priceInfo.Sale and Color3.fromRGB(255, 150, 30) or Color3.fromRGB(50, 150, 220)
+		button.AutoButtonColor = true
 
-		local gradient = Instance.new("UIGradient")
-		if priceInfo.Sale then
-			gradient.Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 80)),
-				ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 150, 30)),
-			})
-		else
-			gradient.Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),
-				ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 150, 220)),
-			})
-		end
-		gradient.Rotation = 90
-		gradient.Parent = button
+		createCorner(button, UDim.new(0, 10))
 
-		-- Icono de compra
-		local icon = Instance.new("TextLabel")
-		icon.Name = "Icon"
-		icon.Size = UDim2.new(0, 30, 0, 30)
-		icon.Position = UDim2.new(0, 10, 0.5, 0)
-		icon.AnchorPoint = Vector2.new(0, 0.5)
+		-- UIStroke grueso estilo cartoon
+		local buttonStroke = Instance.new("UIStroke")
+		buttonStroke.Color = priceInfo.Sale and Color3.fromRGB(180, 100, 0) or Color3.fromRGB(30, 80, 140)
+		buttonStroke.Thickness = 5
+		buttonStroke.Parent = button
+
+		-- Icono de Robux
+		local icon = Instance.new("ImageLabel")
+		icon.Name = "RobuxIcon"
+		icon.Size = UDim2.new(0, 28, 0, 28)
+		icon.Position = UDim2.new(0, 8, 0, 6)
 		icon.BackgroundColor3 = Color3.new(1, 1, 1)
-		icon.Text = "🛒"
-		icon.TextSize = 20
+		icon.Image = TextureManager.Icons.Robux
+		icon.ScaleType = Enum.ScaleType.Fit
 		icon.Parent = button
 
 		local iconCorner = Instance.new("UICorner")
 		iconCorner.CornerRadius = UDim.new(0.5, 0)
 		iconCorner.Parent = icon
 
-		-- Texto de cantidad
+		-- Texto de cantidad (arriba)
 		local amountLabel = Instance.new("TextLabel")
 		amountLabel.Name = "Amount"
-		amountLabel.Size = UDim2.new(0.6, 0, 1, 0)
-		amountLabel.Position = UDim2.new(0.4, 0, 0, 0)
+		amountLabel.Size = UDim2.new(1, -45, 0.5, 0)
+		amountLabel.Position = UDim2.new(1, -5, 0, 2)
+		amountLabel.AnchorPoint = Vector2.new(1, 0)
 		amountLabel.BackgroundTransparency = 1
 		amountLabel.Text = "+" .. priceInfo.Amount
 		amountLabel.TextColor3 = Color3.new(1, 1, 1)
+		amountLabel.TextXAlignment = Enum.TextXAlignment.Right
 		amountLabel.TextSize = sizes.FontSizeMedium
 		amountLabel.Font = Enum.Font.GothamBlack
-		amountLabel.TextStrokeTransparency = 0.5
+		amountLabel.TextStrokeTransparency = 0
+		amountLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
 		amountLabel.Parent = button
+
+		-- Precio en Robux (abajo)
+		local priceLabel = Instance.new("TextLabel")
+		priceLabel.Name = "Price"
+		priceLabel.Size = UDim2.new(1, -45, 0.5, 0)
+		priceLabel.Position = UDim2.new(1, -5, 0.5, -2)
+		priceLabel.AnchorPoint = Vector2.new(1, 0)
+		priceLabel.BackgroundTransparency = 1
+		priceLabel.Text = priceInfo.Robux .. " R$"
+		priceLabel.TextColor3 = Color3.fromRGB(255, 255, 200)
+		priceLabel.TextXAlignment = Enum.TextXAlignment.Right
+		priceLabel.TextSize = sizes.FontSizeSmall
+		priceLabel.Font = Enum.Font.GothamBold
+		priceLabel.TextStrokeTransparency = 0
+		priceLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+		priceLabel.Parent = button
 
 		-- Etiqueta de SALE
 		if priceInfo.Sale then
 			local saleTag = Instance.new("TextLabel")
 			saleTag.Name = "SaleTag"
-			saleTag.Size = UDim2.new(0, 45, 0, 20)
-			saleTag.Position = UDim2.new(1, -5, 0, -5)
+			saleTag.Size = UDim2.new(0, 45, 0, 18)
+			saleTag.Position = UDim2.new(1, 5, 0, -8)
 			saleTag.AnchorPoint = Vector2.new(1, 0)
-			saleTag.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+			saleTag.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
 			saleTag.Text = "SALE"
 			saleTag.TextColor3 = Color3.new(1, 1, 1)
-			saleTag.TextSize = 12
+			saleTag.TextSize = 11
 			saleTag.Font = Enum.Font.GothamBold
 			saleTag.ZIndex = 5
 			saleTag.Parent = button
@@ -639,6 +657,11 @@ local function createSidePanel(parent)
 			local saleCorner = Instance.new("UICorner")
 			saleCorner.CornerRadius = UDim.new(0, 5)
 			saleCorner.Parent = saleTag
+
+			local saleStroke = Instance.new("UIStroke")
+			saleStroke.Color = Color3.fromRGB(150, 30, 30)
+			saleStroke.Thickness = 2
+			saleStroke.Parent = saleTag
 		end
 
 		-- Conectar evento de compra

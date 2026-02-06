@@ -297,6 +297,36 @@ RobuxManager.Bases = {
 }
 
 -- ============================================
+-- SPINS (Giros de la Ruleta)
+-- ============================================
+RobuxManager.Spins = {
+	Spin1 = {
+		Name = "+1 Spin",
+		Description = "Get 1 extra spin",
+		Amount = 1,
+		RobuxCost = 25,
+		Sale = false,
+		DevProductId = 0, -- TODO: Configurar en Roblox
+	},
+	Spin10 = {
+		Name = "+10 Spins",
+		Description = "Get 10 extra spins",
+		Amount = 10,
+		RobuxCost = 200,
+		Sale = false,
+		DevProductId = 0, -- TODO: Configurar en Roblox
+	},
+	Spin100 = {
+		Name = "+100 Spins",
+		Description = "Get 100 extra spins (Best Value!)",
+		Amount = 100,
+		RobuxCost = 1500,
+		Sale = true,
+		DevProductId = 0, -- TODO: Configurar en Roblox
+	},
+}
+
+-- ============================================
 -- HELPER FUNCTIONS
 -- ============================================
 
