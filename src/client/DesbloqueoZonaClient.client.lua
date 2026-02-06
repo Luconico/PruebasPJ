@@ -339,8 +339,8 @@ local function createZoneUI(zoneName, coinsCost, robuxCost, vipOnly)
 end
 
 -- Escuchar evento del servidor para mostrar UI
--- Ahora recibe un cuarto parámetro: vipOnly
-showZoneUIRemote.OnClientEvent:Connect(function(zoneName, coinsCost, robuxCost, vipOnly)
+-- Parámetros: zoneName, coinsCost, robuxCost, vipOnly, displayName (opcional)
+showZoneUIRemote.OnClientEvent:Connect(function(zoneName, coinsCost, robuxCost, vipOnly, displayName)
 	print("[ZonasClient] Recibida petición de UI para: " .. zoneName .. (vipOnly and " (VIP)" or ""))
 
 	-- Si ya hay una UI abierta, no crear otra
@@ -351,7 +351,9 @@ showZoneUIRemote.OnClientEvent:Connect(function(zoneName, coinsCost, robuxCost, 
 
 	print("[ZonasClient] Coins: " .. tostring(coinsCost) .. ", Robux: " .. robuxCost .. ", VIP: " .. tostring(vipOnly))
 	currentZoneName = zoneName
-	createZoneUI(zoneName, coinsCost, robuxCost, vipOnly)
+	-- Usar displayName si existe, sino usar zoneName
+	local uiDisplayName = displayName or zoneName
+	createZoneUI(uiDisplayName, coinsCost, robuxCost, vipOnly)
 	print("[ZonasClient] UI creada")
 end)
 
@@ -376,6 +378,7 @@ if makeInvisibleRemote then
 		end)
 		print("[ZonasClient] Haciendo " .. zoneName .. " invisible localmente")
 
+		-- Primero buscar en carpeta Zonas
 		local zonesFolder = workspace:FindFirstChild("Zonas")
 		if zonesFolder then
 			local zone = zonesFolder:FindFirstChild(zoneName)
@@ -387,7 +390,16 @@ if makeInvisibleRemote then
 					end
 				end
 				print("[ZonasClient] Zona " .. zoneName .. " ahora invisible")
+				return
 			end
+		end
+
+		-- Si no está en Zonas, buscar directamente en Workspace (para bases/bloqueos)
+		local directPart = workspace:FindFirstChild(zoneName)
+		if directPart and directPart:IsA("BasePart") then
+			directPart.Transparency = 1
+			directPart.CanCollide = false
+			print("[ZonasClient] Bloqueo " .. zoneName .. " ahora invisible")
 		end
 	end)
 end

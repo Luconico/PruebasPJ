@@ -10,36 +10,46 @@ print("[Zonas] Iniciando sistema de zonas desbloqueables...")
 
 -- ========== CONFIGURACIÓN DE ZONAS ==========
 local ZONES_CONFIG = {
-	-- Zonas normales (monedas o Robux)
+	-- ========== BASE (antes en DesbloqueoBaseServer) ==========
+	-- ZonePath = nil significa que está directamente en Workspace
+	{
+		ZonePath = nil,
+		ZoneName = "BloqueoBase1",
+		CoinsCost = 100000,
+		RobuxCost = 500,
+		DisplayName = "Base Secreta",
+	},
+
+	-- ========== ZONAS NORMALES (monedas o Robux) ==========
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona1",
 		CoinsCost = 5000,
-		RobuxCost = 10,
+		RobuxCost = 19,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona2",
 		CoinsCost = 10000,
-		RobuxCost = 20,
+		RobuxCost = 39,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona3",
 		CoinsCost = 15000,
-		RobuxCost = 30,
+		RobuxCost = 69,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona4",
 		CoinsCost = 25000,
-		RobuxCost = 50,
+		RobuxCost = 99,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona5",
 		CoinsCost = 50000,
-		RobuxCost = 100,
+		RobuxCost = 399,
 	},
 
 	-- ========== ZONAS VIP (Solo Robux) ==========
@@ -47,19 +57,25 @@ local ZONES_CONFIG = {
 	{
 		ZonePath = "Zonas",
 		ZoneName = "VIP1",
-		RobuxCost = 50,      -- Cambia este valor
+		RobuxCost = 49,      -- Cambia este valor
 		VIPOnly = true,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "VIP2",
-		RobuxCost = 100,     -- Cambia este valor
+		RobuxCost = 99,     -- Cambia este valor
 		VIPOnly = true,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "VIP3",
-		RobuxCost = 150,     -- Cambia este valor
+		RobuxCost = 149,     -- Cambia este valor
+		VIPOnly = true,
+	},
+	{
+		ZonePath = "Zonas",
+		ZoneName = "VIP4",
+		RobuxCost = 199,     -- Cambia este valor
 		VIPOnly = true,
 	},
 	-- Agrega más zonas VIP aquí:
@@ -204,31 +220,41 @@ end
 local zonesConfigured = 0
 
 for _, config in ipairs(ZONES_CONFIG) do
-	local zonesFolder = Workspace:FindFirstChild(config.ZonePath)
-
-	if not zonesFolder then
-		warn("[Zonas] Carpeta no encontrada: " .. config.ZonePath)
-		continue
-	end
-
-	local zone = zonesFolder:FindFirstChild(config.ZoneName)
-
-	if not zone then
-		warn("[Zonas] Zona no encontrada: " .. config.ZoneName)
-		continue
-	end
-
-	-- Buscar el primer BasePart
 	local triggerPart = nil
-	for _, child in ipairs(zone:GetDescendants()) do
-		if child:IsA("BasePart") then
-			triggerPart = child
-			break
+
+	if config.ZonePath then
+		-- Buscar en carpeta (zonas normales)
+		local zonesFolder = Workspace:FindFirstChild(config.ZonePath)
+
+		if not zonesFolder then
+			warn("[Zonas] Carpeta no encontrada: " .. config.ZonePath)
+			continue
+		end
+
+		local zone = zonesFolder:FindFirstChild(config.ZoneName)
+
+		if not zone then
+			warn("[Zonas] Zona no encontrada: " .. config.ZoneName)
+			continue
+		end
+
+		-- Buscar el primer BasePart dentro de la zona
+		for _, child in ipairs(zone:GetDescendants()) do
+			if child:IsA("BasePart") then
+				triggerPart = child
+				break
+			end
+		end
+	else
+		-- Buscar directamente en Workspace (bases/bloqueos)
+		local part = Workspace:FindFirstChild(config.ZoneName)
+		if part and part:IsA("BasePart") then
+			triggerPart = part
 		end
 	end
 
 	if not triggerPart then
-		warn("[Zonas] No hay Parts en " .. config.ZoneName)
+		warn("[Zonas] No hay Parts válidos para " .. config.ZoneName)
 		continue
 	end
 
@@ -258,8 +284,8 @@ for _, config in ipairs(ZONES_CONFIG) do
 			return
 		end
 
-		-- Enviar UI al cliente (incluye VIPOnly para zonas que solo aceptan Robux)
-		showZoneUIRemote:FireClient(player, config.ZoneName, config.CoinsCost or 0, config.RobuxCost, config.VIPOnly or false)
+		-- Enviar UI al cliente (incluye VIPOnly para zonas que solo aceptan Robux, y DisplayName opcional)
+		showZoneUIRemote:FireClient(player, config.ZoneName, config.CoinsCost or 0, config.RobuxCost, config.VIPOnly or false, config.DisplayName)
 	end)
 
 	zonesConfigured = zonesConfigured + 1
