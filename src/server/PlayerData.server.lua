@@ -652,8 +652,8 @@ local function equipPet(player, uuid)
 			-- Spawn en mundo
 			print("[EquipPet] PetManager disponible?", PetManager ~= nil)
 			if PetManager then
-				print("[EquipPet] Llamando a PetManager:EquipPet para", pet.PetName)
-				PetManager:EquipPet(player, pet.PetName)
+				print("[EquipPet] Llamando a PetManager:EquipPet para", pet.PetName, "UUID:", pet.UUID)
+				PetManager:EquipPet(player, pet.PetName, pet.UUID)
 			else
 				warn("[EquipPet] PetManager no está disponible aún")
 			end
@@ -678,7 +678,7 @@ local function unequipPet(player, uuid)
 
 			-- Despawn del mundo
 			if PetManager then
-				PetManager:UnequipPet(player, pet.PetName)
+				PetManager:UnequipPet(player, pet.PetName, pet.UUID)
 			end
 
 			updatePlayerData(player, {
@@ -1228,7 +1228,7 @@ Players.PlayerAdded:Connect(function(player)
 		if data.PetSystem and PetManager then
 			for _, pet in ipairs(data.PetSystem.Pets) do
 				if pet.Equiped then
-					PetManager:EquipPet(player, pet.PetName)
+					PetManager:EquipPet(player, pet.PetName, pet.UUID)
 				end
 			end
 		end
