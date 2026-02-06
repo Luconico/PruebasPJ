@@ -14,6 +14,7 @@ local player = Players.LocalPlayer
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 
 local BuyFoodFromSign = Remotes:WaitForChild("BuyFoodFromSign", 10)
@@ -76,12 +77,28 @@ local function createFoodSign(zonePart, foodType, isOwned)
 	local mainFrame = Instance.new("Frame")
 	mainFrame.Name = "MainFrame"
 	mainFrame.Size = UDim2.new(1, 0, 1, 0)
-	mainFrame.BackgroundColor3 = foodConfig.Color
-	mainFrame.BackgroundTransparency = 0.25
+	mainFrame.BackgroundTransparency = 1
 	mainFrame.BorderSizePixel = 0
 	mainFrame.ClipsDescendants = true
 	mainFrame.Active = false -- No bloquear clicks
 	mainFrame.Parent = billboard
+
+	-- Fondo con textura de studs (mantiene color y transparencia)
+	local studBackground = Instance.new("ImageLabel")
+	studBackground.Name = "StudBackground"
+	studBackground.Size = UDim2.new(1, 0, 1, 0)
+	studBackground.BackgroundTransparency = 1
+	studBackground.Image = TextureManager.Backgrounds.StudGray
+	studBackground.ImageColor3 = foodConfig.Color
+	studBackground.ImageTransparency = 0.25
+	studBackground.ScaleType = Enum.ScaleType.Tile
+	studBackground.TileSize = UDim2.new(0, 50, 0, 50)
+	studBackground.ZIndex = 0
+	studBackground.Parent = mainFrame
+
+	local studCorner = Instance.new("UICorner")
+	studCorner.CornerRadius = UDim.new(0, 16)
+	studCorner.Parent = studBackground
 
 	-- Esquinas redondeadas
 	local corner = Instance.new("UICorner")

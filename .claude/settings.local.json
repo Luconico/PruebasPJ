@@ -15,7 +15,9 @@
       "Bash(cd:*)",
       "Bash(tree:*)",
       "Bash(git push)",
-      "WebFetch(domain:roblox.fandom.com)"
+      "WebFetch(domain:roblox.fandom.com)",
+      "Bash(dir:*)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

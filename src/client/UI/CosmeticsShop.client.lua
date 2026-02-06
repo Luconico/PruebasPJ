@@ -7,7 +7,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
 local player = Players.LocalPlayer
@@ -18,6 +17,8 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 -- Esperar Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -33,10 +34,9 @@ local function getResponsiveSizes()
 	local isTablet = info.IsTablet
 
 	return {
-		-- Contenedor principal
+		-- Contenedor principal (siempre usa escala para ser responsive)
 		ContainerWidth = isMobile and 0.95 or (isTablet and 0.85 or 0.6),
 		ContainerHeight = isMobile and 0.92 or (isTablet and 0.85 or 0.8),
-		UseScale = isMobile or isTablet,
 
 		-- Header
 		HeaderHeight = isMobile and 70 or math.floor(90 * scale),
@@ -50,14 +50,14 @@ local function getResponsiveSizes()
 		IconTextSize = isMobile and 36 or math.floor(48 * scale),
 
 		-- Textos
-		NameTextSize = isMobile and 14 or math.floor(18 * scale),
+		NameTextSize = isMobile and 18 or math.floor(24 * scale),
 		DescTextSize = isMobile and 11 or math.floor(13 * scale),
 		TierTextSize = isMobile and 10 or math.floor(12 * scale),
 		PriceTextSize = isMobile and 14 or math.floor(18 * scale),
 
 		-- Botones
-		ButtonHeight = isMobile and 32 or math.floor(40 * scale),
-		ButtonTextSize = isMobile and 12 or math.floor(16 * scale),
+		ButtonHeight = isMobile and 36 or math.floor(44 * scale),
+		ButtonTextSize = isMobile and 16 or math.floor(20 * scale),
 
 		-- General
 		CornerRadius = isMobile and 10 or math.floor(14 * scale),
@@ -155,23 +155,18 @@ local function createShopUI()
 	screenGui.Enabled = false
 	screenGui.Parent = playerGui
 
-	-- Fondo oscuro
+	-- Backdrop invisible (solo para detectar clicks fuera del menú)
 	local backdrop = Instance.new("Frame")
 	backdrop.Name = "Backdrop"
 	backdrop.Size = UDim2.new(1, 0, 1, 0)
-	backdrop.BackgroundColor3 = Color3.new(0, 0, 0)
-	backdrop.BackgroundTransparency = 0.5
+	backdrop.BackgroundTransparency = 1
 	backdrop.BorderSizePixel = 0
 	backdrop.Parent = screenGui
 
 	-- Contenedor principal
 	mainContainer = Instance.new("Frame")
 	mainContainer.Name = "MainContainer"
-	if sizes.UseScale then
-		mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
-	else
-		mainContainer.Size = UDim2.new(0, 1000, 0, 700)
-	end
+	mainContainer.Size = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
 	mainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
 	mainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
 	mainContainer.BackgroundColor3 = Styles.Colors.Background
@@ -180,57 +175,24 @@ local function createShopUI()
 	createCorner(mainContainer, UDim.new(0, sizes.CornerRadius + 4))
 	createStroke(mainContainer, Styles.Colors.Primary, sizes.StrokeThickness + 1)
 
-	-- Header
-	local header = Instance.new("Frame")
-	header.Name = "Header"
-	header.Size = UDim2.new(1, 0, 0, sizes.HeaderHeight)
-	header.BackgroundColor3 = Styles.Colors.BackgroundLight
-	header.Parent = mainContainer
-	createCorner(header, UDim.new(0, sizes.CornerRadius + 4))
+	-- Header (usando UIComponentsManager)
+	local navbar, titleLabel = UIComponentsManager.createNavbar(mainContainer, {
+		height = sizes.HeaderHeight,
+		color = Color3.fromRGB(120, 80, 180), -- Púrpura para contrastar con rojo
+		cornerRadius = sizes.CornerRadius + 4,
+		title = "✨ FART COSMETICS ✨",
+		titleSize = sizes.TitleSize,
+		titleFont = Styles.Fonts.Title,
+	})
 
-	-- Título
-	local title = Instance.new("TextLabel")
-	title.Name = "Title"
-	title.Size = UDim2.new(1, -(sizes.CloseButtonSize + 30), 1, 0)
-	title.Position = UDim2.new(0, 20, 0, 0)
-	title.BackgroundTransparency = 1
-	title.Text = "✨ FART COSMETICS ✨"
-	title.TextColor3 = Styles.Colors.Primary
-	title.TextSize = sizes.TitleSize
-	title.Font = Styles.Fonts.Title
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.TextScaled = sizes.IsMobile
-	title.Parent = header
-
-	if sizes.IsMobile then
-		local constraint = Instance.new("UITextSizeConstraint")
-		constraint.MaxTextSize = sizes.TitleSize
-		constraint.MinTextSize = 16
-		constraint.Parent = title
-	end
-
-	-- Botón cerrar
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, sizes.CloseButtonSize, 0, sizes.CloseButtonSize)
-	closeButton.Position = UDim2.new(1, -10, 0.5, 0)
-	closeButton.AnchorPoint = Vector2.new(1, 0.5)
-	closeButton.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
-	closeButton.Text = "X"
-	closeButton.TextColor3 = Styles.Colors.Text
-	closeButton.TextSize = math.floor(sizes.CloseButtonSize * 0.5)
-	closeButton.Font = Styles.Fonts.Title
-	closeButton.Parent = header
-	createCorner(closeButton)
-
-	closeButton.MouseButton1Click:Connect(function()
-		SoundManager.play("ButtonClick", 0.4, 1.1)
-		toggleShop(false)
-	end)
-
-	closeButton.MouseEnter:Connect(function()
-		SoundManager.play("ButtonHover", 0.2, 1.2)
-	end)
+	-- Botón cerrar (usando UIComponentsManager)
+	local closeButton = UIComponentsManager.createCloseButton(mainContainer, {
+		size = sizes.CloseButtonSize,
+		onClose = function()
+			toggleShop(false)
+		end
+	})
+	closeButton.ZIndex = 10
 
 	-- Área de scroll para cosméticos
 	local scrollArea = Instance.new("ScrollingFrame")
@@ -281,12 +243,25 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 
 	local card = Instance.new("Frame")
 	card.Name = "Card_" .. cosmeticId
-	card.BackgroundColor3 = Styles.Colors.CardBackground
+	card.BackgroundTransparency = 1
 	card.LayoutOrder = layoutOrder
 	card.ClipsDescendants = true -- Necesario para el efecto shine
 	card.Parent = parent
 
 	createCorner(card)
+
+	-- Fondo con textura de studs
+	local studBackground = Instance.new("ImageLabel")
+	studBackground.Name = "StudBackground"
+	studBackground.Size = UDim2.new(1, 0, 1, 0)
+	studBackground.BackgroundTransparency = 1
+	studBackground.Image = TextureManager.Backgrounds.StudGray
+	studBackground.ImageColor3 = Styles.Colors.CardBackground
+	studBackground.ScaleType = Enum.ScaleType.Tile
+	studBackground.TileSize = UDim2.new(0, 60, 0, 60)
+	studBackground.ZIndex = 0
+	studBackground.Parent = card
+	createCorner(studBackground)
 	local cardStroke = createStroke(card, tierData.Color, sizes.StrokeThickness)
 
 	-- ========== EFECTO SHINE ==========
@@ -388,6 +363,12 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	tierLabel.Font = Styles.Fonts.Body
 	tierLabel.Parent = tierBadge
 
+	local tierStroke = Instance.new("UIStroke")
+	tierStroke.Color = Color3.fromRGB(0, 0, 0)
+	tierStroke.Thickness = 1
+	tierStroke.Transparency = 0.5
+	tierStroke.Parent = tierLabel
+
 	-- Icono del cosmético
 	local iconContainer = Instance.new("Frame")
 	iconContainer.Name = "IconContainer"
@@ -455,6 +436,11 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	nameConstraint.MinTextSize = 10
 	nameConstraint.Parent = nameLabel
 
+	local nameStroke = Instance.new("UIStroke")
+	nameStroke.Color = Color3.fromRGB(0, 0, 0)
+	nameStroke.Thickness = 2
+	nameStroke.Parent = nameLabel
+
 	-- Descripción
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Name = "DescLabel"
@@ -469,6 +455,12 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	descLabel.TextYAlignment = Enum.TextYAlignment.Top
 	descLabel.Parent = card
 
+	local descStroke = Instance.new("UIStroke")
+	descStroke.Color = Color3.fromRGB(0, 0, 0)
+	descStroke.Thickness = 1
+	descStroke.Transparency = 0.3
+	descStroke.Parent = descLabel
+
 	-- Botón de acción (comprar/equipar)
 	local actionButton = Instance.new("TextButton")
 	actionButton.Name = "ActionButton"
@@ -480,6 +472,44 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 	actionButton.Parent = card
 	createCorner(actionButton, UDim.new(0, 8))
 
+	local actionStroke = Instance.new("UIStroke")
+	actionStroke.Color = Color3.fromRGB(0, 0, 0)
+	actionStroke.Thickness = 2
+	actionStroke.Parent = actionButton
+
+	-- Frame para contenido de Robux (icono + precio)
+	local robuxContent = Instance.new("Frame")
+	robuxContent.Name = "RobuxContent"
+	robuxContent.Size = UDim2.new(1, 0, 1, 0)
+	robuxContent.BackgroundTransparency = 1
+	robuxContent.Visible = false
+	robuxContent.Parent = actionButton
+
+	local robuxLayout = Instance.new("UIListLayout")
+	robuxLayout.FillDirection = Enum.FillDirection.Horizontal
+	robuxLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	robuxLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	robuxLayout.Padding = UDim.new(0, 4)
+	robuxLayout.Parent = robuxContent
+
+	local robuxIcon = Instance.new("ImageLabel")
+	robuxIcon.Name = "RobuxIcon"
+	robuxIcon.Size = UDim2.new(0, sizes.ButtonTextSize, 0, sizes.ButtonTextSize)
+	robuxIcon.BackgroundTransparency = 1
+	robuxIcon.Image = TextureManager.Icons.Robux
+	robuxIcon.ScaleType = Enum.ScaleType.Fit
+	robuxIcon.Parent = robuxContent
+
+	local robuxPriceLabel = Instance.new("TextLabel")
+	robuxPriceLabel.Name = "PriceLabel"
+	robuxPriceLabel.Size = UDim2.new(0, 60, 1, 0)
+	robuxPriceLabel.BackgroundTransparency = 1
+	robuxPriceLabel.Text = tostring(cosmeticData.CostRobux)
+	robuxPriceLabel.TextColor3 = Styles.Colors.Text
+	robuxPriceLabel.TextSize = sizes.ButtonTextSize
+	robuxPriceLabel.Font = Styles.Fonts.Body
+	robuxPriceLabel.Parent = robuxContent
+
 	-- Estado del botón
 	local function updateButtonState()
 		isOwned = playerData and playerData.OwnedCosmetics and playerData.OwnedCosmetics[cosmeticId]
@@ -490,21 +520,24 @@ createCosmeticCard = function(parent, cosmeticId, cosmeticData, layoutOrder)
 			actionButton.BackgroundColor3 = Styles.Colors.Equipped
 			actionButton.TextColor3 = Styles.Colors.TextDark
 			cardStroke.Color = Styles.Colors.Equipped
+			robuxContent.Visible = false
 		elseif isOwned then
 			actionButton.Text = "EQUIP"
 			actionButton.BackgroundColor3 = Styles.Colors.Success
 			actionButton.TextColor3 = Styles.Colors.Text
 			cardStroke.Color = tierData.Color
+			robuxContent.Visible = false
 		elseif isFree then
 			actionButton.Text = "FREE"
 			actionButton.BackgroundColor3 = Styles.Colors.Success
 			actionButton.TextColor3 = Styles.Colors.Text
 			cardStroke.Color = tierData.Color
+			robuxContent.Visible = false
 		else
-			actionButton.Text = "R$ " .. cosmeticData.CostRobux
+			actionButton.Text = ""
 			actionButton.BackgroundColor3 = Styles.Colors.RobuxGreen
-			actionButton.TextColor3 = Styles.Colors.Text
 			cardStroke.Color = tierData.Color
+			robuxContent.Visible = true
 		end
 	end
 
@@ -634,12 +667,7 @@ toggleShop = function(open)
 
 		-- Animar entrada
 		mainContainer.Size = UDim2.new(0, 0, 0, 0)
-		local targetSize
-		if sizes.UseScale then
-			targetSize = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
-		else
-			targetSize = UDim2.new(0, 1000, 0, 700)
-		end
+		local targetSize = UDim2.new(sizes.ContainerWidth, 0, sizes.ContainerHeight, 0)
 
 		TweenService:Create(mainContainer, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
 			Size = targetSize
@@ -656,15 +684,6 @@ end
 -- ============================================
 -- CONEXIONES
 -- ============================================
-
--- Tecla C para abrir tienda de cosméticos
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-
-	if input.KeyCode == Enum.KeyCode.C then
-		toggleShop()
-	end
-end)
 
 -- Datos del jugador
 if Remotes then
@@ -702,4 +721,37 @@ ResponsiveUI.onViewportChanged(function(info)
 	end
 end)
 
-print("[CosmeticsShop] Presiona 'C' para abrir la tienda de cosméticos")
+-- Escuchar BindableEvent del menú lateral (VIP Fart)
+local function setupUIEvents(events)
+	local toggleEvent = events:FindFirstChild("ToggleVIPFart")
+	if toggleEvent then
+		toggleEvent.Event:Connect(function()
+			toggleShop()
+		end)
+	end
+
+	-- Escuchar evento de cierre (para exclusividad de menús)
+	local closeEvent = events:FindFirstChild("CloseVIPFart")
+	if closeEvent then
+		closeEvent.Event:Connect(function()
+			if shopOpen then
+				toggleShop(false)
+			end
+		end)
+	end
+end
+
+local UIEvents = playerGui:FindFirstChild("UIEvents")
+if UIEvents then
+	setupUIEvents(UIEvents)
+else
+	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
+	task.spawn(function()
+		local events = playerGui:WaitForChild("UIEvents", 5)
+		if events then
+			setupUIEvents(events)
+		end
+	end)
+end
+
+print("[CosmeticsShop] Tienda de cosméticos inicializada")

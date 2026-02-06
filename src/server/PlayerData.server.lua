@@ -143,6 +143,8 @@ local function createRemotes()
 		"LockPet",           -- Cliente → Servidor: bloquear/desbloquear
 		"GetPets",           -- Cliente → Servidor: obtener inventario
 		"GetPetStats",       -- Cliente → Servidor: estadísticas
+		"BuyInventorySlots", -- Cliente → Servidor: comprar slots de inventario
+		"BuyEquipSlots",     -- Cliente → Servidor: comprar slots de equipo
 	}
 
 	for _, name in ipairs(events) do
@@ -299,16 +301,51 @@ local function getUpgradeValue(upgradeName, level)
 	return upgradeConfig.BaseValue + ((upgradeConfig.IncrementPerLevel or 0) * level)
 end
 
--- Obtener todos los valores calculados de upgrades del jugador
+-- Calcula todos los boosts de mascotas equipadas (definida aquí para uso en getPlayerUpgradeValues)
+local function calculatePetBoosts(player)
+	local data = getPlayerData(player)
+	if not data or not data.PetSystem then return {} end
+
+	local boosts = {}
+	for _, pet in ipairs(data.PetSystem.Pets) do
+		if pet.Equiped then
+			local petConfig = Config.Pets[pet.PetName]
+			if petConfig then
+				-- Nueva estructura con Boosts
+				if petConfig.Boosts then
+					for boostType, value in pairs(petConfig.Boosts) do
+						boosts[boostType] = (boosts[boostType] or 0) + value
+					end
+				-- Compatibilidad con estructura antigua (Boost simple)
+				elseif petConfig.Boost then
+					boosts.CoinBoost = (boosts.CoinBoost or 0) + petConfig.Boost
+				end
+			end
+		end
+	end
+	return boosts
+end
+
+-- Obtener todos los valores calculados de upgrades del jugador (con boosts de mascotas)
 local function getPlayerUpgradeValues(player)
 	local data = getPlayerData(player)
 	if not data then return nil end
 
+	-- Valores base de upgrades
+	local baseMaxFatness = getUpgradeValue("MaxFatness", data.Upgrades.MaxFatness)
+	local baseEatSpeed = getUpgradeValue("EatSpeed", data.Upgrades.EatSpeed)
+	local basePropulsion = getUpgradeValue("PropulsionForce", data.Upgrades.PropulsionForce)
+	local baseFuelEff = getUpgradeValue("FuelEfficiency", data.Upgrades.FuelEfficiency)
+
+	-- Aplicar boosts de mascotas
+	local petBoosts = calculatePetBoosts(player)
+
 	return {
-		MaxFatness = getUpgradeValue("MaxFatness", data.Upgrades.MaxFatness),
-		EatSpeed = getUpgradeValue("EatSpeed", data.Upgrades.EatSpeed),
-		PropulsionForce = getUpgradeValue("PropulsionForce", data.Upgrades.PropulsionForce),
-		FuelEfficiency = getUpgradeValue("FuelEfficiency", data.Upgrades.FuelEfficiency),
+		MaxFatness = baseMaxFatness * (1 + (petBoosts.FatnessBoost or 0)),
+		EatSpeed = baseEatSpeed * (1 + (petBoosts.EatBoost or 0)),
+		PropulsionForce = basePropulsion * (1 + (petBoosts.PropulsionBoost or 0)),
+		-- EfficiencyBoost reduce la perdida de grasa (menor es mejor)
+		FuelEfficiency = baseFuelEff * (1 - (petBoosts.EfficiencyBoost or 0)),
 	}
 end
 
@@ -497,20 +534,10 @@ local function generateUUID()
 	return HttpService:GenerateGUID(false)
 end
 
+-- Mantener compatibilidad: retorna solo CoinBoost para sistemas antiguos
 local function calculatePetBoost(player)
-	local data = getPlayerData(player)
-	if not data or not data.PetSystem then return 0 end
-
-	local totalBoost = 0
-	for _, pet in ipairs(data.PetSystem.Pets) do
-		if pet.Equiped then
-			local petConfig = Config.Pets[pet.PetName]
-			if petConfig then
-				totalBoost = totalBoost + petConfig.Boost
-			end
-		end
-	end
-	return totalBoost
+	local boosts = calculatePetBoosts(player)
+	return boosts.CoinBoost or 0
 end
 
 local function openEgg(player, eggName)
@@ -551,11 +578,12 @@ local function openEgg(player, eggName)
 			MarketplaceService:PromptProductPurchase(player, productId)
 			return false, "ROBUX_PROMPT", productId
 		end
-	elseif data.Coins < eggConfig.Cost then
-		return false, "Monedas insuficientes"
-	else
-		-- Restar monedas (solo para huevos de monedas)
-		data.Coins = data.Coins - eggConfig.Cost
+	elseif eggConfig.TrophyCost then
+		-- Huevo de trofeos
+		if data.Trophies < eggConfig.TrophyCost then
+			return false, "Trofeos insuficientes"
+		end
+		data.Trophies = data.Trophies - eggConfig.TrophyCost
 	end
 
 	-- Selección aleatoria ponderada
@@ -626,8 +654,8 @@ local function equipPet(player, uuid)
 			-- Spawn en mundo
 			print("[EquipPet] PetManager disponible?", PetManager ~= nil)
 			if PetManager then
-				print("[EquipPet] Llamando a PetManager:EquipPet para", pet.PetName)
-				PetManager:EquipPet(player, pet.PetName)
+				print("[EquipPet] Llamando a PetManager:EquipPet para", pet.PetName, "UUID:", pet.UUID)
+				PetManager:EquipPet(player, pet.PetName, pet.UUID)
 			else
 				warn("[EquipPet] PetManager no está disponible aún")
 			end
@@ -652,7 +680,7 @@ local function unequipPet(player, uuid)
 
 			-- Despawn del mundo
 			if PetManager then
-				PetManager:UnequipPet(player, pet.PetName)
+				PetManager:UnequipPet(player, pet.PetName, pet.UUID)
 			end
 
 			updatePlayerData(player, {
@@ -938,19 +966,24 @@ local function collectCoin(player, coinValue)
 end
 
 -- Recoger un trofeo
+-- Recoger un trofeo (con boost de pets)
 local function collectTrophy(player, trophyValue)
 	local data = getPlayerData(player)
 	if not data then return false end
 
 	trophyValue = trophyValue or 1
 
-	data.Trophies = (data.Trophies or 0) + trophyValue
+	-- Aplicar boost de pets para trofeos
+	local petBoosts = calculatePetBoosts(player)
+	local boostedValue = math.floor(trophyValue * (1 + (petBoosts.TrophyBoost or 0)))
+
+	data.Trophies = (data.Trophies or 0) + boostedValue
 
 	updatePlayerData(player, {
 		Trophies = data.Trophies
 	})
 
-	Remotes.OnTrophyCollected:FireClient(player, trophyValue, data.Trophies)
+	Remotes.OnTrophyCollected:FireClient(player, boostedValue, data.Trophies)
 	return true
 end
 
@@ -1078,7 +1111,7 @@ end
 Remotes.GetPetStats.OnServerInvoke = function(player)
 	local data = getPlayerData(player)
 	if not data or not data.PetSystem then
-		return {TotalPets = 0, EquippedPets = 0, TotalBoost = 0}
+		return {TotalPets = 0, EquippedPets = 0, TotalBoost = 0, Boosts = {}}
 	end
 
 	local equippedCount = 0
@@ -1086,13 +1119,88 @@ Remotes.GetPetStats.OnServerInvoke = function(player)
 		if pet.Equiped then equippedCount = equippedCount + 1 end
 	end
 
+	local allBoosts = calculatePetBoosts(player)
+
 	return {
 		TotalPets = #data.PetSystem.Pets,
 		EquippedPets = equippedCount,
 		InventorySlots = data.PetSystem.InventorySlots,
 		EquipSlots = data.PetSystem.EquipSlots,
-		TotalBoost = calculatePetBoost(player),
+		TotalBoost = allBoosts.CoinBoost or 0, -- Compatibilidad
+		Boosts = allBoosts, -- Todos los boosts
 	}
+end
+
+-- Comprar slots de inventario con Robux
+Remotes.BuyInventorySlots.OnServerInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data or not data.PetSystem then
+		return false, "Datos no disponibles"
+	end
+
+	local purchaseConfig = Config.PetSystem.SlotPurchases.InventorySlots
+	local maxSlots = Config.PetSystem.MaxInventorySlots
+
+	-- Verificar límite máximo
+	if data.PetSystem.InventorySlots >= maxSlots then
+		return false, "Ya tienes el máximo de slots de inventario"
+	end
+
+	-- TODO: Integrar con MarketplaceService para procesar compra real de Robux
+	-- Por ahora, simulamos la compra exitosa para testing
+	-- En producción, esto debería usar:
+	-- local MarketplaceService = game:GetService("MarketplaceService")
+	-- MarketplaceService:PromptProductPurchase(player, purchaseConfig.DevProductId)
+
+	-- Añadir slots
+	local newSlots = math.min(
+		data.PetSystem.InventorySlots + purchaseConfig.SlotsPerPurchase,
+		maxSlots
+	)
+	data.PetSystem.InventorySlots = newSlots
+
+	updatePlayerData(player, {
+		PetSystem = data.PetSystem
+	})
+
+	print("[PlayerData] Slots de inventario comprados:", player.Name, "->", newSlots)
+	return true, "Slots de inventario añadidos"
+end
+
+-- Comprar slots de equipo con Robux
+Remotes.BuyEquipSlots.OnServerInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data or not data.PetSystem then
+		return false, "Datos no disponibles"
+	end
+
+	local purchaseConfig = Config.PetSystem.SlotPurchases.EquipSlots
+	local maxSlots = Config.PetSystem.MaxEquipSlots
+
+	-- Verificar límite máximo
+	if data.PetSystem.EquipSlots >= maxSlots then
+		return false, "Ya tienes el máximo de slots de equipo"
+	end
+
+	-- TODO: Integrar con MarketplaceService para procesar compra real de Robux
+	-- Por ahora, simulamos la compra exitosa para testing
+	-- En producción, esto debería usar:
+	-- local MarketplaceService = game:GetService("MarketplaceService")
+	-- MarketplaceService:PromptProductPurchase(player, purchaseConfig.DevProductId)
+
+	-- Añadir slots
+	local newSlots = math.min(
+		data.PetSystem.EquipSlots + purchaseConfig.SlotsPerPurchase,
+		maxSlots
+	)
+	data.PetSystem.EquipSlots = newSlots
+
+	updatePlayerData(player, {
+		PetSystem = data.PetSystem
+	})
+
+	print("[PlayerData] Slots de equipo comprados:", player.Name, "->", newSlots)
+	return true, "Slot de equipo añadido"
 end
 
 -- Sistema anti-exploit para height bonus (tracking por vuelo)
@@ -1194,7 +1302,7 @@ Players.PlayerAdded:Connect(function(player)
 		if data.PetSystem and PetManager then
 			for _, pet in ipairs(data.PetSystem.Pets) do
 				if pet.Equiped then
-					PetManager:EquipPet(player, pet.PetName)
+					PetManager:EquipPet(player, pet.PetName, pet.UUID)
 				end
 			end
 		end

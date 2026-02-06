@@ -18,6 +18,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local UIComponentsManager = require(Shared:WaitForChild("UIComponentsManager"))
 
 -- Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -96,11 +97,6 @@ local wheelFrame = nil
 local spinButton = nil
 local spinsCountLabel = nil
 local timerLabel = nil
-
--- Botón persistente
-local persistentButton = nil
-local persistentBadge = nil
-local persistentTimer = nil
 
 -- Forward declarations
 local spinWheel
@@ -187,164 +183,6 @@ local function formatGold(amount)
 		return string.format("%.1fK", amount / 1000)
 	end
 	return tostring(amount)
-end
-
--- ============================================
--- CREAR BOTÓN PERSISTENTE (SIEMPRE VISIBLE)
--- ============================================
-
-local function createPersistentButton()
-	-- ScreenGui separado para el botón persistente
-	local buttonGui = Instance.new("ScreenGui")
-	buttonGui.Name = "SpinWheelButton"
-	buttonGui.ResetOnSpawn = false
-	buttonGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	buttonGui.Parent = playerGui
-
-	-- Contenedor principal del botón
-	persistentButton = Instance.new("TextButton")
-	persistentButton.Name = "WheelButton"
-	persistentButton.Size = UDim2.new(0, sizes.IsMobile and 55 or 70, 0, sizes.IsMobile and 55 or 70)
-	persistentButton.Position = UDim2.new(0, sizes.IsMobile and 15 or 20, 0, sizes.IsMobile and 150 or 180)
-	persistentButton.AnchorPoint = Vector2.new(0, 0)
-	persistentButton.BackgroundColor3 = Color3.fromRGB(70, 130, 200)
-	persistentButton.Text = ""
-	persistentButton.AutoButtonColor = true
-	persistentButton.Parent = buttonGui
-
-	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(0, 15)
-	buttonCorner.Parent = persistentButton
-
-	local buttonStroke = Instance.new("UIStroke")
-	buttonStroke.Color = Color3.fromRGB(40, 80, 140)
-	buttonStroke.Thickness = 3
-	buttonStroke.Parent = persistentButton
-
-	local buttonGradient = Instance.new("UIGradient")
-	buttonGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 160, 230)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 100, 180)),
-	})
-	buttonGradient.Rotation = 90
-	buttonGradient.Parent = persistentButton
-
-	-- Icono de ruleta arcoíris
-	local iconContainer = Instance.new("Frame")
-	iconContainer.Name = "IconContainer"
-	iconContainer.Size = UDim2.new(0, sizes.IsMobile and 38 or 48, 0, sizes.IsMobile and 38 or 48)
-	iconContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
-	iconContainer.AnchorPoint = Vector2.new(0.5, 0.5)
-	iconContainer.BackgroundColor3 = Color3.new(1, 1, 1)
-	iconContainer.Parent = persistentButton
-
-	local iconCorner = Instance.new("UICorner")
-	iconCorner.CornerRadius = UDim.new(0.5, 0)
-	iconCorner.Parent = iconContainer
-
-	local iconGradient = Instance.new("UIGradient")
-	iconGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
-		ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 180, 100)),
-		ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 100)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 255, 100)),
-		ColorSequenceKeypoint.new(0.67, Color3.fromRGB(100, 200, 255)),
-		ColorSequenceKeypoint.new(0.83, Color3.fromRGB(150, 100, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 200)),
-	})
-	iconGradient.Rotation = 45
-	iconGradient.Parent = iconContainer
-
-	local iconStroke = Instance.new("UIStroke")
-	iconStroke.Color = Color3.fromRGB(80, 80, 80)
-	iconStroke.Thickness = 2
-	iconStroke.Parent = iconContainer
-
-	local iconCenter = Instance.new("Frame")
-	iconCenter.Name = "Center"
-	iconCenter.Size = UDim2.new(0, sizes.IsMobile and 14 or 18, 0, sizes.IsMobile and 14 or 18)
-	iconCenter.Position = UDim2.new(0.5, 0, 0.5, 0)
-	iconCenter.AnchorPoint = Vector2.new(0.5, 0.5)
-	iconCenter.BackgroundColor3 = Color3.new(1, 1, 1)
-	iconCenter.ZIndex = 2
-	iconCenter.Parent = iconContainer
-
-	local centerCorner = Instance.new("UICorner")
-	centerCorner.CornerRadius = UDim.new(0.5, 0)
-	centerCorner.Parent = iconCenter
-
-	-- Badge verde con contador de giros
-	persistentBadge = Instance.new("TextLabel")
-	persistentBadge.Name = "SpinsBadge"
-	persistentBadge.Size = UDim2.new(0, sizes.IsMobile and 22 or 28, 0, sizes.IsMobile and 22 or 28)
-	persistentBadge.Position = UDim2.new(1, sizes.IsMobile and -2 or -4, 0, sizes.IsMobile and -2 or -4)
-	persistentBadge.AnchorPoint = Vector2.new(1, 0)
-	persistentBadge.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
-	persistentBadge.Text = "0"
-	persistentBadge.TextColor3 = Color3.new(1, 1, 1)
-	persistentBadge.TextSize = sizes.IsMobile and 14 or 18
-	persistentBadge.Font = Enum.Font.GothamBlack
-	persistentBadge.ZIndex = 5
-	persistentBadge.Parent = persistentButton
-
-	local badgeCorner = Instance.new("UICorner")
-	badgeCorner.CornerRadius = UDim.new(0.5, 0)
-	badgeCorner.Parent = persistentBadge
-
-	local badgeStroke = Instance.new("UIStroke")
-	badgeStroke.Color = Color3.fromRGB(40, 120, 40)
-	badgeStroke.Thickness = 2
-	badgeStroke.Parent = persistentBadge
-
-	-- Timer debajo del botón
-	local timerContainer = Instance.new("Frame")
-	timerContainer.Name = "TimerContainer"
-	timerContainer.Size = UDim2.new(0, sizes.IsMobile and 55 or 70, 0, sizes.IsMobile and 22 or 26)
-	timerContainer.Position = UDim2.new(0.5, 0, 1, 5)
-	timerContainer.AnchorPoint = Vector2.new(0.5, 0)
-	timerContainer.BackgroundColor3 = Color3.fromRGB(255, 180, 50)
-	timerContainer.Parent = persistentButton
-
-	local timerCorner = Instance.new("UICorner")
-	timerCorner.CornerRadius = UDim.new(0, 8)
-	timerCorner.Parent = timerContainer
-
-	local timerStroke = Instance.new("UIStroke")
-	timerStroke.Color = Color3.fromRGB(200, 130, 30)
-	timerStroke.Thickness = 2
-	timerStroke.Parent = timerContainer
-
-	local timerGradient = Instance.new("UIGradient")
-	timerGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 80)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 150, 30)),
-	})
-	timerGradient.Rotation = 90
-	timerGradient.Parent = timerContainer
-
-	persistentTimer = Instance.new("TextLabel")
-	persistentTimer.Name = "TimerText"
-	persistentTimer.Size = UDim2.new(1, 0, 1, 0)
-	persistentTimer.BackgroundTransparency = 1
-	persistentTimer.Text = "00:00"
-	persistentTimer.TextColor3 = Color3.new(1, 1, 1)
-	persistentTimer.TextSize = sizes.IsMobile and 12 or 14
-	persistentTimer.Font = Enum.Font.GothamBold
-	persistentTimer.TextStrokeTransparency = 0.5
-	persistentTimer.TextStrokeColor3 = Color3.new(0, 0, 0)
-	persistentTimer.Parent = timerContainer
-
-	-- Conectar click para abrir la ruleta
-	persistentButton.MouseButton1Click:Connect(function()
-		SoundManager.play("ButtonClick", 0.4, 1.0)
-		toggleWheel(true)
-	end)
-
-	persistentButton.MouseEnter:Connect(function()
-		SoundManager.play("ButtonHover", 0.2, 1.1)
-	end)
-
-	return buttonGui
 end
 
 -- ============================================
@@ -751,10 +589,6 @@ local function createSidePanel(parent)
 				if spinsCountLabel then
 					spinsCountLabel.Text = tostring(availableSpins)
 				end
-				if persistentBadge then
-					persistentBadge.Text = tostring(availableSpins)
-					persistentBadge.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
-				end
 			end
 		end)
 	end
@@ -812,6 +646,11 @@ local function createBottomPanel(parent)
 	spinsCountLabel.TextSize = sizes.FontSizeLarge
 	spinsCountLabel.Font = Enum.Font.GothamBlack
 	spinsCountLabel.Parent = panel
+
+	local spinsStroke = Instance.new("UIStroke")
+	spinsStroke.Color = Color3.fromRGB(0, 0, 0)
+	spinsStroke.Thickness = 3
+	spinsStroke.Parent = spinsCountLabel
 
 	-- Timer de giro gratis
 	timerLabel = Instance.new("TextLabel")
@@ -879,30 +718,14 @@ local function createWheelUI()
 	createSidePanel(wheelArea)
 	createBottomPanel(wheelArea)
 
-	-- Botón de cerrar
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, sizes.CloseButtonSize, 0, sizes.CloseButtonSize)
-	closeButton.Position = UDim2.new(1, 20, 0, -20)
-	closeButton.AnchorPoint = Vector2.new(0, 0)
-	closeButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-	closeButton.Text = "X"
-	closeButton.TextColor3 = Color3.new(1, 1, 1)
-	closeButton.TextSize = sizes.FontSizeLarge
-	closeButton.Font = Enum.Font.GothamBlack
+	-- Botón de cerrar (usando UIComponentsManager)
+	local closeButton = UIComponentsManager.createCloseButton(wheelContainer, {
+		size = sizes.CloseButtonSize,
+		onClose = function()
+			toggleWheel(false)
+		end
+	})
 	closeButton.ZIndex = 10
-	closeButton.Parent = wheelArea
-
-	createCorner(closeButton, UDim.new(0, 10))
-
-	closeButton.MouseButton1Click:Connect(function()
-		SoundManager.play("ButtonClick", 0.4, 1.1)
-		toggleWheel(false)
-	end)
-
-	closeButton.MouseEnter:Connect(function()
-		SoundManager.play("ButtonHover", 0.2, 1.2)
-	end)
 
 	-- Conectar botón de spin
 	spinButton.MouseButton1Click:Connect(function()
@@ -977,6 +800,11 @@ showPrizeNotification = function(prize)
 	prizeText.ZIndex = 101
 	prizeText.Parent = notification
 
+	local prizeStroke = Instance.new("UIStroke")
+	prizeStroke.Color = Color3.fromRGB(0, 0, 0)
+	prizeStroke.Thickness = 2
+	prizeStroke.Parent = prizeText
+
 	local goldText = Instance.new("TextLabel")
 	goldText.Size = UDim2.new(1, -20, 0, 35)
 	goldText.Position = UDim2.new(0.5, 0, 0.75, 0)
@@ -988,6 +816,11 @@ showPrizeNotification = function(prize)
 	goldText.Font = Enum.Font.GothamBlack
 	goldText.ZIndex = 101
 	goldText.Parent = notification
+
+	local goldStroke = Instance.new("UIStroke")
+	goldStroke.Color = Color3.fromRGB(0, 0, 0)
+	goldStroke.Thickness = 3
+	goldStroke.Parent = goldText
 
 	notification.Size = UDim2.new(0, 0, 0, 0)
 	local showTween = TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -1022,15 +855,6 @@ spinWheel = function()
 
 	if spinsCountLabel then
 		spinsCountLabel.Text = tostring(availableSpins)
-	end
-
-	if persistentBadge then
-		persistentBadge.Text = tostring(availableSpins)
-		if availableSpins > 0 then
-			persistentBadge.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
-		else
-			persistentBadge.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
-		end
 	end
 
 	local prizeIndex, prize = selectPrize()
@@ -1156,23 +980,6 @@ updateFreeSpins = function()
 			timerLabel.Text = "Free Spin In " .. formatTime(timeUntilNext)
 		end
 	end
-
-	if persistentBadge then
-		persistentBadge.Text = tostring(availableSpins)
-		if availableSpins > 0 then
-			persistentBadge.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
-		else
-			persistentBadge.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
-		end
-	end
-
-	if persistentTimer then
-		if spinsAreFull then
-			persistentTimer.Text = "FULL!"
-		else
-			persistentTimer.Text = formatTime(timeUntilNext)
-		end
-	end
 end
 
 -- ============================================
@@ -1182,27 +989,9 @@ end
 -- Crear UI de la ruleta
 createWheelUI()
 
--- Crear botón persistente
-createPersistentButton()
-
 -- Dar giros iniciales para pruebas
 availableSpins = 3
 lastFreeSpinTime = os.time()
-
--- Actualizar badge inicial
-if persistentBadge then
-	persistentBadge.Text = tostring(availableSpins)
-end
-
--- Input para abrir la rueda (tecla R)
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-
-	if input.KeyCode == Enum.KeyCode.R then
-		toggleWheel()
-	end
-end)
 
 -- Loop de actualización del timer
 local lastUpdateTime = 0
@@ -1223,16 +1012,39 @@ ResponsiveUI.onViewportChanged(function()
 	isWheelOpen = false
 	sizes = getResponsiveSizes()
 	createWheelUI()
-
-	local buttonGui = playerGui:FindFirstChild("SpinWheelButton")
-	if buttonGui then
-		buttonGui:Destroy()
-	end
-	createPersistentButton()
-
-	if persistentBadge then
-		persistentBadge.Text = tostring(availableSpins)
-	end
 end)
+
+-- Escuchar BindableEvent del menú lateral
+local function setupUIEvents(events)
+	local toggleEvent = events:FindFirstChild("ToggleSpinWheel")
+	if toggleEvent then
+		toggleEvent.Event:Connect(function()
+			toggleWheel()
+		end)
+	end
+
+	-- Escuchar evento de cierre (para exclusividad de menús)
+	local closeEvent = events:FindFirstChild("CloseSpinWheel")
+	if closeEvent then
+		closeEvent.Event:Connect(function()
+			if isWheelOpen then
+				toggleWheel(false)
+			end
+		end)
+	end
+end
+
+local UIEvents = playerGui:FindFirstChild("UIEvents")
+if UIEvents then
+	setupUIEvents(UIEvents)
+else
+	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
+	task.spawn(function()
+		local events = playerGui:WaitForChild("UIEvents", 5)
+		if events then
+			setupUIEvents(events)
+		end
+	end)
+end
 
 print("[SpinWheel] Ruleta de la suerte inicializada")

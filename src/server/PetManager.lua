@@ -28,12 +28,14 @@ local function ensurePlayerFolder(player)
 	return playerFolder
 end
 
-function PetManager:EquipPet(player, petName)
-	print("[PetManager] Intentando equipar:", petName, "para", player.Name)
+function PetManager:EquipPet(player, petName, uuid)
+	print("[PetManager] Intentando equipar:", petName, "(UUID:", uuid, ") para", player.Name)
 	local playerFolder = ensurePlayerFolder(player)
 
-	if playerFolder:FindFirstChild(petName) then
-		print("[PetManager] Ya existe:", petName)
+	-- Usar UUID como identificador único para permitir múltiples mascotas del mismo tipo
+	local modelName = uuid or petName
+	if playerFolder:FindFirstChild(modelName) then
+		print("[PetManager] Ya existe modelo con ID:", modelName)
 		return
 	end
 
@@ -53,6 +55,13 @@ function PetManager:EquipPet(player, petName)
 
 	print("[PetManager] Modelo encontrado, clonando...")
 	local clonedPet = petModel:Clone()
+	clonedPet.Name = modelName -- Usar UUID como nombre para identificación única
+
+	-- Guardar el nombre original del pet para referencia
+	local petNameValue = Instance.new("StringValue")
+	petNameValue.Name = "PetName"
+	petNameValue.Value = petName
+	petNameValue.Parent = clonedPet
 
 	-- Configurar valores
 	if not clonedPet:FindFirstChild("Flying") then
@@ -69,26 +78,50 @@ function PetManager:EquipPet(player, petName)
 		timeDelayValue.Parent = clonedPet
 	end
 
-	-- Posicionar cerca del jugador
+	-- Calcular posición offset basada en cuántas mascotas ya hay
+	local existingPets = playerFolder:GetChildren()
+	local petIndex = #existingPets -- 0, 1, 2...
+	local spacing = 3 -- Espaciado entre mascotas
+
+	-- Posicionar cerca del jugador con offset para evitar superposición
 	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-		print("[PetManager] Posicionando cerca del jugador...")
-		clonedPet:PivotTo(player.Character.HumanoidRootPart.CFrame)
+		print("[PetManager] Posicionando cerca del jugador (slot", petIndex, ")...")
+		local hrp = player.Character.HumanoidRootPart
+		-- Offset hacia atrás y a los lados basado en el índice
+		local angle = (petIndex * 0.8) -- Distribución angular
+		local offsetX = math.sin(angle) * spacing
+		local offsetZ = spacing + math.cos(angle) * spacing
+		clonedPet:PivotTo(hrp.CFrame * CFrame.new(offsetX, 0, offsetZ))
 	else
 		warn("[PetManager] No se encontró HumanoidRootPart del jugador")
 	end
 
 	clonedPet.Parent = playerFolder
-	print("[PetManager] ✓ Equipada exitosamente:", player.Name, "→", petName, "en", playerFolder:GetFullName())
+	print("[PetManager] ✓ Equipada exitosamente:", player.Name, "→", petName, "(UUID:", modelName, ") en slot", petIndex)
 end
 
-function PetManager:UnequipPet(player, petName)
+function PetManager:UnequipPet(player, petName, uuid)
 	local playerFolder = ServerPets:FindFirstChild(player.Name)
 	if not playerFolder then return end
 
-	local petModel = playerFolder:FindFirstChild(petName)
+	-- Buscar por UUID primero (preferido), luego por petName (compatibilidad)
+	local modelName = uuid or petName
+	local petModel = playerFolder:FindFirstChild(modelName)
+
+	-- Si no se encuentra por UUID, buscar por nombre de pet (para compatibilidad)
+	if not petModel and uuid then
+		for _, child in ipairs(playerFolder:GetChildren()) do
+			local nameValue = child:FindFirstChild("PetName")
+			if nameValue and nameValue.Value == petName then
+				petModel = child
+				break
+			end
+		end
+	end
+
 	if petModel then
 		petModel:Destroy()
-		print("[PetManager] Desequipada:", player.Name, "→", petName)
+		print("[PetManager] Desequipada:", player.Name, "→", petName, "(UUID:", modelName, ")")
 	end
 end
 

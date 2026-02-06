@@ -20,7 +20,7 @@ local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
 -- CONFIGURACIÓN
 -- ============================================
 
-local MAX_HEIGHT = 5000 -- 5km = SPACE
+local MAX_HEIGHT = 30000 -- 30km = SPACE
 local UPDATE_INTERVAL = 0.1 -- Actualizar cada 100ms
 local AVATAR_SIZE = 50 -- Tamaño del avatar circular (más grande que la barra)
 local BAR_WIDTH = 32 -- Ancho de la barra arcoíris (estrecha para que avatar sobresalga)

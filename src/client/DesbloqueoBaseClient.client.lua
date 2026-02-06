@@ -5,9 +5,10 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Cargar módulo de sonidos
+-- Cargar módulos
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local SoundManager = require(Shared:WaitForChild("SoundManager"))
+local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 -- Esperar a la carpeta Remotes que ya existe
 local remotesFolder = ReplicatedStorage:WaitForChild("Remotes", 30)
@@ -253,14 +254,15 @@ local function createBaseUI(baseName, coinsCost, robuxCost, displayName, blockNa
 	robuxCorner.CornerRadius = UDim.new(0, 12)
 	robuxCorner.Parent = robuxButton
 
-	-- Contenido del botón de Robux
-	local robuxIcon = Instance.new("TextLabel")
-	robuxIcon.Size = UDim2.new(0, 40, 1, 0)
-	robuxIcon.Position = UDim2.new(0, 15, 0, 0)
+	-- Contenido del botón de Robux (icono de Robux)
+	local robuxIcon = Instance.new("ImageLabel")
+	robuxIcon.Name = "RobuxIcon"
+	robuxIcon.Size = UDim2.new(0, 32, 0, 32)
+	robuxIcon.Position = UDim2.new(0, 15, 0.5, 0)
+	robuxIcon.AnchorPoint = Vector2.new(0, 0.5)
 	robuxIcon.BackgroundTransparency = 1
-	robuxIcon.Text = "💎"
-	robuxIcon.TextSize = 32
-	robuxIcon.Font = Enum.Font.GothamBold
+	robuxIcon.Image = TextureManager.Icons.Robux
+	robuxIcon.ScaleType = Enum.ScaleType.Fit
 	robuxIcon.Parent = robuxButton
 
 	local robuxText = Instance.new("TextLabel")
