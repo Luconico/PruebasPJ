@@ -124,31 +124,32 @@ local function createFartParticles(parent)
 
 	particles.Color = ColorSequence.new(colorKeypoints)
 
+	-- COLOR SOLIDO SIN TRANSPARENCIA (exagerado)
 	particles.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0),
-		NumberSequenceKeypoint.new(0.4, 0.1),
-		NumberSequenceKeypoint.new(0.7, 0.3),
-		NumberSequenceKeypoint.new(1, 1),
+		NumberSequenceKeypoint.new(0, 0),      -- Completamente opaco al inicio
+		NumberSequenceKeypoint.new(0.7, 0),    -- Sigue opaco hasta el 70%
+		NumberSequenceKeypoint.new(1, 0.3),    -- Solo un poco transparente al final
 	})
 
-	-- Tamaño basado en cosmético
-	local sizeMin = 1.5
-	local sizeMax = 5
+	-- Tamaño EXAGERADO
+	local sizeMin = 3
+	local sizeMax = 8
 	if equippedCosmeticConfig and equippedCosmeticConfig.ParticleSize then
-		sizeMin = equippedCosmeticConfig.ParticleSize.Min or 0.5
-		sizeMax = (equippedCosmeticConfig.ParticleSize.Max or 2) * 2.5
+		sizeMin = (equippedCosmeticConfig.ParticleSize.Min or 0.5) * 3
+		sizeMax = (equippedCosmeticConfig.ParticleSize.Max or 2) * 4
 	end
 
 	particles.Size = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, sizeMin),
-		NumberSequenceKeypoint.new(0.5, (sizeMin + sizeMax) / 2),
-		NumberSequenceKeypoint.new(1, sizeMax),
+		NumberSequenceKeypoint.new(0.3, sizeMax),       -- Crece rapido
+		NumberSequenceKeypoint.new(1, sizeMax * 1.2),   -- Sigue creciendo
 	})
 
-	particles.Rate = 20
-	particles.Lifetime = NumberRange.new(1.2, 2)
-	particles.Speed = NumberRange.new(4, 8)
-	particles.SpreadAngle = Vector2.new(40, 40)
+	-- MUCHA MAS CADENCIA (exagerado)
+	particles.Rate = 80                           -- Era 20, ahora 80 (4x mas)
+	particles.Lifetime = NumberRange.new(0.6, 1)  -- Mas corto para mas refresh
+	particles.Speed = NumberRange.new(12, 20)     -- Mas rapido (era 4-8)
+	particles.SpreadAngle = Vector2.new(50, 50)   -- Un poco mas spread
 	particles.Rotation = NumberRange.new(0, 360)
 	particles.RotSpeed = NumberRange.new(-10, 10)
 	particles.Acceleration = Vector3.new(0, 2, 0)
@@ -640,9 +641,9 @@ local function updatePropulsion()
 		lastFartTime = currentTime
 	end
 
-	-- Ajustar intensidad de partículas
+	-- Ajustar intensidad de partículas (EXAGERADO)
 	if fartParticles then
-		fartParticles.Rate = 15 + (weightFactor * 35)
+		fartParticles.Rate = 50 + (weightFactor * 100)  -- Mucha mas cadencia
 	end
 
 	-- Perder peso gradualmente (usando eficiencia del servidor)
