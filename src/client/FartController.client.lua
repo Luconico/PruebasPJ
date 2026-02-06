@@ -627,8 +627,11 @@ local function updatePropulsion()
 	end
 
 	-- Calcular fuerza de propulsión
+	-- Fuerza mínima = salto vanilla (50), más bonus por grasa acumulada
 	local weightFactor = (currentFatness - thinMultiplier) / (playerStats.MaxFatness - thinMultiplier)
-	local currentForce = playerStats.PropulsionForce * weightFactor
+	local minimumForce = 50 -- Al menos igual al salto vanilla
+	local bonusForce = playerStats.PropulsionForce * weightFactor
+	local currentForce = minimumForce + bonusForce
 
 	if bodyVelocity then
 		bodyVelocity.Velocity = Vector3.new(0, currentForce, 0)

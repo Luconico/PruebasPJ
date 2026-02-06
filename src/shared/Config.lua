@@ -912,7 +912,7 @@ Config.Pets = {
 		Icon = "✨",
 		Boosts = { EatBoost = 0.45, TrophyBoost = 0.30, CoinBoost = 0.20 },  -- 95%
 	},
-	RainbowAxolotl = {
+	RainbowGoldenAxolotl = {
 		Name = "Rainbow Axolotl",
 		Rarity = "Epic",
 		Icon = "🌈",
@@ -922,7 +922,7 @@ Config.Pets = {
 			CoinBoost = 0.25,
 		},  -- 105%
 	},
-	RainbowDog = {
+	RainbowGoldenDog = {
 		Name = "Rainbow Dog",
 		Rarity = "Epic",
 		Icon = "🌈",
@@ -932,7 +932,7 @@ Config.Pets = {
 			TrophyBoost = 0.25,
 		},  -- 105%
 	},
-	RainbowCat = {
+	RainbowGoldenCat = {
 		Name = "Rainbow Cat",
 		Rarity = "Epic",
 		Icon = "🌈",
@@ -957,7 +957,7 @@ Config.Pets = {
 			FatnessBoost = 0.25,
 		},  -- 160%
 	},
-	RainbowDragon = {
+	RainbowGoldenDragon = {
 		Name = "Rainbow Dragon",
 		Rarity = "Legendary",
 		Icon = "🌈",
@@ -1024,12 +1024,12 @@ Config.Eggs = {
 			GoldenLion = 0.18,
 			-- Epic (30%)
 			GoldenCat = 0.12,
-			RainbowAxolotl = 0.08,
-			RainbowDog = 0.06,
-			RainbowCat = 0.04,
+			RainbowGoldenAxolotl = 0.08,
+			RainbowGoldenDog = 0.06,
+			RainbowGoldenCat = 0.04,
 			-- Legendary (5%)
 			GoldenDragon = 0.03,
-			RainbowDragon = 0.02,
+			RainbowGoldenDragon = 0.02,
 		},
 	},
 }
