@@ -6,6 +6,9 @@
 
 local Config = {}
 
+-- Importar RobuxManager para centralizar precios de Robux
+local RobuxManager = require(script.Parent.RobuxManager)
+
 -- ============================================
 -- FATNESS AND PROPULSION
 -- ============================================
@@ -71,8 +74,7 @@ Config.Upgrades = {
 		IncrementPerLevel = 0.025, -- +0.025 per level (0.25/10) → max 4.0 at level 100
 		-- Coin costs: 100 levels, exponential growth from 10 to 50000
 		CostCoins = generateCoinCosts(10, 50000, 100),
-		-- Robux: fixed 10 R$ per level (independent of coin scaling)
-		CostRobux = 10,
+		-- CostRobux se inyecta desde RobuxManager
 	},
 
 	-- Eating speed (LINEAR - 100 levels)
@@ -83,7 +85,7 @@ Config.Upgrades = {
 		BaseValue = 0.08,
 		IncrementPerLevel = 0.002, -- +0.002 per level (0.02/10)
 		CostCoins = generateCoinCosts(8, 40000, 100),
-		CostRobux = 10,
+		-- CostRobux se inyecta desde RobuxManager
 	},
 
 	-- Propulsion force (EXPONENTIAL - 100 levels)
@@ -95,7 +97,7 @@ Config.Upgrades = {
 		-- Interpolated from original 10 values to 100 values
 		ValuesPerLevel = interpolateValues(50, { 58, 68, 80, 95, 115, 140, 170, 210, 260, 320 }, 100),
 		CostCoins = generateCoinCosts(15, 75000, 100),
-		CostRobux = 10,
+		-- CostRobux se inyecta desde RobuxManager
 	},
 
 	-- Fuel efficiency (EXPONENTIAL - 100 levels)
@@ -107,7 +109,7 @@ Config.Upgrades = {
 		-- Interpolated from original 10 values to 100 values
 		ValuesPerLevel = interpolateValues(0.04, { 0.032, 0.025, 0.019, 0.014, 0.010, 0.0075, 0.0055, 0.0045, 0.0038, 0.0032 }, 100),
 		CostCoins = generateCoinCosts(20, 100000, 100),
-		CostRobux = 10,
+		-- CostRobux se inyecta desde RobuxManager
 	},
 }
 
@@ -121,7 +123,7 @@ Config.Food = {
 		FatnessPerSecond = 0.00125,
 		SpeedMultiplier = 1,
 		RequiresUnlock = false,
-		CostRobux = 0,
+		-- CostRobux se inyecta desde RobuxManager (0 para Salad)
 		Color = Color3.fromRGB(120, 200, 80), -- Verde
 		Icon = "🥗",
 	},
@@ -132,7 +134,7 @@ Config.Food = {
 		FatnessPerSecond = 0.00375,
 		SpeedMultiplier = 3,
 		RequiresUnlock = true,
-		CostRobux = 15,
+		-- CostRobux se inyecta desde RobuxManager
 		Color = Color3.fromRGB(210, 140, 60), -- Naranja/marrón
 		Icon = "🍔",
 	},
@@ -143,7 +145,7 @@ Config.Food = {
 		FatnessPerSecond = 0.0075,
 		SpeedMultiplier = 6,
 		RequiresUnlock = true,
-		CostRobux = 35,
+		-- CostRobux se inyecta desde RobuxManager
 		Color = Color3.fromRGB(230, 180, 80), -- Amarillo/queso
 		Icon = "🍕",
 	},
@@ -154,7 +156,7 @@ Config.Food = {
 		FatnessPerSecond = 0.0125,
 		SpeedMultiplier = 10,
 		RequiresUnlock = true,
-		CostRobux = 65,
+		-- CostRobux se inyecta desde RobuxManager
 		Color = Color3.fromRGB(200, 100, 80), -- Rojo/salchicha
 		Icon = "🌭",
 	},
@@ -165,7 +167,7 @@ Config.Food = {
 		FatnessPerSecond = 0.02,
 		SpeedMultiplier = 16,
 		RequiresUnlock = true,
-		CostRobux = 99,
+		-- CostRobux se inyecta desde RobuxManager
 		Color = Color3.fromRGB(130, 80, 180), -- Morado royal (corona dorada visible)
 		Icon = "👑",
 	},
@@ -376,7 +378,7 @@ Config.FartCosmetics = {
 		Description = "The classic green fart",
 		Tier = "common",
 		Icon = "💨",
-		CostRobux = 0, -- Free, comes by default
+		-- CostRobux se inyecta desde RobuxManager (0 = gratis)
 		Colors = {
 			Color3.fromRGB(140, 160, 80),
 			Color3.fromRGB(100, 120, 50),
@@ -391,7 +393,7 @@ Config.FartCosmetics = {
 		Description = "A fresh and refreshing fart",
 		Tier = "common",
 		Icon = "🌀",
-		CostRobux = 25,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(100, 150, 255),
 			Color3.fromRGB(50, 100, 200),
@@ -406,7 +408,7 @@ Config.FartCosmetics = {
 		Description = "Adorable and stinky",
 		Tier = "common",
 		Icon = "🌸",
-		CostRobux = 25,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(255, 150, 200),
 			Color3.fromRGB(255, 100, 180),
@@ -421,7 +423,7 @@ Config.FartCosmetics = {
 		Description = "Mysterious and smelly",
 		Tier = "common",
 		Icon = "🔮",
-		CostRobux = 35,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(180, 100, 255),
 			Color3.fromRGB(150, 50, 220),
@@ -439,7 +441,7 @@ Config.FartCosmetics = {
 		Description = "Warning! Radiation level: EXTREME",
 		Tier = "rare",
 		Icon = "☢️",
-		CostRobux = 75,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(0, 255, 0),
 			Color3.fromRGB(100, 255, 50),
@@ -455,7 +457,7 @@ Config.FartCosmetics = {
 		Description = "Spicy going in, explosive going out",
 		Tier = "rare",
 		Icon = "🔥",
-		CostRobux = 99,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(255, 200, 0),
 			Color3.fromRGB(255, 100, 0),
@@ -471,7 +473,7 @@ Config.FartCosmetics = {
 		Description = "So cold it freezes the air",
 		Tier = "rare",
 		Icon = "❄️",
-		CostRobux = 99,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(200, 240, 255),
 			Color3.fromRGB(150, 220, 255),
@@ -488,7 +490,7 @@ Config.FartCosmetics = {
 		Description = "From the depths of the abyss",
 		Tier = "rare",
 		Icon = "🖤",
-		CostRobux = 99,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(50, 30, 60),
 			Color3.fromRGB(30, 20, 40),
@@ -507,7 +509,7 @@ Config.FartCosmetics = {
 		Description = "Straight from the Earth's core",
 		Tier = "epic",
 		Icon = "🌋",
-		CostRobux = 199,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(255, 100, 0),
 			Color3.fromRGB(255, 50, 0),
@@ -525,7 +527,7 @@ Config.FartCosmetics = {
 		Description = "10,000 volts of pure power",
 		Tier = "epic",
 		Icon = "⚡",
-		CostRobux = 199,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(255, 255, 100),
 			Color3.fromRGB(200, 200, 255),
@@ -543,7 +545,7 @@ Config.FartCosmetics = {
 		Description = "A fart of cosmic proportions",
 		Tier = "epic",
 		Icon = "🌌",
-		CostRobux = 249,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(100, 50, 200),
 			Color3.fromRGB(200, 100, 255),
@@ -562,7 +564,7 @@ Config.FartCosmetics = {
 		Description = "Welcome to the future of gas",
 		Tier = "epic",
 		Icon = "💜",
-		CostRobux = 249,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(255, 0, 255),
 			Color3.fromRGB(0, 255, 255),
@@ -582,7 +584,7 @@ Config.FartCosmetics = {
 		Description = "All the colors, all the smell",
 		Tier = "legendary",
 		Icon = "🌈",
-		CostRobux = 499,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(255, 0, 0),
 			Color3.fromRGB(255, 127, 0),
@@ -603,7 +605,7 @@ Config.FartCosmetics = {
 		Description = "The most valuable gas in the world",
 		Tier = "legendary",
 		Icon = "👑",
-		CostRobux = 599,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(255, 215, 0),
 			Color3.fromRGB(255, 200, 50),
@@ -622,7 +624,7 @@ Config.FartCosmetics = {
 		Description = "Pure crystallized luxury",
 		Tier = "legendary",
 		Icon = "💎",
-		CostRobux = 699,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(185, 242, 255),
 			Color3.fromRGB(200, 255, 255),
@@ -644,7 +646,7 @@ Config.FartCosmetics = {
 		Description = "Opens portals to other dimensions",
 		Tier = "mythic",
 		Icon = "🕳️",
-		CostRobux = 999,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(20, 0, 40),
 			Color3.fromRGB(50, 0, 100),
@@ -663,7 +665,7 @@ Config.FartCosmetics = {
 		Description = "Constantly changing, never repeats",
 		Tier = "mythic",
 		Icon = "✨",
-		CostRobux = 1299,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {}, -- Dynamically generated
 		ParticleSize = {Min = 1, Max = 4},
 		Animated = true,
@@ -679,7 +681,7 @@ Config.FartCosmetics = {
 		Description = "From the ashes rises the most powerful smell",
 		Tier = "mythic",
 		Icon = "🦅",
-		CostRobux = 1499,
+		-- CostRobux se inyecta desde RobuxManager
 		Colors = {
 			Color3.fromRGB(255, 100, 0),
 			Color3.fromRGB(255, 200, 50),
@@ -1012,9 +1014,8 @@ Config.Eggs = {
 
 	RobuxEgg = {
 		Name = "Golden Egg",
-		CostRobux = 99,
+		-- CostRobux y DevProductId se inyectan desde RobuxManager
 		Icon = "💎",
-		DevProductId = 0,
 		Description = "Exclusive Golden & Rainbow pets!",
 		Pets = {
 			-- Rare Golden (65%)
@@ -1047,17 +1048,15 @@ Config.PetSystem = {
 	IdleAmplitude = 0.05,
 	FlyingHeightOffset = 2,
 
-	-- Compra de slots con Robux
+	-- Compra de slots con Robux (precios se inyectan desde RobuxManager)
 	SlotPurchases = {
 		InventorySlots = {
-			RobuxCost = 49,       -- Costo en Robux
+			-- RobuxCost y DevProductId se inyectan desde RobuxManager
 			SlotsPerPurchase = 10, -- Slots ganados por compra
-			DevProductId = 0,     -- ID del Developer Product (configurar en Roblox)
 		},
 		EquipSlots = {
-			RobuxCost = 99,       -- Costo en Robux
+			-- RobuxCost y DevProductId se inyectan desde RobuxManager
 			SlotsPerPurchase = 1, -- Slots ganados por compra
-			DevProductId = 0,     -- ID del Developer Product (configurar en Roblox)
 		},
 	},
 }
@@ -1122,5 +1121,61 @@ Config.DefaultPlayerData = {
 		PetIndex = {}, -- Mascotas descubiertas
 	},
 }
+
+-- ============================================
+-- INYECCION DE PRECIOS DESDE ROBUXMANAGER
+-- RobuxManager es la fuente unica de verdad para precios y DevProductIds
+-- ============================================
+
+-- Inyectar precios de Upgrades
+for upgradeName, upgradeData in pairs(Config.Upgrades) do
+	local robuxProduct = RobuxManager.Upgrades[upgradeName]
+	if robuxProduct then
+		upgradeData.CostRobux = robuxProduct.RobuxCost
+		upgradeData.DevProductId = robuxProduct.DevProductId
+	end
+end
+
+-- Inyectar precios de Food
+for foodName, foodData in pairs(Config.Food) do
+	local robuxProduct = RobuxManager.Foods[foodName]
+	if robuxProduct then
+		foodData.CostRobux = robuxProduct.RobuxCost
+		foodData.DevProductId = robuxProduct.DevProductId
+	else
+		-- Comida gratis (Salad) - asignar 0 si no esta en RobuxManager
+		foodData.CostRobux = foodData.CostRobux or 0
+	end
+end
+
+-- Inyectar precios de FartCosmetics
+for cosmeticId, cosmeticData in pairs(Config.FartCosmetics) do
+	local robuxProduct = RobuxManager.Cosmetics[cosmeticId]
+	if robuxProduct then
+		cosmeticData.CostRobux = robuxProduct.RobuxCost
+		cosmeticData.DevProductId = robuxProduct.DevProductId
+	else
+		-- Default cosmetic es gratis
+		cosmeticData.CostRobux = cosmeticData.CostRobux or 0
+	end
+end
+
+-- Inyectar precios de Eggs (solo RobuxEgg)
+if Config.Eggs.RobuxEgg and RobuxManager.Pets.RobuxEgg then
+	Config.Eggs.RobuxEgg.CostRobux = RobuxManager.Pets.RobuxEgg.RobuxCost
+	Config.Eggs.RobuxEgg.DevProductId = RobuxManager.Pets.RobuxEgg.DevProductId
+end
+
+-- Inyectar precios de Pet Slots
+if Config.PetSystem and Config.PetSystem.SlotPurchases then
+	if RobuxManager.Pets.InventorySlots then
+		Config.PetSystem.SlotPurchases.InventorySlots.RobuxCost = RobuxManager.Pets.InventorySlots.RobuxCost
+		Config.PetSystem.SlotPurchases.InventorySlots.DevProductId = RobuxManager.Pets.InventorySlots.DevProductId
+	end
+	if RobuxManager.Pets.EquipSlots then
+		Config.PetSystem.SlotPurchases.EquipSlots.RobuxCost = RobuxManager.Pets.EquipSlots.RobuxCost
+		Config.PetSystem.SlotPurchases.EquipSlots.DevProductId = RobuxManager.Pets.EquipSlots.DevProductId
+	end
+end
 
 return Config

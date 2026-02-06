@@ -12,86 +12,18 @@ local MarketplaceService = game:GetService("MarketplaceService")
 -- Wait for Shared to exist
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local RobuxManager = require(Shared:WaitForChild("RobuxManager"))
 
 -- Cargar PetManager (está en la misma carpeta Server)
 local PetManager = require(script.Parent.PetManager)
 print("[PlayerData] ✓ PetManager cargado exitosamente")
+print("[PlayerData] ✓ RobuxManager cargado - Productos centralizados")
 
 -- ============================================
--- DEVELOPER PRODUCTS FOR ROBUX
+-- DEVELOPER PRODUCTS - AHORA CENTRALIZADOS EN ROBUXMANAGER
 -- ============================================
--- IMPORTANT: You must create these products in Roblox Studio:
--- Game Settings > Monetization > Developer Products
--- Then replace these IDs with the real ones
-
-local DeveloperProducts = {
-	-- Each upgrade costs 10 Robux per level (+1 level per purchase)
-	-- One product per upgrade type
-	Upgrade_MaxFatness = 0, -- 10 Robux → +1 level
-	Upgrade_EatSpeed = 0, -- 10 Robux → +1 level
-	Upgrade_PropulsionForce = 0, -- 10 Robux → +1 level
-	Upgrade_FuelEfficiency = 0, -- 10 Robux → +1 level
-
-	-- ============================================
-	-- COSMÉTICOS DE PEDO
-	-- ============================================
-	-- Común (25-35 R$)
-	Cosmetic_Blue = 0,
-	Cosmetic_Pink = 0,
-	Cosmetic_Purple = 0,
-
-	-- Raro (75-99 R$)
-	Cosmetic_Toxic = 0,
-	Cosmetic_Fire = 0,
-	Cosmetic_Ice = 0,
-	Cosmetic_Shadow = 0,
-
-	-- Épico (199-249 R$)
-	Cosmetic_Lava = 0,
-	Cosmetic_Electric = 0,
-	Cosmetic_Galaxy = 0,
-	Cosmetic_Neon = 0,
-
-	-- Legendario (499-699 R$)
-	Cosmetic_Rainbow = 0,
-	Cosmetic_Golden = 0,
-	Cosmetic_Diamond = 0,
-
-	-- Mítico (999-1499 R$)
-	Cosmetic_Void = 0,
-	Cosmetic_Chromatic = 0,
-	Cosmetic_Legendary_Phoenix = 0,
-
-	-- ============================================
-	-- HUEVOS DE MASCOTAS (Robux)
-	-- ============================================
-	Egg_RobuxEgg = 0, -- 99 Robux - Golden Egg
-}
-
--- Mapeo inverso: ProductId -> UpgradeName (simple, +1 nivel por compra)
-local ProductToUpgrade = {}
--- Mapeo inverso para cosméticos: ProductId -> CosmeticId
-local ProductToCosmetic = {}
--- Mapeo inverso para huevos: ProductId -> EggName
-local ProductToEgg = {}
-
-for key, productId in pairs(DeveloperProducts) do
-	if productId > 0 then
-		if key:sub(1, 9) == "Cosmetic_" then
-			-- Es un cosmético
-			local cosmeticId = key:sub(10) -- Quitar "Cosmetic_"
-			ProductToCosmetic[productId] = cosmeticId
-		elseif key:sub(1, 4) == "Egg_" then
-			-- Es un huevo
-			local eggName = key:sub(5) -- Quitar "Egg_"
-			ProductToEgg[productId] = eggName
-		elseif key:sub(1, 8) == "Upgrade_" then
-			-- Es un upgrade (10 R$ por +1 nivel)
-			local upgradeName = key:sub(9) -- Quitar "Upgrade_"
-			ProductToUpgrade[productId] = upgradeName
-		end
-	end
-end
+-- Los DevProductIds se configuran en src/shared/RobuxManager.lua
+-- Usar RobuxManager.findProductByDevId(productId) para obtener info del producto
 
 -- Compras pendientes (para cuando el jugador compra pero aún no se procesa)
 local pendingPurchases = {}
@@ -388,12 +320,13 @@ local function purchaseUpgrade(player, upgradeName, useRobux)
 		-- Compra con Robux (10 R$ por +1 nivel, independiente del escalado de monedas)
 		local nextLevel = currentLevel + 1
 
-		local productKey = "Upgrade_" .. upgradeName
-		local productId = DeveloperProducts[productKey]
+		-- Obtener DevProductId desde RobuxManager (fuente centralizada)
+		local robuxProduct = RobuxManager.Upgrades[upgradeName]
+		local productId = robuxProduct and robuxProduct.DevProductId or 0
 
 		if not productId or productId == 0 then
 			-- Si no hay producto configurado, usar modo de prueba
-			warn("[PlayerData] Developer Product no configurado para:", productKey)
+			warn("[PlayerData] Developer Product no configurado para upgrade:", upgradeName)
 			warn("[PlayerData] Usando modo de prueba - upgrade gratis (+1 nivel)")
 
 			-- En modo de prueba, dar +1 nivel gratis
@@ -456,13 +389,13 @@ local function purchaseCosmetic(player, cosmeticId)
 		return true, "Cosmético desbloqueado"
 	end
 
-	-- Compra con Robux
-	local productKey = "Cosmetic_" .. cosmeticId
-	local productId = DeveloperProducts[productKey]
+	-- Compra con Robux - obtener DevProductId desde RobuxManager
+	local robuxProduct = RobuxManager.Cosmetics[cosmeticId]
+	local productId = robuxProduct and robuxProduct.DevProductId or 0
 
 	if not productId or productId == 0 then
 		-- Modo de prueba: dar gratis
-		warn("[PlayerData] Developer Product no configurado para cosmético:", productKey)
+		warn("[PlayerData] Developer Product no configurado para cosmético:", cosmeticId)
 		warn("[PlayerData] Usando modo de prueba - cosmético gratis")
 
 		if not data.OwnedCosmetics then
@@ -558,13 +491,13 @@ local function openEgg(player, eggName)
 
 	-- Verificar costo
 	if eggConfig.CostRobux then
-		-- Es un huevo de Robux - iniciar compra
-		local productKey = "Egg_" .. eggName
-		local productId = DeveloperProducts[productKey]
+		-- Es un huevo de Robux - obtener DevProductId desde RobuxManager
+		local robuxProduct = RobuxManager.Pets[eggName]
+		local productId = robuxProduct and robuxProduct.DevProductId or 0
 
 		if not productId or productId == 0 then
 			-- Modo de prueba: abrir gratis
-			warn("[PlayerData] Developer Product no configurado para huevo:", productKey)
+			warn("[PlayerData] Developer Product no configurado para huevo:", eggName)
 			warn("[PlayerData] Usando modo de prueba - huevo gratis")
 			-- Continuar con la lógica normal (no restar monedas)
 		else
@@ -753,7 +686,9 @@ local function processReceipt(receiptInfo)
 	-- ============================================
 	-- VERIFICAR SI ES UN COSMÉTICO
 	-- ============================================
-	local cosmeticId = ProductToCosmetic[productId]
+	-- Usar RobuxManager para buscar el producto por DevProductId
+	local category, productKey, _productInfo = RobuxManager.findProductByDevId(productId)
+	local cosmeticId = (category == "Cosmetics") and productKey or nil
 
 	-- También revisar compras pendientes de cosméticos
 	if not cosmeticId then
@@ -798,7 +733,8 @@ local function processReceipt(receiptInfo)
 	-- ============================================
 	-- VERIFICAR SI ES UN HUEVO (PET EGG)
 	-- ============================================
-	local eggName = ProductToEgg[productId]
+	-- Reutilizar resultado de findProductByDevId (category ya está definido arriba)
+	local eggName = (category == "Pets" and productKey) or nil
 
 	-- También revisar compras pendientes de huevos
 	if not eggName then
@@ -884,7 +820,8 @@ local function processReceipt(receiptInfo)
 	-- ============================================
 	-- VERIFICAR SI ES UN UPGRADE (10 R$ por +1 nivel)
 	-- ============================================
-	local upgradeName = ProductToUpgrade[productId]
+	-- Reutilizar resultado de findProductByDevId (category ya está definido arriba)
+	local upgradeName = (category == "Upgrades" and productKey) or nil
 
 	if not upgradeName then
 		-- También revisar compras pendientes
