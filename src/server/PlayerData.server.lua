@@ -98,12 +98,89 @@ local pendingPurchases = {}
 local pendingCosmeticPurchases = {} -- Para cosméticos
 local pendingEggPurchases = {} -- Para huevos
 
+-- Mapeo de ProductId -> Precio (para tracking de robux gastados)
+-- Se llenará dinámicamente al obtener info del producto
+local productPriceCache = {}
+
 -- DataStore
 local DATA_STORE_NAME = "FartTycoon_PlayerData_v8" -- Cambiar versión para resetear datos
 local playerDataStore = DataStoreService:GetDataStore(DATA_STORE_NAME)
 
+-- OrderedDataStore para el leaderboard de Robux gastados
+local robuxLeaderboardStore = DataStoreService:GetOrderedDataStore("RobuxLeaderboard_v1")
+
 -- Cache de datos en memoria
 local playerDataCache = {}
+
+-- ============================================
+-- ROBUX LEADERBOARD SYSTEM
+-- ============================================
+
+-- Función para registrar robux gastados
+local function recordRobuxSpent(player, robuxAmount)
+	local userId = player.UserId
+	local data = playerDataCache[userId]
+	if not data then return end
+
+	-- Inicializar RobuxSpent si no existe
+	if not data.RobuxSpent then
+		data.RobuxSpent = 0
+	end
+
+	-- Sumar al total
+	data.RobuxSpent = data.RobuxSpent + robuxAmount
+
+	-- Actualizar el OrderedDataStore del leaderboard
+	local success, err = pcall(function()
+		robuxLeaderboardStore:SetAsync(tostring(userId), data.RobuxSpent)
+	end)
+
+	if not success then
+		warn("[PlayerData] Error actualizando RobuxLeaderboard:", err)
+	else
+		print("[PlayerData] Robux registrados:", player.Name, "+", robuxAmount, "Total:", data.RobuxSpent)
+	end
+
+	return data.RobuxSpent
+end
+
+-- Función pública para obtener el leaderboard de robux (top 50)
+local function getRobuxLeaderboard()
+	local success, pages = pcall(function()
+		return robuxLeaderboardStore:GetSortedAsync(false, 50, 1)
+	end)
+
+	if not success or not pages then
+		warn("[PlayerData] Error obteniendo RobuxLeaderboard")
+		return {}
+	end
+
+	local topPlayers = {}
+	local currentPage = pages:GetCurrentPage()
+
+	for rank, data in ipairs(currentPage) do
+		local userId = tonumber(data.key)
+		local robuxSpent = data.value
+
+		-- Obtener nombre del jugador
+		local playerName = "Unknown"
+		local nameSuccess, name = pcall(function()
+			return Players:GetNameFromUserIdAsync(userId)
+		end)
+		if nameSuccess then
+			playerName = name
+		end
+
+		table.insert(topPlayers, {
+			Rank = rank,
+			UserId = userId,
+			Name = playerName,
+			RobuxSpent = robuxSpent,
+		})
+	end
+
+	return topPlayers
+end
 
 -- ============================================
 -- CREAR REMOTES
@@ -750,6 +827,18 @@ local function processReceipt(receiptInfo)
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
+	-- Obtener precio del producto para tracking de Robux gastados
+	local robuxPrice = 0
+	if not productPriceCache[productId] then
+		local priceSuccess, productInfo = pcall(function()
+			return MarketplaceService:GetProductInfo(productId, Enum.InfoType.Product)
+		end)
+		if priceSuccess and productInfo then
+			productPriceCache[productId] = productInfo.PriceInRobux or 0
+		end
+	end
+	robuxPrice = productPriceCache[productId] or 0
+
 	-- ============================================
 	-- VERIFICAR SI ES UN COSMÉTICO
 	-- ============================================
@@ -781,6 +870,11 @@ local function processReceipt(receiptInfo)
 		if player then
 			Remotes.OnDataUpdated:FireClient(player, data)
 			print("[PlayerData] Cosmético comprado con Robux:", cosmeticId)
+
+			-- Registrar Robux gastados
+			if robuxPrice > 0 then
+				recordRobuxSpent(player, robuxPrice)
+			end
 		end
 
 		-- Limpiar compra pendiente
@@ -867,6 +961,11 @@ local function processReceipt(receiptInfo)
 		if player then
 			updatePlayerData(player, { PetSystem = data.PetSystem })
 			print("[PlayerData] Huevo Robux abierto:", eggName, "→", selectedPet)
+
+			-- Registrar Robux gastados
+			if robuxPrice > 0 then
+				recordRobuxSpent(player, robuxPrice)
+			end
 		end
 
 		-- Limpiar compra pendiente
@@ -921,6 +1020,11 @@ local function processReceipt(receiptInfo)
 	if player then
 		Remotes.OnDataUpdated:FireClient(player, data)
 		print("[PlayerData] Upgrade comprado con Robux:", upgradeName, "Nivel:", newLevel)
+
+		-- Registrar Robux gastados
+		if robuxPrice > 0 then
+			recordRobuxSpent(player, robuxPrice)
+		end
 	end
 
 	-- Limpiar compra pendiente
@@ -1523,6 +1627,27 @@ unlockBaseBindable.OnInvoke = function(player, baseName)
 
 	print("[PlayerData] Base desbloqueada:", player.Name, "->", baseName)
 	return true, "Desbloqueada"
+end
+
+-- ============================================
+-- ROBUX LEADERBOARD BINDABLES
+-- ============================================
+local getRobuxLeaderboardBindable = Instance.new("BindableFunction")
+getRobuxLeaderboardBindable.Name = "GetRobuxLeaderboard"
+getRobuxLeaderboardBindable.Parent = serverFolder
+
+getRobuxLeaderboardBindable.OnInvoke = function()
+	return getRobuxLeaderboard()
+end
+
+local getPlayerRobuxSpentBindable = Instance.new("BindableFunction")
+getPlayerRobuxSpentBindable.Name = "GetPlayerRobuxSpent"
+getPlayerRobuxSpentBindable.Parent = serverFolder
+
+getPlayerRobuxSpentBindable.OnInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data then return 0 end
+	return data.RobuxSpent or 0
 end
 
 print("[PlayerData] Sistema de datos inicializado")

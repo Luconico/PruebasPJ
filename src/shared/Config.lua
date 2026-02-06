@@ -1084,6 +1084,7 @@ Config.Zones = {
 Config.DefaultPlayerData = {
 	Coins = 0,
 	Trophies = 0,
+	RobuxSpent = 0, -- Total Robux gastados en el juego
 
 	-- Upgrade levels (0 = not purchased, uses base value)
 	Upgrades = {
