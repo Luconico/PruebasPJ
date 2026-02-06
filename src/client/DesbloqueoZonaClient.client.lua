@@ -191,7 +191,7 @@ local function createZoneUI(zoneName, trophyCost, robuxCost, vipOnly)
 	subtitle.Size = UDim2.new(1, -40, 0, 40)
 	subtitle.Position = UDim2.new(0, 20, 0, 75)
 	subtitle.BackgroundTransparency = 1
-	subtitle.Text = vipOnly and "Zona exclusiva VIP" or "¿Pagar para desbloquear?"
+	subtitle.Text = vipOnly and "VIP Exclusive Zone" or "Pay to unlock?"
 	subtitle.TextColor3 = Color3.fromRGB(200, 200, 200)
 	subtitle.TextSize = 18
 	subtitle.Font = Enum.Font.Gotham
@@ -209,7 +209,7 @@ local function createZoneUI(zoneName, trophyCost, robuxCost, vipOnly)
 		trophiesButton.Position = UDim2.new(0, 20, 0, 130)
 		trophiesButton.BackgroundColor3 = Color3.fromRGB(255, 180, 50)
 		trophiesButton.BorderSizePixel = 0
-		trophiesButton.Text = "🏆 " .. formatNumber(trophyCost) .. " Trofeos"
+		trophiesButton.Text = "🏆 " .. formatNumber(trophyCost) .. " Trophies"
 		trophiesButton.TextColor3 = Color3.fromRGB(0, 0, 0)
 		trophiesButton.TextSize = 24
 		trophiesButton.Font = Enum.Font.GothamBold
@@ -446,9 +446,9 @@ end
 if insufficientFundsRemote then
 	insufficientFundsRemote.OnClientEvent:Connect(function(zoneName, required, current, currencyType)
 		if currencyType == "trophies" then
-			showNotification(false, "Trofeos insuficientes! Necesitas " .. formatNumber(required) .. " 🏆")
+			showNotification(false, "Insufficient Trophies! You need " .. formatNumber(required) .. " 🏆")
 		else
-			showNotification(false, "Monedas insuficientes! Necesitas " .. formatNumber(required) .. "$")
+			showNotification(false, "Insufficient Coins! You need " .. formatNumber(required) .. "$")
 		end
 	end)
 end

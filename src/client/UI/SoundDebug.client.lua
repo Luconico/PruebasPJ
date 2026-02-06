@@ -90,7 +90,7 @@ local function createDebugUI()
 	subtitle.Size = UDim2.new(1, -40, 0, 25)
 	subtitle.Position = UDim2.new(0, 20, 0, 55)
 	subtitle.BackgroundTransparency = 1
-	subtitle.Text = "Presiona L para cerrar | Click en ▶ para reproducir"
+	subtitle.Text = "Press L to close | Click on ▶ to play"
 	subtitle.TextColor3 = Color3.fromRGB(150, 150, 150)
 	subtitle.TextSize = 14
 	subtitle.Font = Enum.Font.Gotham
@@ -221,7 +221,7 @@ local function createDebugUI()
 	sectionBasic.Name = "00_SectionBasic"
 	sectionBasic.Size = UDim2.new(1, -20, 0, 30)
 	sectionBasic.BackgroundTransparency = 1
-	sectionBasic.Text = "── SONIDOS BÁSICOS ──"
+	sectionBasic.Text = "── BASIC SOUNDS ──"
 	sectionBasic.TextColor3 = Color3.fromRGB(100, 150, 255)
 	sectionBasic.TextSize = 14
 	sectionBasic.Font = Enum.Font.GothamBold
@@ -240,7 +240,7 @@ local function createDebugUI()
 	sectionFunctions.Name = "zz_SectionFunctions"
 	sectionFunctions.Size = UDim2.new(1, -20, 0, 30)
 	sectionFunctions.BackgroundTransparency = 1
-	sectionFunctions.Text = "── FUNCIONES ESPECIALES ──"
+	sectionFunctions.Text = "── SPECIAL FUNCTIONS ──"
 	sectionFunctions.TextColor3 = Color3.fromRGB(255, 180, 100)
 	sectionFunctions.TextSize = 14
 	sectionFunctions.Font = Enum.Font.GothamBold
