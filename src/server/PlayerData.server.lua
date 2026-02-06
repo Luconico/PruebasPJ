@@ -411,6 +411,11 @@ local function purchaseUpgrade(player, upgradeName, useRobux)
 			updatePlayerData(player, {
 				Upgrades = data.Upgrades
 			})
+
+			-- MODO PRUEBA: Registrar robux gastados (simulado)
+			local testPrice = robuxProduct and robuxProduct.RobuxCost or 10
+			recordRobuxSpent(player, testPrice)
+
 			return true, "Nivel " .. nextLevel .. "! (Modo prueba)"
 		end
 
@@ -483,6 +488,11 @@ local function purchaseCosmetic(player, cosmeticId)
 		updatePlayerData(player, {
 			OwnedCosmetics = data.OwnedCosmetics
 		})
+
+		-- MODO PRUEBA: Registrar robux gastados (simulado)
+		local testPrice = robuxProduct and robuxProduct.RobuxCost or 25
+		recordRobuxSpent(player, testPrice)
+
 		return true, "Cosmético desbloqueado (Modo prueba)"
 	end
 
@@ -576,6 +586,10 @@ local function openEgg(player, eggName)
 			-- Modo de prueba: abrir gratis
 			warn("[PlayerData] Developer Product no configurado para huevo:", eggName)
 			warn("[PlayerData] Usando modo de prueba - huevo gratis")
+
+			-- MODO PRUEBA: Registrar robux gastados (simulado)
+			local testPrice = robuxProduct and robuxProduct.RobuxCost or 99
+			recordRobuxSpent(player, testPrice)
 			-- Continuar con la lógica normal (no restar monedas)
 		else
 			-- Guardar compra pendiente
@@ -761,16 +775,26 @@ local function processReceipt(receiptInfo)
 	end
 
 	-- Obtener precio del producto para tracking de Robux gastados
+	-- Primero intentar desde RobuxManager (funciona en modo prueba)
+	-- Luego desde MarketplaceService (productos reales)
 	local robuxPrice = 0
-	if not productPriceCache[productId] then
-		local priceSuccess, productInfo = pcall(function()
+	local category, productKey, productInfo = RobuxManager.findProductByDevId(productId)
+
+	if productInfo and productInfo.RobuxCost then
+		-- Precio desde RobuxManager (siempre disponible)
+		robuxPrice = productInfo.RobuxCost
+	elseif not productPriceCache[productId] then
+		-- Intentar desde MarketplaceService (productos reales)
+		local priceSuccess, marketInfo = pcall(function()
 			return MarketplaceService:GetProductInfo(productId, Enum.InfoType.Product)
 		end)
-		if priceSuccess and productInfo then
-			productPriceCache[productId] = productInfo.PriceInRobux or 0
+		if priceSuccess and marketInfo then
+			productPriceCache[productId] = marketInfo.PriceInRobux or 0
+			robuxPrice = productPriceCache[productId]
 		end
+	else
+		robuxPrice = productPriceCache[productId] or 0
 	end
-	robuxPrice = productPriceCache[productId] or 0
 
 	-- ============================================
 	-- VERIFICAR SI ES UN COSMÉTICO
