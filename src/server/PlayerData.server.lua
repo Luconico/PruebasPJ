@@ -132,6 +132,7 @@ local function createRemotes()
 		"OnTrophyCollected", -- Servidor → Cliente: trofeo recogido
 		"OnTrophyVisibility",-- Servidor → Cliente: mostrar/ocultar trofeo
 		"OnSpinsPurchased",  -- Servidor → Cliente: giros comprados con Robux
+		"OnRobuxEggOpened",  -- Servidor → Cliente: huevo de Robux abierto (para animación)
 	}
 
 	-- Funciones (con respuesta)
@@ -922,6 +923,12 @@ local function processReceipt(receiptInfo)
 		if player then
 			updatePlayerData(player, { PetSystem = data.PetSystem })
 			print("[PlayerData] Robux egg opened:", eggName, "→", selectedPet)
+
+			-- Notificar al cliente para reproducir animación de apertura
+			local eggRemote = Remotes:FindFirstChild("OnRobuxEggOpened")
+			if eggRemote then
+				eggRemote:FireClient(player, eggName, selectedPet)
+			end
 
 			-- Registrar Robux gastados
 			if robuxPrice > 0 then
