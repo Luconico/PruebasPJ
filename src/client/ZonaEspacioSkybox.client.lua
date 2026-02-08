@@ -46,7 +46,7 @@ local LIGHTING_ESPACIO = {
 -- VARIABLES DE ESTADO
 -- ═══════════════════════════════════════════════════════════════════
 
-local zonaEspacio = nil
+local zonasEspacio = {} -- Tabla con todos los Parts "ZonaEspacio"
 local dentroDeZona = false
 
 -- Guardar configuración original
@@ -86,9 +86,9 @@ local function guardarConfiguracionOriginal()
 	}
 end
 
--- Verifica si el jugador está dentro de la zona
+-- Verifica si el jugador está dentro de alguna zona
 local function estaEnZona(personaje)
-	if not zonaEspacio or not personaje then
+	if #zonasEspacio == 0 or not personaje then
 		return false
 	end
 
@@ -97,16 +97,23 @@ local function estaEnZona(personaje)
 		return false
 	end
 
-	local zonaCF = zonaEspacio.CFrame
-	local zonaSize = zonaEspacio.Size
+	-- Comprobar si está dentro de CUALQUIERA de las zonas
+	for _, zona in ipairs(zonasEspacio) do
+		if zona and zona.Parent then -- Verificar que el Part siga existiendo
+			local zonaCF = zona.CFrame
+			local zonaSize = zona.Size
 
-	-- Convertir posición del jugador a coordenadas locales de la zona
-	local posRelativa = zonaCF:PointToObjectSpace(hrp.Position)
+			local posRelativa = zonaCF:PointToObjectSpace(hrp.Position)
 
-	-- Verificar si está dentro del bounding box
-	return math.abs(posRelativa.X) <= zonaSize.X / 2
-		and math.abs(posRelativa.Y) <= zonaSize.Y / 2
-		and math.abs(posRelativa.Z) <= zonaSize.Z / 2
+			if math.abs(posRelativa.X) <= zonaSize.X / 2
+				and math.abs(posRelativa.Y) <= zonaSize.Y / 2
+				and math.abs(posRelativa.Z) <= zonaSize.Z / 2 then
+				return true
+			end
+		end
+	end
+
+	return false
 end
 
 -- Interpola suavemente entre dos valores
@@ -232,18 +239,35 @@ end
 -- INICIALIZACIÓN
 -- ═══════════════════════════════════════════════════════════════════
 
--- Esperar a que exista la zona en Workspace
-zonaEspacio = workspace:WaitForChild("ZonaEspacio", 30)
+-- Buscar TODOS los Parts llamados "ZonaEspacio" en todo el Workspace
+local function buscarZonasEspacio()
+	zonasEspacio = {}
+	for _, descendant in ipairs(workspace:GetDescendants()) do
+		if descendant.Name == "ZonaEspacio" and descendant:IsA("BasePart") then
+			table.insert(zonasEspacio, descendant)
+		end
+	end
+end
 
-if not zonaEspacio then
-	warn("[ZonaEspacioSkybox] No se encontró 'ZonaEspacio' en Workspace")
+buscarZonasEspacio()
+
+-- Detectar si se añaden nuevas zonas en tiempo de ejecución
+workspace.DescendantAdded:Connect(function(descendant)
+	if descendant.Name == "ZonaEspacio" and descendant:IsA("BasePart") then
+		table.insert(zonasEspacio, descendant)
+		print("[ZonaEspacioSkybox] Nueva zona detectada, total: " .. #zonasEspacio)
+	end
+end)
+
+if #zonasEspacio == 0 then
+	warn("[ZonaEspacioSkybox] No se encontró ningún 'ZonaEspacio' en Workspace")
 	return
 end
 
 -- Guardar configuración original al iniciar
 guardarConfiguracionOriginal()
 
-print("[ZonaEspacioSkybox] Script inicializado correctamente")
+print("[ZonaEspacioSkybox] Script inicializado - " .. #zonasEspacio .. " zona(s) encontrada(s)")
 
 -- ═══════════════════════════════════════════════════════════════════
 -- LOOP PRINCIPAL DE DETECCIÓN
