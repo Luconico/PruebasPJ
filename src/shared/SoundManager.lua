@@ -9,6 +9,34 @@ local SoundService = game:GetService("SoundService")
 local SoundManager = {}
 
 -- ============================================
+-- GLOBAL STATE
+-- ============================================
+SoundManager.Muted = false
+
+-- ============================================
+-- MUSIC PLAYLIST SYSTEM
+-- ============================================
+SoundManager.Playlist = {
+	-- TODO: Add your rbxassetid URLs here
+	-- "rbxassetid://123456789",
+	-- "rbxassetid://987654321",
+	"rbxassetid://134683190583397",
+	"rbxassetid://132842607237623",
+	"rbxassetid://138042878455698",
+	"rbxassetid://136320373312228",
+	"rbxassetid://128143022923696",
+	"rbxassetid://134269437736506",
+	"rbxassetid://139839617222594",
+	"rbxassetid://133269421887679",
+	"rbxassetid://88638675242195",
+	"rbxassetid://126137822474406"
+}
+SoundManager.CurrentTrackIndex = 1
+SoundManager.MusicInstance = nil
+SoundManager.MusicVolume = 0.3
+SoundManager.MusicPlaying = false
+
+-- ============================================
 -- IDs DE SONIDOS VERIFICADOS
 -- ============================================
 SoundManager.Sounds = {
@@ -64,6 +92,8 @@ SoundManager.Sounds.UnlockZone = SoundManager.Sounds.Equip
 	@return Sound - La instancia del sonido creado
 ]]
 function SoundManager.play(soundId, volume, pitch)
+	if SoundManager.Muted then return nil end
+
 	-- Si es una key del diccionario, obtener el ID real
 	if SoundManager.Sounds[soundId] then
 		soundId = SoundManager.Sounds[soundId]
@@ -204,6 +234,87 @@ end
 -- Reproduce sonido de comer
 function SoundManager.playEat(volume)
 	return SoundManager.play("Eat", volume or 0.4, 1.0)
+end
+
+-- ============================================
+-- MUSIC SYSTEM
+-- ============================================
+
+local function createMusicInstance()
+	if SoundManager.MusicInstance then
+		SoundManager.MusicInstance:Destroy()
+	end
+
+	local sound = Instance.new("Sound")
+	sound.Name = "BackgroundMusic"
+	sound.Volume = SoundManager.Muted and 0 or SoundManager.MusicVolume
+	sound.Looped = false
+	sound.Parent = SoundService
+
+	sound.Ended:Connect(function()
+		if SoundManager.MusicPlaying then
+			SoundManager.nextTrack()
+		end
+	end)
+
+	SoundManager.MusicInstance = sound
+	return sound
+end
+
+function SoundManager.playMusic()
+	if #SoundManager.Playlist == 0 then return end
+
+	local music = SoundManager.MusicInstance or createMusicInstance()
+
+	local trackId = SoundManager.Playlist[SoundManager.CurrentTrackIndex]
+	if music.SoundId ~= trackId then
+		music.SoundId = trackId
+	end
+
+	music.Volume = SoundManager.Muted and 0 or SoundManager.MusicVolume
+	music:Play()
+	SoundManager.MusicPlaying = true
+end
+
+function SoundManager.pauseMusic()
+	if SoundManager.MusicInstance then
+		SoundManager.MusicInstance:Pause()
+	end
+	SoundManager.MusicPlaying = false
+end
+
+function SoundManager.resumeMusic()
+	if not SoundManager.MusicInstance then return end
+	if #SoundManager.Playlist == 0 then return end
+
+	SoundManager.MusicInstance.Volume = SoundManager.Muted and 0 or SoundManager.MusicVolume
+	SoundManager.MusicInstance:Resume()
+	SoundManager.MusicPlaying = true
+end
+
+function SoundManager.nextTrack()
+	if #SoundManager.Playlist == 0 then return end
+
+	SoundManager.CurrentTrackIndex = SoundManager.CurrentTrackIndex % #SoundManager.Playlist + 1
+
+	if SoundManager.MusicInstance then
+		SoundManager.MusicInstance:Stop()
+		SoundManager.MusicInstance.SoundId = SoundManager.Playlist[SoundManager.CurrentTrackIndex]
+		if SoundManager.MusicPlaying then
+			SoundManager.MusicInstance.Volume = SoundManager.Muted and 0 or SoundManager.MusicVolume
+			SoundManager.MusicInstance:Play()
+		end
+	end
+end
+
+function SoundManager.toggleMute()
+	SoundManager.Muted = not SoundManager.Muted
+
+	if SoundManager.MusicInstance then
+		SoundManager.MusicInstance.Volume = SoundManager.Muted and 0 or SoundManager.MusicVolume
+	end
+
+	return SoundManager.Muted
 end
 
 return SoundManager
