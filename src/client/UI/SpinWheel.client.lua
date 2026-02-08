@@ -950,7 +950,11 @@ spinWheel = function()
 	local targetSegmentCenter = (prizeIndex - 1) * anglePerSegment + anglePerSegment / 2
 
 	local fullRotations = math.random(5, 8) * 360
-	local finalAngle = currentRotation + fullRotations + (360 - targetSegmentCenter)
+	-- Calcular el ángulo de parada correcto compensando la rotación acumulada
+	local desiredStop = (360 - targetSegmentCenter) % 360
+	local currentMod = currentRotation % 360
+	local delta = (desiredStop - currentMod) % 360
+	local finalAngle = currentRotation + fullRotations + delta
 
 	local spinDuration = 4 + math.random() * 2
 
@@ -998,6 +1002,14 @@ spinWheel = function()
 		end
 
 		showPrizeNotification(prize)
+
+		-- Dar las monedas al jugador a través del servidor
+		if Remotes then
+			local collectCoin = Remotes:FindFirstChild("CollectCoin")
+			if collectCoin then
+				collectCoin:InvokeServer(prize.Gold)
+			end
+		end
 
 		print("[SpinWheel] Premio ganado: " .. prize.Name .. " - " .. prize.Gold .. " oro")
 	end)
