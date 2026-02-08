@@ -17,6 +17,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local ResponsiveUI = require(Shared:WaitForChild("ResponsiveUI"))
+local SoundManager = require(Shared:WaitForChild("SoundManager"))
 
 -- ============================================
 -- CONFIGURACIÓN DE ESTILOS
@@ -641,6 +642,8 @@ local function showFloatingTrophy(amount, worldPosition)
 	local floater = floatingNumberTemplate:Clone()
 	floater.Text = "+" .. amount .. " 🏆"
 	floater.TextColor3 = Styles.Colors.MaxHeightTextColor -- Dorado
+	floater.Size = UDim2.new(0, 200, 0, 80)
+	floater.TextSize = floater.TextSize * 2
 	floater.Position = UDim2.new(0, screenPos.X, 0, screenPos.Y)
 	floater.Visible = true
 	floater.Parent = screenGui
@@ -717,6 +720,9 @@ if Remotes then
 	if OnTrophyCollected then
 		OnTrophyCollected.OnClientEvent:Connect(function(amount, totalTrophies)
 			updateTrophies(totalTrophies)
+
+			-- Sonido de éxito al recoger trofeo
+			SoundManager.play("PurchaseSuccess", 0.5, 1.2)
 
 			-- Mostrar número flotante de trofeo
 			local character = player.Character
