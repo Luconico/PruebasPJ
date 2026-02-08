@@ -39,7 +39,7 @@ local playerStats = {
 	MaxFatness = 1.5,      -- Base sin upgrades (máximo 4.0 con upgrades)
 	EatSpeed = 0.08,
 	PropulsionForce = 50,
-	FuelEfficiency = 0.04,
+	FuelEfficiency = 0.08,
 }
 
 -- Estado actual
