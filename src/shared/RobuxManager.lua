@@ -222,7 +222,7 @@ RobuxManager.Zones = {
 		Name = "Zone 1",
 		Description = "Unlock Zone 1",
 		RobuxCost = 19,
-		TrophyCost =250,
+		TrophyCost = 250,
 		DevProductId = 0, -- TODO: Configurar en Roblox
 	},
 	Zona2 = {

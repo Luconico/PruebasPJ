@@ -15,8 +15,8 @@ local ZONES_CONFIG = {
 	{
 		ZonePath = nil,
 		ZoneName = "BloqueoBase1",
-		TrophyCost = 500,
-		RobuxCost = 500,
+		TrophyCost = 50000,
+		RobuxCost = 499,
 		DisplayName = "Base Secreta",
 	},
 
@@ -24,26 +24,26 @@ local ZONES_CONFIG = {
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona1",
-		TrophyCost = 10,
+		TrophyCost = 250,
 		RobuxCost = 19,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona2",
-		TrophyCost = 25,
-		RobuxCost = 39,
+		TrophyCost = 1000,
+		RobuxCost = 99,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona3",
-		TrophyCost = 50,
-		RobuxCost = 69,
+		TrophyCost = 10000,
+		RobuxCost = 149,
 	},
 	{
 		ZonePath = "Zonas",
 		ZoneName = "Zona4",
-		TrophyCost = 100,
-		RobuxCost = 99,
+		TrophyCost = 50000,
+		RobuxCost = 399,
 	},
 	{
 		ZonePath = "Zonas",
