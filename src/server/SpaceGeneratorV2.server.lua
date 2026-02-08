@@ -7,9 +7,9 @@ local SPACE_CONFIG = {
 	{
 		FolderPath = "BurgueteNotoca",
 		TowerName = "Space1",
-		BlockCount = 28,
-		XReduction = 3,
-		YScalePercentage = 29.25,
+		BlockCount = 38,
+		XReduction = 2.5,
+		YScalePercentage = 35,
 	},
 }
 
