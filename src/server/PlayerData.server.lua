@@ -131,6 +131,7 @@ local function createRemotes()
 		"CollectHeightBonus",-- Cliente → Servidor: recompensa por altura
 		"OnTrophyCollected", -- Servidor → Cliente: trofeo recogido
 		"OnTrophyVisibility",-- Servidor → Cliente: mostrar/ocultar trofeo
+		"OnSpinsPurchased",  -- Servidor → Cliente: giros comprados con Robux
 	}
 
 	-- Funciones (con respuesta)
@@ -799,8 +800,7 @@ local function processReceipt(receiptInfo)
 	-- ============================================
 	-- VERIFICAR SI ES UN COSMÉTICO
 	-- ============================================
-	-- Usar RobuxManager para buscar el producto por DevProductId
-	local category, productKey, _productInfo = RobuxManager.findProductByDevId(productId)
+	-- Reutilizar category y productKey del findProductByDevId de arriba
 	local cosmeticId = (category == "Cosmetics") and productKey or nil
 
 	-- También revisar compras pendientes de cosméticos
@@ -852,7 +852,8 @@ local function processReceipt(receiptInfo)
 	-- VERIFICAR SI ES UN HUEVO (PET EGG)
 	-- ============================================
 	-- Reutilizar resultado de findProductByDevId (category ya está definido arriba)
-	local eggName = (category == "Pets" and productKey) or nil
+	-- Excluir InventorySlots y EquipSlots (se manejan aparte)
+	local eggName = (category == "Pets" and productKey ~= "InventorySlots" and productKey ~= "EquipSlots") and productKey or nil
 
 	-- También revisar compras pendientes de huevos
 	if not eggName then
@@ -954,50 +955,261 @@ local function processReceipt(receiptInfo)
 		end
 	end
 
-	if not upgradeName then
-		warn("[PlayerData] Unrecognized product:", productId)
-		return Enum.ProductPurchaseDecision.NotProcessedYet
-	end
+	if upgradeName then
+		local upgradeConfig = Config.Upgrades[upgradeName]
+		if not upgradeConfig then
+			warn("[PlayerData] Upgrade no existe en Config:", upgradeName)
+			return Enum.ProductPurchaseDecision.NotProcessedYet
+		end
 
-	local upgradeConfig = Config.Upgrades[upgradeName]
-	if not upgradeConfig then
-		warn("[PlayerData] Upgrade no existe en Config:", upgradeName)
-		return Enum.ProductPurchaseDecision.NotProcessedYet
-	end
+		local currentLevel = data.Upgrades[upgradeName] or 0
 
-	local currentLevel = data.Upgrades[upgradeName] or 0
+		-- Verificar que no esté al máximo
+		if currentLevel >= upgradeConfig.MaxLevel then
+			print("[PlayerData] Player already at max level for", upgradeName)
+			return Enum.ProductPurchaseDecision.PurchaseGranted
+		end
 
-	-- Verificar que no esté al máximo
-	if currentLevel >= upgradeConfig.MaxLevel then
-		print("[PlayerData] Player already at max level for", upgradeName)
+		-- Aplicar el upgrade (+1 nivel)
+		local newLevel = currentLevel + 1
+		data.Upgrades[upgradeName] = newLevel
+
+		-- Notificar al jugador si está conectado
+		if player then
+			Remotes.OnDataUpdated:FireClient(player, data)
+			print("[PlayerData] Upgrade purchased with Robux:", upgradeName, "Nivel:", newLevel)
+
+			if robuxPrice > 0 then
+				recordRobuxSpent(player, robuxPrice)
+			end
+		end
+
+		pendingPurchases[playerId] = nil
+
+		local saveKey = "Player_" .. playerId
+		pcall(function()
+			playerDataStore:SetAsync(saveKey, data)
+		end)
+
 		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end
 
-	-- Aplicar el upgrade (+1 nivel)
-	local newLevel = currentLevel + 1
-	data.Upgrades[upgradeName] = newLevel
+	-- ============================================
+	-- VERIFICAR SI ES UNA ZONA
+	-- ============================================
+	if category == "Zones" then
+		local zoneName = productKey -- ej: "Zona1", "VIP1"
 
-	-- Notificar al jugador si está conectado
-	if player then
-		Remotes.OnDataUpdated:FireClient(player, data)
-		print("[PlayerData] Upgrade purchased with Robux:", upgradeName, "Nivel:", newLevel)
-
-		-- Registrar Robux gastados
-		if robuxPrice > 0 then
-			recordRobuxSpent(player, robuxPrice)
+		if not data.UnlockedZones then
+			data.UnlockedZones = {}
 		end
+
+		-- Si ya la tiene, confirmar compra
+		if data.UnlockedZones[zoneName] then
+			return Enum.ProductPurchaseDecision.PurchaseGranted
+		end
+
+		data.UnlockedZones[zoneName] = true
+
+		if player then
+			updatePlayerData(player, { UnlockedZones = data.UnlockedZones })
+			print("[PlayerData] Zone purchased with Robux:", zoneName)
+
+			-- Notificar al cliente para hacer la zona invisible/pasable
+			local makeZoneRemote = Remotes:FindFirstChild("MakeZoneInvisible")
+			if makeZoneRemote then
+				makeZoneRemote:FireClient(player, zoneName)
+			end
+
+			if robuxPrice > 0 then
+				recordRobuxSpent(player, robuxPrice)
+			end
+		end
+
+		local saveKey = "Player_" .. playerId
+		pcall(function()
+			playerDataStore:SetAsync(saveKey, data)
+		end)
+
+		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end
 
-	-- Limpiar compra pendiente
-	pendingPurchases[playerId] = nil
+	-- ============================================
+	-- VERIFICAR SI ES UNA BASE
+	-- ============================================
+	if category == "Bases" then
+		local baseName = productKey -- ej: "Base1"
 
-	-- Guardar datos
-	local saveKey = "Player_" .. playerId
-	pcall(function()
-		playerDataStore:SetAsync(saveKey, data)
-	end)
+		if not data.UnlockedBases then
+			data.UnlockedBases = {}
+		end
 
-	return Enum.ProductPurchaseDecision.PurchaseGranted
+		if data.UnlockedBases[baseName] then
+			return Enum.ProductPurchaseDecision.PurchaseGranted
+		end
+
+		data.UnlockedBases[baseName] = true
+
+		-- También desbloquear como zona (DesbloqueoZonaServer usa "BloqueoBase1")
+		if not data.UnlockedZones then
+			data.UnlockedZones = {}
+		end
+		data.UnlockedZones["Bloqueo" .. baseName] = true
+
+		if player then
+			updatePlayerData(player, {
+				UnlockedBases = data.UnlockedBases,
+				UnlockedZones = data.UnlockedZones,
+			})
+			print("[PlayerData] Base purchased with Robux:", baseName)
+
+			-- Notificar a ambos sistemas (bases y zonas)
+			local makeBaseRemote = Remotes:FindFirstChild("MakeBaseInvisible")
+			if makeBaseRemote then
+				makeBaseRemote:FireClient(player, baseName, "Bloqueo" .. baseName)
+			end
+			local makeZoneRemote = Remotes:FindFirstChild("MakeZoneInvisible")
+			if makeZoneRemote then
+				makeZoneRemote:FireClient(player, "Bloqueo" .. baseName)
+			end
+
+			if robuxPrice > 0 then
+				recordRobuxSpent(player, robuxPrice)
+			end
+		end
+
+		local saveKey = "Player_" .. playerId
+		pcall(function()
+			playerDataStore:SetAsync(saveKey, data)
+		end)
+
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	-- ============================================
+	-- VERIFICAR SI ES UNA COMIDA (FOOD)
+	-- ============================================
+	if category == "Foods" then
+		local foodType = productKey -- ej: "Burger", "Pizza"
+
+		if not data.UnlockedFood then
+			data.UnlockedFood = {}
+		end
+
+		if data.UnlockedFood[foodType] then
+			return Enum.ProductPurchaseDecision.PurchaseGranted
+		end
+
+		data.UnlockedFood[foodType] = true
+
+		if player then
+			updatePlayerData(player, { UnlockedFood = data.UnlockedFood })
+			print("[PlayerData] Food purchased with Robux:", foodType)
+
+			-- Notificar al cliente
+			local foodPurchasedRemote = Remotes:FindFirstChild("OnFoodPurchased")
+			if foodPurchasedRemote then
+				foodPurchasedRemote:FireClient(player, foodType, true)
+			end
+
+			if robuxPrice > 0 then
+				recordRobuxSpent(player, robuxPrice)
+			end
+		end
+
+		local saveKey = "Player_" .. playerId
+		pcall(function()
+			playerDataStore:SetAsync(saveKey, data)
+		end)
+
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	-- ============================================
+	-- VERIFICAR SI ES GIROS DE RULETA (SPINS)
+	-- ============================================
+	if category == "Spins" then
+		local spinKey = productKey -- ej: "Spin1", "Spin10", "Spin100"
+		local spinProduct = RobuxManager.Spins[spinKey]
+		local spinAmount = spinProduct and spinProduct.Amount or 0
+
+		if spinAmount <= 0 then
+			warn("[PlayerData] Spin product sin cantidad:", spinKey)
+			return Enum.ProductPurchaseDecision.NotProcessedYet
+		end
+
+		-- Añadir giros al jugador
+		if not data.PurchasedSpins then
+			data.PurchasedSpins = 0
+		end
+		data.PurchasedSpins = data.PurchasedSpins + spinAmount
+
+		if player then
+			updatePlayerData(player, { PurchasedSpins = data.PurchasedSpins })
+			print("[PlayerData] Spins purchased with Robux:", spinKey, "+" .. spinAmount)
+
+			-- Notificar al cliente con los giros añadidos
+			local spinsRemote = Remotes:FindFirstChild("OnSpinsPurchased")
+			if spinsRemote then
+				spinsRemote:FireClient(player, spinAmount, data.PurchasedSpins)
+			end
+
+			if robuxPrice > 0 then
+				recordRobuxSpent(player, robuxPrice)
+			end
+		end
+
+		local saveKey = "Player_" .. playerId
+		pcall(function()
+			playerDataStore:SetAsync(saveKey, data)
+		end)
+
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	-- ============================================
+	-- VERIFICAR SI ES PET SLOTS (Inventory / Equip)
+	-- ============================================
+	if category == "Pets" and (productKey == "InventorySlots" or productKey == "EquipSlots") then
+		if not data.PetSystem then
+			data.PetSystem = deepClone(Config.DefaultPlayerData.PetSystem)
+		end
+
+		if productKey == "InventorySlots" then
+			local slotsToAdd = RobuxManager.Pets.InventorySlots.SlotsPerPurchase or 10
+			local maxSlots = Config.PetSystem.MaxInventorySlots or 200
+			local newSlots = math.min(data.PetSystem.InventorySlots + slotsToAdd, maxSlots)
+			data.PetSystem.InventorySlots = newSlots
+			print("[PlayerData] Inventory slots purchased with Robux:", player and player.Name or playerId, "->", newSlots)
+		elseif productKey == "EquipSlots" then
+			local slotsToAdd = RobuxManager.Pets.EquipSlots.SlotsPerPurchase or 1
+			local maxSlots = Config.PetSystem.MaxEquipSlots or 10
+			local newSlots = math.min(data.PetSystem.EquipSlots + slotsToAdd, maxSlots)
+			data.PetSystem.EquipSlots = newSlots
+			print("[PlayerData] Equip slots purchased with Robux:", player and player.Name or playerId, "->", newSlots)
+		end
+
+		if player then
+			updatePlayerData(player, { PetSystem = data.PetSystem })
+
+			if robuxPrice > 0 then
+				recordRobuxSpent(player, robuxPrice)
+			end
+		end
+
+		local saveKey = "Player_" .. playerId
+		pcall(function()
+			playerDataStore:SetAsync(saveKey, data)
+		end)
+
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	-- ============================================
+	-- PRODUCTO NO RECONOCIDO
+	-- ============================================
+	warn("[PlayerData] Unrecognized product:", productId)
+	return Enum.ProductPurchaseDecision.NotProcessedYet
 end
 
 -- Conectar el procesador de recibos
@@ -1211,25 +1423,33 @@ Remotes.BuyInventorySlots.OnServerInvoke = function(player)
 		return false, "Max inventory slots reached"
 	end
 
-	-- TODO: Integrar con MarketplaceService para procesar compra real de Robux
-	-- Por ahora, simulamos la compra exitosa para testing
-	-- En producción, esto debería usar:
-	-- local MarketplaceService = game:GetService("MarketplaceService")
-	-- MarketplaceService:PromptProductPurchase(player, purchaseConfig.DevProductId)
+	-- Obtener DevProductId desde RobuxManager (inyectado en Config)
+	local devProductId = purchaseConfig.DevProductId
+	if not devProductId or devProductId == 0 then
+		-- Modo de prueba: dar slots gratis
+		warn("[PlayerData] DevProductId no configurado para InventorySlots - modo testing")
+		local newSlots = math.min(
+			data.PetSystem.InventorySlots + purchaseConfig.SlotsPerPurchase,
+			maxSlots
+		)
+		data.PetSystem.InventorySlots = newSlots
+		updatePlayerData(player, { PetSystem = data.PetSystem })
 
-	-- Añadir slots
-	local newSlots = math.min(
-		data.PetSystem.InventorySlots + purchaseConfig.SlotsPerPurchase,
-		maxSlots
-	)
-	data.PetSystem.InventorySlots = newSlots
+		local testPrice = RobuxManager.Pets.InventorySlots and RobuxManager.Pets.InventorySlots.RobuxCost or 49
+		recordRobuxSpent(player, testPrice)
+		return true, "Inventory slots added (Test mode)"
+	end
 
-	updatePlayerData(player, {
-		PetSystem = data.PetSystem
-	})
-
-	print("[PlayerData] Inventory slots purchased:", player.Name, "->", newSlots)
-	return true, "Inventory slots added"
+	-- Prompt de compra real con Robux (ProcessReceipt manejará el resultado)
+	local success, errorMessage = pcall(function()
+		MarketplaceService:PromptProductPurchase(player, devProductId)
+	end)
+	if success then
+		return true, "Processing purchase..."
+	else
+		warn("[PlayerData] Error al iniciar compra InventorySlots:", errorMessage)
+		return false, "Purchase error"
+	end
 end
 
 -- Comprar slots de equipo con Robux
@@ -1247,25 +1467,33 @@ Remotes.BuyEquipSlots.OnServerInvoke = function(player)
 		return false, "Max equip slots reached"
 	end
 
-	-- TODO: Integrar con MarketplaceService para procesar compra real de Robux
-	-- Por ahora, simulamos la compra exitosa para testing
-	-- En producción, esto debería usar:
-	-- local MarketplaceService = game:GetService("MarketplaceService")
-	-- MarketplaceService:PromptProductPurchase(player, purchaseConfig.DevProductId)
+	-- Obtener DevProductId desde RobuxManager (inyectado en Config)
+	local devProductId = purchaseConfig.DevProductId
+	if not devProductId or devProductId == 0 then
+		-- Modo de prueba: dar slots gratis
+		warn("[PlayerData] DevProductId no configurado para EquipSlots - modo testing")
+		local newSlots = math.min(
+			data.PetSystem.EquipSlots + purchaseConfig.SlotsPerPurchase,
+			maxSlots
+		)
+		data.PetSystem.EquipSlots = newSlots
+		updatePlayerData(player, { PetSystem = data.PetSystem })
 
-	-- Añadir slots
-	local newSlots = math.min(
-		data.PetSystem.EquipSlots + purchaseConfig.SlotsPerPurchase,
-		maxSlots
-	)
-	data.PetSystem.EquipSlots = newSlots
+		local testPrice = RobuxManager.Pets.EquipSlots and RobuxManager.Pets.EquipSlots.RobuxCost or 99
+		recordRobuxSpent(player, testPrice)
+		return true, "Equip slot added (Test mode)"
+	end
 
-	updatePlayerData(player, {
-		PetSystem = data.PetSystem
-	})
-
-	print("[PlayerData] Equip slots purchased:", player.Name, "->", newSlots)
-	return true, "Equip slot added"
+	-- Prompt de compra real con Robux (ProcessReceipt manejará el resultado)
+	local success, errorMessage = pcall(function()
+		MarketplaceService:PromptProductPurchase(player, devProductId)
+	end)
+	if success then
+		return true, "Processing purchase..."
+	else
+		warn("[PlayerData] Error al iniciar compra EquipSlots:", errorMessage)
+		return false, "Purchase error"
+	end
 end
 
 -- Sistema anti-exploit para height bonus (tracking por vuelo)

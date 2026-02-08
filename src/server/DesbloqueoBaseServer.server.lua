@@ -5,6 +5,11 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local MarketplaceService = game:GetService("MarketplaceService")
+
+-- Esperar módulos compartidos
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local RobuxManager = require(Shared:WaitForChild("RobuxManager"))
 
 print("[Bases] Iniciando sistema de bases desbloqueables...")
 
@@ -279,10 +284,25 @@ unlockBaseRemote.OnServerEvent:Connect(function(player, baseName, paymentType)
 		makeBasePassable(player, baseName, config.BlockName)
 
 	elseif paymentType == "robux" then
-		-- TODO: Implementar pago con Robux usando MarketplaceService
-		warn("[Bases] Pago con Robux no implementado - desbloqueando gratis para testing")
-		unlockBase(player, baseName)
-		makeBasePassable(player, baseName, config.BlockName)
+		-- Obtener DevProductId desde RobuxManager
+		local robuxProduct = RobuxManager.Bases[baseName]
+
+		if not robuxProduct or not RobuxManager.isValidDevProductId(robuxProduct.DevProductId) then
+			-- Modo de prueba: desbloquear gratis
+			warn("[Bases] DevProductId no configurado para " .. baseName .. " - desbloqueando gratis para testing")
+			unlockBase(player, baseName)
+			makeBasePassable(player, baseName, config.BlockName)
+			return
+		end
+
+		-- Prompt de compra real con Robux (ProcessReceipt en PlayerData manejará el resultado)
+		local success, errorMessage = pcall(function()
+			MarketplaceService:PromptProductPurchase(player, robuxProduct.DevProductId)
+		end)
+
+		if not success then
+			warn("[Bases] Error al iniciar compra:", errorMessage)
+		end
 	end
 end)
 
