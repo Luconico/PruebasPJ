@@ -35,7 +35,7 @@ local pendingEggPurchases = {} -- Para huevos
 local productPriceCache = {}
 
 -- DataStore
-local DATA_STORE_NAME = "FartTycoon_PlayerData_v9" -- Cambiar versión para resetear datos
+local DATA_STORE_NAME = "FartTycoon_PlayerData_v10" -- Cambiar versión para resetear datos
 local playerDataStore = DataStoreService:GetDataStore(DATA_STORE_NAME)
 
 -- OrderedDataStore para el leaderboard de Robux gastados
