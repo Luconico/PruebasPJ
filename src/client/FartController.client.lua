@@ -246,6 +246,7 @@ local function applyBodySize(multiplier)
 				originalSize.Z * multiplier
 			)
 			part.Size = newSize
+			part.CanCollide = false
 		end
 	end
 
