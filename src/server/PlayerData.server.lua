@@ -133,6 +133,10 @@ local function createRemotes()
 		"OnTrophyVisibility",-- Servidor → Cliente: mostrar/ocultar trofeo
 		"OnSpinsPurchased",  -- Servidor → Cliente: giros comprados con Robux
 		"OnRobuxEggOpened",  -- Servidor → Cliente: huevo de Robux abierto (para animación)
+		-- Replicación visual entre jugadores
+		"VisualFatnessUpdate",   -- Cliente → Servidor → Otros: gordura actual
+		"VisualPropulsionState", -- Cliente → Servidor → Otros: propulsión on/off
+		"VisualEatingState",     -- Cliente → Servidor → Otros: comer on/off
 	}
 
 	-- Funciones (con respuesta)

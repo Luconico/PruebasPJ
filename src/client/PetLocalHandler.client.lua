@@ -1,6 +1,6 @@
 --[[
 	PetLocalHandler.client.lua
-	Lógica de seguimiento de mascotas
+	Lógica de seguimiento de mascotas de TODOS los jugadores
 	Adaptado de UXR PetLocalHander.client.lua
 ]]
 
@@ -8,11 +8,6 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local humanoid = character:WaitForChild("Humanoid")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
@@ -104,70 +99,73 @@ local function movePets(hrp, pet, x, y, z, xOffset, hum, playerInAir)
 	pet.PrimaryPart.CFrame = pet.PrimaryPart.CFrame:Lerp(targetCFrame, lerpSpeed)
 end
 
+-- Procesar mascotas de TODOS los jugadores, no solo el local
 RunService.Heartbeat:Connect(function()
-	if not character or not character.Parent then
-		character = player.Character
-		if character then
-			humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-			humanoid = character:WaitForChild("Humanoid")
-		else
-			return
-		end
-	end
+	for _, playerPetFolder in ipairs(ServerPets:GetChildren()) do
+		if not playerPetFolder:IsA("Folder") then continue end
 
-	local playerPetFolder = ServerPets:FindFirstChild(player.Name)
-	if not playerPetFolder then return end
+		-- Buscar el jugador dueño de estas mascotas
+		local ownerPlayer = Players:FindFirstChild(playerPetFolder.Name)
+		if not ownerPlayer then continue end
 
-	local pets = {}
-	local rows = {}
+		local ownerCharacter = ownerPlayer.Character
+		if not ownerCharacter or not ownerCharacter.Parent then continue end
 
-	for _, pet in ipairs(playerPetFolder:GetChildren()) do
-		if pet:IsA("Model") and pet.PrimaryPart then
-			table.insert(pets, pet)
-		end
-	end
+		local ownerHRP = ownerCharacter:FindFirstChild("HumanoidRootPart")
+		local ownerHumanoid = ownerCharacter:FindFirstChildOfClass("Humanoid")
+		if not ownerHRP or not ownerHumanoid then continue end
 
-	if #pets == 0 then return end
+		local pets = {}
+		local rows = {}
 
-	rayParams.FilterDescendantsInstances = {ServerPets, character}
-
-	-- Detectar si el jugador está en el aire
-	local playerInAir = humanoid.FloorMaterial == Enum.Material.Air
-
-	local maxRowCapacity = math.ceil(math.sqrt(#pets))
-	rearrangeTables(pets, rows, maxRowCapacity)
-
-	for i, pet in ipairs(pets) do
-		local rowIndex = math.ceil(i / maxRowCapacity)
-		local row = rows[rowIndex]
-		local rowWidth = getRowWidth(row, pet)
-
-		local xOffset = #row == 1 and 0 or rowWidth / 2 - pet.PrimaryPart.Size.X / 2
-
-		local x = (table.find(row, pet) - 1) * SPACING
-		local z = rowIndex * SPACING
-		local y = 0
-
-		-- Solo hacer raycast si el jugador está en el suelo
-		if not playerInAir then
-			local rayResult = Workspace:Blockcast(
-				pet.PrimaryPart.CFrame + Vector3.new(0, MAX_CLIMB_HEIGHT, 0),
-				pet.PrimaryPart.Size,
-				rayDirection,
-				rayParams
-			)
-
-			if rayResult then
-				local isFlying = pet:FindFirstChild("Flying") and pet.Flying.Value or false
-				y = rayResult.Position.Y + pet.PrimaryPart.Size.Y / 2
-				if isFlying then
-					y = y + FLY_OFFSET
-				end
+		for _, pet in ipairs(playerPetFolder:GetChildren()) do
+			if pet:IsA("Model") and pet.PrimaryPart then
+				table.insert(pets, pet)
 			end
 		end
 
-		movePets(humanoidRootPart, pet, x, y, z, xOffset, humanoid, playerInAir)
+		if #pets == 0 then continue end
+
+		rayParams.FilterDescendantsInstances = {ServerPets, ownerCharacter}
+
+		-- Detectar si el jugador está en el aire
+		local playerInAir = ownerHumanoid.FloorMaterial == Enum.Material.Air
+
+		local maxRowCapacity = math.ceil(math.sqrt(#pets))
+		rearrangeTables(pets, rows, maxRowCapacity)
+
+		for i, pet in ipairs(pets) do
+			local rowIndex = math.ceil(i / maxRowCapacity)
+			local row = rows[rowIndex]
+			local rowWidth = getRowWidth(row, pet)
+
+			local xOffset = #row == 1 and 0 or rowWidth / 2 - pet.PrimaryPart.Size.X / 2
+
+			local x = (table.find(row, pet) - 1) * SPACING
+			local z = rowIndex * SPACING
+			local y = 0
+
+			-- Solo hacer raycast si el jugador está en el suelo
+			if not playerInAir then
+				local rayResult = Workspace:Blockcast(
+					pet.PrimaryPart.CFrame + Vector3.new(0, MAX_CLIMB_HEIGHT, 0),
+					pet.PrimaryPart.Size,
+					rayDirection,
+					rayParams
+				)
+
+				if rayResult then
+					local isFlying = pet:FindFirstChild("Flying") and pet.Flying.Value or false
+					y = rayResult.Position.Y + pet.PrimaryPart.Size.Y / 2
+					if isFlying then
+						y = y + FLY_OFFSET
+					end
+				end
+			end
+
+			movePets(ownerHRP, pet, x, y, z, xOffset, ownerHumanoid, playerInAir)
+		end
 	end
 end)
 
-print("[PetLocalHandler] Inicializado")
+print("[PetLocalHandler] Inicializado (todos los jugadores)")

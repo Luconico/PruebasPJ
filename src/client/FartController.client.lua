@@ -90,6 +90,12 @@ local originalLeftKneeC0, originalRightKneeC0
 -- Cosmético equipado
 local equippedCosmeticConfig = nil
 
+-- Replicación visual a otros jugadores (throttled)
+local lastFatnessSendTime = 0
+local lastSentFatness = 0
+local FATNESS_SEND_INTERVAL = 0.2  -- 5 Hz
+local FATNESS_SEND_THRESHOLD = 0.02
+
 -- ============================================
 -- EFECTOS VISUALES (Solo cliente)
 -- ============================================
@@ -582,6 +588,9 @@ local function stopPropelling()
 		fartParticles.Enabled = false
 	end
 
+	-- Notificar a otros jugadores que paró la propulsión
+	pcall(function() Remotes.VisualPropulsionState:FireServer(false) end)
+
 	-- Registrar altura máxima en el servidor
 	if maxHeightThisFlight > 0 then
 		Remotes.RegisterHeight:InvokeServer(maxHeightThisFlight)
@@ -612,6 +621,10 @@ local function startPropelling()
 
 	-- Iniciar animación de propulsión
 	startPropellingAnimation()
+
+	-- Notificar a otros jugadores que empezó la propulsión
+	local cosmeticId = equippedCosmeticConfig and equippedCosmeticConfig.Name or nil
+	pcall(function() Remotes.VisualPropulsionState:FireServer(true, cosmeticId) end)
 
 	playRandomFart()
 end
@@ -668,7 +681,11 @@ end
 -- ============================================
 
 local function stopEating()
-	isEating = false
+	if isEating then
+		isEating = false
+		-- Notificar a otros jugadores que dejó de comer
+		pcall(function() Remotes.VisualEatingState:FireServer(false) end)
+	end
 	if eatSound and eatSound.Playing then
 		eatSound:Stop()
 	end
@@ -697,6 +714,9 @@ local function updateEating()
 		if eatSound and not eatSound.Playing then
 			eatSound:Play()
 		end
+		-- Notificar a otros jugadores que empezó a comer
+		local foodIcon = currentFoodConfig and currentFoodConfig.Icon or "🍔"
+		pcall(function() Remotes.VisualEatingState:FireServer(true, foodIcon) end)
 	end
 
 	-- La comida determina la velocidad base
@@ -794,6 +814,16 @@ RunService.RenderStepped:Connect(function()
 			fartParticles.Enabled = false
 		end
 		isPropelling = false
+	end
+
+	-- Replicar gordura a otros jugadores (throttled 5Hz)
+	local now = tick()
+	if now - lastFatnessSendTime >= FATNESS_SEND_INTERVAL then
+		if math.abs(currentFatness - lastSentFatness) > FATNESS_SEND_THRESHOLD then
+			pcall(function() Remotes.VisualFatnessUpdate:FireServer(currentFatness) end)
+			lastSentFatness = currentFatness
+			lastFatnessSendTime = now
+		end
 	end
 
 	-- Actualizar UI
