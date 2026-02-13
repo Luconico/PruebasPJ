@@ -28,25 +28,25 @@ RobuxManager.Upgrades = {
 		Name = "Max Fatness Upgrade",
 		Description = "+1 Level Max Fatness",
 		RobuxCost = 10,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532847985, -- TODO: Configurar en Roblox
 	},
 	EatSpeed = {
 		Name = "Eat Speed Upgrade",
 		Description = "+1 Level Eat Speed",
 		RobuxCost = 10,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532848287, -- TODO: Configurar en Roblox
 	},
 	PropulsionForce = {
 		Name = "Fart Power Upgrade",
 		Description = "+1 Level Fart Power",
 		RobuxCost = 10,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532848724, -- TODO: Configurar en Roblox
 	},
 	FuelEfficiency = {
 		Name = "Gas Efficiency Upgrade",
 		Description = "+1 Level Gas Efficiency",
 		RobuxCost = 10,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532849024, -- TODO: Configurar en Roblox
 	},
 }
 
@@ -58,25 +58,25 @@ RobuxManager.Foods = {
 		Name = "Burger Unlock",
 		Description = "Unlock Burger (x3 speed)",
 		RobuxCost = 15,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532849366, -- TODO: Configurar en Roblox
 	},
 	Pizza = {
 		Name = "Pizza Unlock",
 		Description = "Unlock Pizza (x6 speed)",
 		RobuxCost = 35,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532849802, -- TODO: Configurar en Roblox
 	},
 	HotDog = {
 		Name = "Hot Dog Unlock",
 		Description = "Unlock Hot Dog (x10 speed)",
 		RobuxCost = 65,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532850579, -- TODO: Configurar en Roblox
 	},
 	GoldenBurger = {
 		Name = "Golden Burger Unlock",
 		Description = "Unlock Golden Burger (x16 speed)",
 		RobuxCost = 99,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532850810, -- TODO: Configurar en Roblox
 	},
 }
 
@@ -88,103 +88,103 @@ RobuxManager.Cosmetics = {
 		Name = "Blue Breeze",
 		Description = "Blue fart cosmetic",
 		RobuxCost = 9,
-		DevProductId = 0,
+		DevProductId = 3532851760,
 	},
 	Pink = {
 		Name = "Pink Cloud",
 		Description = "Pink fart cosmetic",
 		RobuxCost = 15,
-		DevProductId = 0,
+		DevProductId = 3532851947,
 	},
 	Purple = {
 		Name = "Mystic Vapor",
 		Description = "Purple fart cosmetic",
 		RobuxCost = 19,
-		DevProductId = 0,
+		DevProductId = 3532852188,
 	},
 	Toxic = {
 		Name = "Radioactive Toxic",
 		Description = "Toxic green fart",
 		RobuxCost = 49,
-		DevProductId = 0,
+		DevProductId = 3532852321,
 	},
 	Fire = {
 		Name = "Fire Fart",
 		Description = "Fiery fart cosmetic",
 		RobuxCost = 99,
-		DevProductId = 0,
+		DevProductId = 3532852441,
 	},
 	Ice = {
 		Name = "Frozen Blizzard",
 		Description = "Ice fart cosmetic",
 		RobuxCost = 99,
-		DevProductId = 0,
+		DevProductId = 3532852632,
 	},
 	Shadow = {
 		Name = "Dark Shadow",
 		Description = "Shadow fart cosmetic",
 		RobuxCost = 99,
-		DevProductId = 0,
+		DevProductId = 3532852781,
 	},
 	Lava = {
 		Name = "Volcanic Magma",
 		Description = "Lava fart cosmetic",
 		RobuxCost = 149,
-		DevProductId = 0,
+		DevProductId = 3532852899,
 	},
 	Electric = {
 		Name = "Electric Storm",
 		Description = "Electric fart cosmetic",
 		RobuxCost = 149,
-		DevProductId = 0,
+		DevProductId = 3532853064,
 	},
 	Galaxy = {
 		Name = "Galactic Nebula",
 		Description = "Galaxy fart cosmetic",
 		RobuxCost = 199,
-		DevProductId = 0,
+		DevProductId = 3532853172,
 	},
 	Neon = {
 		Name = "Cyberpunk Neon",
 		Description = "Neon fart cosmetic",
 		RobuxCost = 199,
-		DevProductId = 0,
+		DevProductId = 3532853323,
 	},
 	Rainbow = {
 		Name = "Magic Rainbow",
 		Description = "Rainbow fart cosmetic",
 		RobuxCost = 249,
-		DevProductId = 0,
+		DevProductId = 3532853505,
 	},
 	Golden = {
 		Name = "Golden Fart",
 		Description = "Golden fart cosmetic",
 		RobuxCost = 299,
-		DevProductId = 0,
+		DevProductId = 3532853639,
 	},
 	Diamond = {
 		Name = "Brilliant Diamond",
 		Description = "Diamond fart cosmetic",
 		RobuxCost = 499,
-		DevProductId = 0,
+		DevProductId = 3532853790,
 	},
 	Void = {
 		Name = "Dimensional Void",
 		Description = "Void fart cosmetic",
 		RobuxCost = 799,
-		DevProductId = 0,
+		DevProductId = 3532853958,
 	},
 	Chromatic = {
 		Name = "Infinite Chromatic",
 		Description = "Chromatic fart cosmetic",
 		RobuxCost = 999,
-		DevProductId = 0,
+		DevProductId = 3532854097,
 	},
 	Legendary_Phoenix = {
 		Name = "Reborn Phoenix",
 		Description = "Phoenix fart cosmetic",
 		RobuxCost = 1499,
-		DevProductId = 0,
+		DevProductId = 3532854250,
 	},
 }
 
@@ -196,21 +196,21 @@ RobuxManager.Pets = {
 		Name = "Golden Egg",
 		Description = "Premium egg with exclusive pets",
 		RobuxCost = 99,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532854402, -- TODO: Configurar en Roblox
 	},
 	InventorySlots = {
 		Name = "+10 Inventory Slots",
 		Description = "Increase pet inventory capacity",
 		RobuxCost = 49,
 		SlotsPerPurchase = 10,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532854616, -- TODO: Configurar en Roblox
 	},
 	EquipSlots = {
 		Name = "+1 Pet Following Slot",
 		Description = "Equip one more pet",
 		RobuxCost = 99,
 		SlotsPerPurchase = 1,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532854871, -- TODO: Configurar en Roblox
 	},
 }
 
@@ -223,63 +223,63 @@ RobuxManager.Zones = {
 		Description = "Unlock Zone 1",
 		RobuxCost = 19,
 		TrophyCost = 250,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532855197, -- TODO: Configurar en Roblox
 	},
 	Zona2 = {
 		Name = "Zone 2",
 		Description = "Unlock Zone 2",
 		RobuxCost = 99,
 		TrophyCost = 750,
-		DevProductId = 0,
+		DevProductId = 3532855338,
 	},
 	Zona3 = {
 		Name = "Zone 3",
 		Description = "Unlock Zone 3",
 		RobuxCost = 149,
 		TrophyCost = 2500,
-		DevProductId = 0,
+		DevProductId = 3532855438,
 	},
 	Zona4 = {
 		Name = "Zone 4",
 		Description = "Unlock Zone 4",
 		RobuxCost = 399,
 		TrophyCost = 5000,
-		DevProductId = 0,
+		DevProductId = 3532855549,
 	},
 	Zona5 = {
 		Name = "Zone 5",
 		Description = "Unlock Zone 5",
 		RobuxCost = 399,
 		TrophyCost = 250,
-		DevProductId = 0,
+		DevProductId = 3532855549,
 	},
 	VIP1 = {
 		Name = "VIP Zone 1",
 		Description = "Exclusive VIP Zone 1",
 		RobuxCost = 49,
 		VIPOnly = true,
-		DevProductId = 0,
+		DevProductId = 3532855709,
 	},
 	VIP2 = {
 		Name = "VIP Zone 2",
 		Description = "Exclusive VIP Zone 2",
 		RobuxCost = 99,
 		VIPOnly = true,
-		DevProductId = 0,
+		DevProductId = 3532855813,
 	},
 	VIP3 = {
 		Name = "VIP Zone 3",
 		Description = "Exclusive VIP Zone 3",
 		RobuxCost = 149,
 		VIPOnly = true,
-		DevProductId = 0,
+		DevProductId = 3532855960,
 	},
 	VIP4 = {
 		Name = "VIP Zone 4",
 		Description = "Exclusive VIP Zone 4",
 		RobuxCost = 199,
 		VIPOnly = true,
-		DevProductId = 0,
+		DevProductId = 3532856075,
 	},
 }
 
@@ -306,7 +306,7 @@ RobuxManager.Spins = {
 		Amount = 1,
 		RobuxCost = 25,
 		Sale = false,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532856603, -- TODO: Configurar en Roblox
 	},
 	Spin10 = {
 		Name = "+10 Spins",
@@ -314,7 +314,7 @@ RobuxManager.Spins = {
 		Amount = 10,
 		RobuxCost = 200,
 		Sale = false,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532856787, -- TODO: Configurar en Roblox
 	},
 	Spin100 = {
 		Name = "+100 Spins",
@@ -322,7 +322,7 @@ RobuxManager.Spins = {
 		Amount = 100,
 		RobuxCost = 1500,
 		Sale = true,
-		DevProductId = 0, -- TODO: Configurar en Roblox
+		DevProductId = 3532857012, -- TODO: Configurar en Roblox
 	},
 }
 

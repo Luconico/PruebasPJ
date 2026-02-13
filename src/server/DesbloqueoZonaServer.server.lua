@@ -5,6 +5,11 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local MarketplaceService = game:GetService("MarketplaceService")
+
+-- Esperar módulos compartidos
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local RobuxManager = require(Shared:WaitForChild("RobuxManager"))
 
 print("[Zonas] Iniciando sistema de zonas desbloqueables...")
 
@@ -360,14 +365,34 @@ unlockZoneRemote.OnServerEvent:Connect(function(player, zoneName, paymentType)
 		makeZonePassable(player, zoneName)
 
 	elseif paymentType == "robux" then
-		-- TODO: Implementar pago con Robux usando MarketplaceService
-		if config.VIPOnly then
-			warn("[Zonas VIP] Pago con Robux para " .. zoneName .. " - desbloqueando gratis para testing")
-		else
-			warn("[Zonas] Pago con Robux no implementado - desbloqueando gratis para testing")
+		-- Obtener DevProductId desde RobuxManager
+		local robuxProduct = RobuxManager.Zones[zoneName]
+		-- Si no está en Zones, buscar en Bases (ej: BloqueoBase1 → Base1)
+		if not robuxProduct then
+			for baseName, baseData in pairs(RobuxManager.Bases) do
+				if zoneName == "Bloqueo" .. baseName then
+					robuxProduct = baseData
+					break
+				end
+			end
 		end
-		unlockZone(player, zoneName)
-		makeZonePassable(player, zoneName)
+
+		if not robuxProduct or not RobuxManager.isValidDevProductId(robuxProduct.DevProductId) then
+			-- Modo de prueba: desbloquear gratis
+			warn("[Zonas] DevProductId no configurado para " .. zoneName .. " - desbloqueando gratis para testing")
+			unlockZone(player, zoneName)
+			makeZonePassable(player, zoneName)
+			return
+		end
+
+		-- Prompt de compra real con Robux (ProcessReceipt en PlayerData manejará el resultado)
+		local success, errorMessage = pcall(function()
+			MarketplaceService:PromptProductPurchase(player, robuxProduct.DevProductId)
+		end)
+
+		if not success then
+			warn("[Zonas] Error al iniciar compra:", errorMessage)
+		end
 	end
 end)
 

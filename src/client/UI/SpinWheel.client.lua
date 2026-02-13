@@ -10,6 +10,7 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -99,6 +100,20 @@ local wheelFrame = nil
 local spinButton = nil
 local spinsCountLabel = nil
 local timerLabel = nil
+
+-- Escuchar cuando el servidor confirma compra de giros
+if Remotes then
+	local OnSpinsPurchased = Remotes:WaitForChild("OnSpinsPurchased", 10)
+	if OnSpinsPurchased then
+		OnSpinsPurchased.OnClientEvent:Connect(function(spinAmount)
+			availableSpins = availableSpins + spinAmount
+			if spinsCountLabel then
+				spinsCountLabel.Text = tostring(availableSpins)
+			end
+			print("[SpinWheel] Giros recibidos del servidor: +" .. spinAmount)
+		end)
+	end
+end
 
 -- Forward declarations
 local spinWheel
@@ -667,12 +682,22 @@ local function createSidePanel(parent)
 		-- Conectar evento de compra
 		button.MouseButton1Click:Connect(function()
 			if not isSpinning then
-				-- TODO: Implementar compra con Robux
-				print("[SpinWheel] Comprar " .. priceInfo.Amount .. " giros por " .. priceInfo.Robux .. " R$")
-				-- Por ahora, dar giros gratis para pruebas
-				availableSpins = availableSpins + priceInfo.Amount
-				if spinsCountLabel then
-					spinsCountLabel.Text = tostring(availableSpins)
+				local devProductId = priceInfo.DevProductId
+				if not devProductId or devProductId == 0 then
+					-- Modo de prueba: dar giros gratis
+					warn("[SpinWheel] DevProductId no configurado - giros gratis para testing")
+					availableSpins = availableSpins + priceInfo.Amount
+					if spinsCountLabel then
+						spinsCountLabel.Text = tostring(availableSpins)
+					end
+				else
+					-- Prompt de compra real con Robux
+					local success, errorMessage = pcall(function()
+						MarketplaceService:PromptProductPurchase(player, devProductId)
+					end)
+					if not success then
+						warn("[SpinWheel] Error al iniciar compra:", errorMessage)
+					end
 				end
 			end
 		end)
@@ -1131,15 +1156,22 @@ local function setupUIEvents(events)
 	end
 end
 
-local UIEvents = playerGui:FindFirstChild("UIEvents")
-if UIEvents then
-	setupUIEvents(UIEvents)
+-- UIEvents vive dentro de UIEventsGui (ScreenGui con ResetOnSpawn=false)
+local eventsGui = playerGui:FindFirstChild("UIEventsGui")
+if eventsGui then
+	local UIEvents = eventsGui:FindFirstChild("UIEvents")
+	if UIEvents then
+		setupUIEvents(UIEvents)
+	end
 else
-	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
+	-- Esperar a que se cree UIEventsGui (si LeftMenu se carga después)
 	task.spawn(function()
-		local events = playerGui:WaitForChild("UIEvents", 5)
-		if events then
-			setupUIEvents(events)
+		local gui = playerGui:WaitForChild("UIEventsGui", 5)
+		if gui then
+			local events = gui:WaitForChild("UIEvents", 5)
+			if events then
+				setupUIEvents(events)
+			end
 		end
 	end)
 end

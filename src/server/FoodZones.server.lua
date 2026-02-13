@@ -12,6 +12,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 -- Esperar dependencias
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local RobuxManager = require(Shared:WaitForChild("RobuxManager"))
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 
 -- Crear RemoteEvents
@@ -306,12 +307,27 @@ BuyFoodFromSign.OnServerEvent:Connect(function(player, foodType)
 		return
 	end
 
-	-- TODO: Implementar compra con Developer Products
-	-- Por ahora, modo testing: desbloquear gratis
-	warn("[FoodZones] Modo testing - desbloqueando gratis:", foodType)
-	if unlockFoodServer then
-		unlockFoodServer:Invoke(player, foodType)
-		OnFoodPurchased:FireClient(player, foodType, true)
+	-- Compra con Robux - obtener DevProductId desde RobuxManager
+	local robuxProduct = RobuxManager.Foods[foodType]
+	local productId = robuxProduct and robuxProduct.DevProductId or 0
+
+	if not productId or productId == 0 then
+		-- Modo de prueba: desbloquear gratis
+		warn("[FoodZones] DevProductId no configurado para " .. foodType .. " - desbloqueando gratis para testing")
+		if unlockFoodServer then
+			unlockFoodServer:Invoke(player, foodType)
+			OnFoodPurchased:FireClient(player, foodType, true)
+		end
+		return
+	end
+
+	-- Prompt de compra real con Robux (ProcessReceipt en PlayerData manejará el resultado)
+	local success, errorMessage = pcall(function()
+		MarketplaceService:PromptProductPurchase(player, productId)
+	end)
+
+	if not success then
+		warn("[FoodZones] Error al iniciar compra:", errorMessage)
 	end
 end)
 

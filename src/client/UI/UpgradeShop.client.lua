@@ -1056,32 +1056,39 @@ ResponsiveUI.onViewportChanged(function(info)
 end)
 
 -- Escuchar BindableEvent del menú lateral
-local UIEvents = playerGui:FindFirstChild("UIEvents")
-if UIEvents then
-	local toggleEvent = UIEvents:FindFirstChild("ToggleUpgradeShop")
-	if toggleEvent then
-		toggleEvent.Event:Connect(function()
-			if isShopOpen then
-				closeShop()
-			else
-				openShop()
-			end
-		end)
+-- UIEvents vive dentro de UIEventsGui (ScreenGui con ResetOnSpawn=false)
+local eventsGui = playerGui:FindFirstChild("UIEventsGui")
+if eventsGui then
+	local UIEvents = eventsGui:FindFirstChild("UIEvents")
+	if UIEvents then
+		local toggleEvent = UIEvents:FindFirstChild("ToggleUpgradeShop")
+		if toggleEvent then
+			toggleEvent.Event:Connect(function()
+				if isShopOpen then
+					closeShop()
+				else
+					openShop()
+				end
+			end)
+		end
 	end
 else
-	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
+	-- Esperar a que se cree UIEventsGui (si LeftMenu se carga después)
 	task.spawn(function()
-		local events = playerGui:WaitForChild("UIEvents", 5)
-		if events then
-			local toggleEvent = events:WaitForChild("ToggleUpgradeShop", 5)
-			if toggleEvent then
-				toggleEvent.Event:Connect(function()
-					if isShopOpen then
-						closeShop()
-					else
-						openShop()
-					end
-				end)
+		local gui = playerGui:WaitForChild("UIEventsGui", 5)
+		if gui then
+			local events = gui:WaitForChild("UIEvents", 5)
+			if events then
+				local toggleEvent = events:WaitForChild("ToggleUpgradeShop", 5)
+				if toggleEvent then
+					toggleEvent.Event:Connect(function()
+						if isShopOpen then
+							closeShop()
+						else
+							openShop()
+						end
+					end)
+				end
 			end
 		end
 	end)

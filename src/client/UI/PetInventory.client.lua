@@ -1036,15 +1036,22 @@ local function setupUIEvents(events)
 	end
 end
 
-local UIEvents = playerGui:FindFirstChild("UIEvents")
-if UIEvents then
-	setupUIEvents(UIEvents)
+-- UIEvents vive dentro de UIEventsGui (ScreenGui con ResetOnSpawn=false)
+local eventsGui = playerGui:FindFirstChild("UIEventsGui")
+if eventsGui then
+	local UIEvents = eventsGui:FindFirstChild("UIEvents")
+	if UIEvents then
+		setupUIEvents(UIEvents)
+	end
 else
-	-- Esperar a que se cree UIEvents (si LeftMenu se carga después)
+	-- Esperar a que se cree UIEventsGui (si LeftMenu se carga después)
 	task.spawn(function()
-		local events = playerGui:WaitForChild("UIEvents", 5)
-		if events then
-			setupUIEvents(events)
+		local gui = playerGui:WaitForChild("UIEventsGui", 5)
+		if gui then
+			local events = gui:WaitForChild("UIEvents", 5)
+			if events then
+				setupUIEvents(events)
+			end
 		end
 	end)
 end

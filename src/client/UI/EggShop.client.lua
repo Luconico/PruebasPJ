@@ -26,6 +26,7 @@ local SoundManager = require(Shared:WaitForChild("SoundManager"))
 local PetsFolder = ReplicatedStorage:WaitForChild("Pets", 10)
 local EggsFolder = ReplicatedStorage:WaitForChild("Eggs", 10)
 
+
 -- ============================================
 -- VIEWPORT FRAME HELPER
 -- ============================================
@@ -520,6 +521,18 @@ local function playEggOpenAnimation(eggName, petName)
 			inputConnection:Disconnect()
 			closeAnimation()
 		end
+	end)
+end
+
+-- Escuchar cuando el servidor confirma apertura de huevo de Robux (para animación)
+local OnRobuxEggOpened = Remotes and Remotes:FindFirstChild("OnRobuxEggOpened")
+if not OnRobuxEggOpened and Remotes then
+	OnRobuxEggOpened = Remotes:WaitForChild("OnRobuxEggOpened", 10)
+end
+if OnRobuxEggOpened then
+	OnRobuxEggOpened.OnClientEvent:Connect(function(eggName, petName)
+		print("[EggShop] Huevo de Robux abierto! Obtenido:", petName)
+		playEggOpenAnimation(eggName, petName)
 	end)
 end
 

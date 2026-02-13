@@ -21,13 +21,23 @@ local TextureManager = require(Shared:WaitForChild("TextureManager"))
 
 -- ============================================
 -- CREAR BINDABLE EVENTS PARA COMUNICACIÓN
+-- (Dentro de un ScreenGui con ResetOnSpawn=false para que sobreviva al respawn)
 -- ============================================
 
-local UIEvents = playerGui:FindFirstChild("UIEvents")
+local eventsGui = playerGui:FindFirstChild("UIEventsGui")
+if not eventsGui then
+	eventsGui = Instance.new("ScreenGui")
+	eventsGui.Name = "UIEventsGui"
+	eventsGui.ResetOnSpawn = false
+	eventsGui.Enabled = false -- No necesita renderizar nada
+	eventsGui.Parent = playerGui
+end
+
+local UIEvents = eventsGui:FindFirstChild("UIEvents")
 if not UIEvents then
 	UIEvents = Instance.new("Folder")
 	UIEvents.Name = "UIEvents"
-	UIEvents.Parent = playerGui
+	UIEvents.Parent = eventsGui
 end
 
 -- Evento para abrir/cerrar inventario de pets

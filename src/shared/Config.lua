@@ -105,9 +105,9 @@ Config.Upgrades = {
 		Name = "Gas Efficiency",
 		Description = "Lose less fat when propelling",
 		MaxLevel = 100,
-		BaseValue = 0.04,
-		-- Interpolated from original 10 values to 100 values
-		ValuesPerLevel = interpolateValues(0.04, { 0.032, 0.025, 0.019, 0.014, 0.010, 0.0075, 0.0055, 0.0045, 0.0038, 0.0032 }, 100),
+		BaseValue = 0.02,
+		-- Interpolated from original 10 values to 100 values (x0.5 = less fat loss)
+		ValuesPerLevel = interpolateValues(0.02, { 0.016, 0.0125, 0.0095, 0.007, 0.005, 0.00375, 0.00275, 0.00225, 0.0019, 0.0016 }, 100),
 		CostCoins = generateCoinCosts(20, 100000, 100),
 		-- CostRobux se inyecta desde RobuxManager
 	},
