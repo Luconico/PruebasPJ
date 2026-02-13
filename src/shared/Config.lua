@@ -1121,6 +1121,9 @@ Config.DefaultPlayerData = {
 		InventorySlots = 50,
 		PetIndex = {}, -- Mascotas descubiertas
 	},
+
+	-- Recompensas reclamadas
+	TreasureClaimed = false, -- Cofre del tesoro (requiere grupo)
 }
 
 -- ============================================
