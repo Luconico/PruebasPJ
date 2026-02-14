@@ -1124,6 +1124,13 @@ Config.DefaultPlayerData = {
 
 	-- Recompensas reclamadas
 	TreasureClaimed = false, -- Cofre del tesoro (requiere grupo)
+
+	-- Sistema de referidos
+	ReferralData = {
+		ReferredPlayers = {}, -- UserIds de amigos que entraron por invitación
+		ClaimedCount = 0,     -- Recompensas ya cobradas (máx 3)
+		PendingRewards = 0,   -- Recompensas pendientes de cobrar
+	},
 }
 
 -- ============================================

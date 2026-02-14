@@ -1,28 +1,27 @@
 --[[
 	TreasureChest.server.lua
-	Cofre del tesoro: recompensa 10,000 monedas si el jugador
-	está en el grupo (ID 803229435). Una sola vez por jugador.
+	Treasure chest: rewards 10,000 coins if the player
+	is in the group (ID 803229435). One time per player.
 ]]
 
 local Players = game:GetService("Players")
-local GroupService = game:GetService("GroupService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Esperar a que existan los ServerFunctions (creados por PlayerData)
+-- Wait for ServerFunctions (created by PlayerData)
 local ServerFunctions = ReplicatedStorage:WaitForChild("ServerFunctions")
 local ModifyCoinsServer = ServerFunctions:WaitForChild("ModifyCoinsServer")
-local GetPlayerDataServer = ServerFunctions:WaitForChild("GetPlayerDataServer")
+local ClaimTreasureServer = ServerFunctions:WaitForChild("ClaimTreasureServer")
+local CheckTreasureClaimedServer = ServerFunctions:WaitForChild("CheckTreasureClaimedServer")
 
--- Esperar a los Remotes (creados por PlayerData)
+-- Wait for Remotes (created by PlayerData)
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-local OnDataUpdated = Remotes:WaitForChild("OnDataUpdated")
 
--- Configuración
+-- Config
 local GROUP_ID = 803229435
 local REWARD_COINS = 10000
 
 -- ============================================
--- CREAR REMOTES PARA EL COFRE
+-- CREATE REMOTES FOR THE CHEST
 -- ============================================
 local claimTreasureRemote = Instance.new("RemoteFunction")
 claimTreasureRemote.Name = "ClaimTreasure"
@@ -33,47 +32,35 @@ checkTreasureRemote.Name = "CheckTreasureStatus"
 checkTreasureRemote.Parent = Remotes
 
 -- ============================================
--- FUNCIONES
+-- FUNCTIONS
 -- ============================================
 
--- Verificar si el jugador está en el grupo
+-- Check if the player is in the group
 local function isInGroup(player)
 	local success, result = pcall(function()
 		return player:IsInGroup(GROUP_ID)
 	end)
 	if not success then
-		warn("[TreasureChest] Error verificando grupo para", player.Name, ":", result)
+		warn("[TreasureChest] Error checking group for", player.Name, ":", result)
 		return false
 	end
 	return result
 end
 
--- Obtener datos del jugador
-local function getPlayerData(player)
-	local result = GetPlayerDataServer:Invoke(player)
-	if result and result.Data then
-		return result.Data
-	end
-	return nil
-end
-
 -- ============================================
--- HANDLERS DE REMOTES
+-- REMOTE HANDLERS
 -- ============================================
 
--- Consultar estado del cofre (si ya reclamó, si está en el grupo)
+-- Check chest status (already claimed, in group, etc.)
 checkTreasureRemote.OnServerInvoke = function(player)
-	local data = getPlayerData(player)
-	if not data then
-		return { CanClaim = false, Reason = "DataError" }
-	end
+	-- Use BindableFunction to check the REAL cache
+	local alreadyClaimed = CheckTreasureClaimedServer:Invoke(player)
 
-	-- Ya reclamó
-	if data.TreasureClaimed then
+	if alreadyClaimed then
 		return { CanClaim = false, Reason = "AlreadyClaimed" }
 	end
 
-	-- Verificar grupo
+	-- Check group membership
 	local inGroup = isInGroup(player)
 	if not inGroup then
 		return { CanClaim = false, Reason = "NotInGroup", GroupId = GROUP_ID }
@@ -82,41 +69,34 @@ checkTreasureRemote.OnServerInvoke = function(player)
 	return { CanClaim = true }
 end
 
--- Reclamar la recompensa del cofre
+-- Claim the chest reward
 claimTreasureRemote.OnServerInvoke = function(player)
-	local data = getPlayerData(player)
-	if not data then
-		return false, "Error de datos"
+	-- Check not already claimed (on the REAL cache)
+	local alreadyClaimed = CheckTreasureClaimedServer:Invoke(player)
+	if alreadyClaimed then
+		return false, "You already claimed this reward"
 	end
 
-	-- Verificar que no haya reclamado ya
-	if data.TreasureClaimed then
-		return false, "Ya reclamaste esta recompensa"
-	end
-
-	-- Verificar grupo
+	-- Check group membership
 	local inGroup = isInGroup(player)
 	if not inGroup then
-		return false, "Debes unirte al grupo primero"
+		return false, "You must join the group first"
 	end
 
-	-- Dar las monedas
+	-- Give coins
 	local success, newCoins = ModifyCoinsServer:Invoke(player, REWARD_COINS)
 	if not success then
-		return false, "Error al dar monedas"
+		return false, "Error granting coins"
 	end
 
-	-- Marcar como reclamado
-	data.TreasureClaimed = true
+	-- Mark as claimed on the REAL cache (via BindableFunction)
+	local claimSuccess = ClaimTreasureServer:Invoke(player)
+	if not claimSuccess then
+		return false, "Error saving claim status"
+	end
 
-	-- Notificar al cliente que los datos cambiaron
-	OnDataUpdated:FireClient(player, {
-		TreasureClaimed = true,
-		Coins = newCoins,
-	})
-
-	print("[TreasureChest]", player.Name, "reclamó el cofre del tesoro! +", REWARD_COINS, "monedas")
-	return true, "Has recibido " .. REWARD_COINS .. " monedas!"
+	print("[TreasureChest]", player.Name, "claimed the treasure chest! +", REWARD_COINS, "coins")
+	return true, "You received " .. REWARD_COINS .. " coins!"
 end
 
-print("[TreasureChest] Sistema de cofre del tesoro inicializado")
+print("[TreasureChest] Treasure chest system initialized")

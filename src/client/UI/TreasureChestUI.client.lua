@@ -1,7 +1,7 @@
 --[[
 	TreasureChestUI.client.lua
-	UI del cofre del tesoro: detecta proximidad, muestra popup para
-	reclamar 10,000 monedas si el jugador está en el grupo.
+	Treasure chest UI: detects proximity, shows popup to
+	claim 10,000 coins if the player is in the group.
 ]]
 
 local Players = game:GetService("Players")
@@ -22,22 +22,20 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local ClaimTreasure = Remotes:WaitForChild("ClaimTreasure")
 local CheckTreasureStatus = Remotes:WaitForChild("CheckTreasureStatus")
 
--- Configuración
-local PROXIMITY_DISTANCE = 15 -- Studs para activar la UI
+-- Config
+local PROXIMITY_DISTANCE = 15 -- Studs to activate UI
 local GROUP_ID = 803229435
 local REWARD_AMOUNT = 10000
-local GROUP_URL = "https://www.roblox.com/groups/" .. GROUP_ID
 
--- Estado
+-- State
 local isUIOpen = false
 local hasClaimed = false
 local treasureModel = nil
 
 -- ============================================
--- BUSCAR MODELO TREASURE EN WORKSPACE
+-- FIND TREASURE MODEL IN WORKSPACE
 -- ============================================
 local function findTreasure()
-	-- Buscar directamente
 	local model = workspace:FindFirstChild("Treasure", true)
 	if model then
 		return model
@@ -45,7 +43,7 @@ local function findTreasure()
 	return nil
 end
 
--- Esperar a que el modelo exista
+-- Wait for the model to exist
 task.spawn(function()
 	while not treasureModel do
 		treasureModel = findTreasure()
@@ -53,11 +51,11 @@ task.spawn(function()
 			task.wait(2)
 		end
 	end
-	print("[TreasureChestUI] Modelo Treasure encontrado")
+	print("[TreasureChestUI] Treasure model found")
 end)
 
 -- ============================================
--- CREAR UI
+-- CREATE UI
 -- ============================================
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "TreasureChestGui"
@@ -65,7 +63,7 @@ screenGui.ResetOnSpawn = false
 screenGui.DisplayOrder = 10
 screenGui.Parent = playerGui
 
--- Indicador de proximidad (icono flotante sobre el cofre)
+-- Proximity indicator (floating icon above the chest)
 local proximityBillboard = Instance.new("BillboardGui")
 proximityBillboard.Name = "TreasureIndicator"
 proximityBillboard.Size = UDim2.new(0, 80, 0, 80)
@@ -82,7 +80,7 @@ indicatorIcon.Text = "💰"
 indicatorIcon.TextScaled = true
 indicatorIcon.Parent = proximityBillboard
 
--- Fondo oscuro (overlay)
+-- Dark overlay
 local overlay = Instance.new("Frame")
 overlay.Name = "Overlay"
 overlay.Size = UDim2.new(1, 0, 1, 0)
@@ -93,7 +91,7 @@ overlay.ZIndex = 50
 overlay.Visible = false
 overlay.Parent = screenGui
 
--- Panel principal del popup
+-- Main popup panel
 local mainFrame = Instance.new("ImageLabel")
 mainFrame.Name = "TreasurePanel"
 mainFrame.Size = UDim2.new(0, 420, 0, 380)
@@ -117,7 +115,7 @@ mainStroke.Color = Color3.fromRGB(255, 200, 50)
 mainStroke.Thickness = 3
 mainStroke.Parent = mainFrame
 
--- Icono del cofre (arriba, sobresale)
+-- Chest icon (top, overflows)
 local chestIcon = Instance.new("TextLabel")
 chestIcon.Name = "ChestIcon"
 chestIcon.Size = UDim2.new(0, 90, 0, 90)
@@ -137,13 +135,13 @@ chestIconStroke.Color = Color3.fromRGB(180, 140, 30)
 chestIconStroke.Thickness = 3
 chestIconStroke.Parent = chestIcon
 
--- Título
+-- Title
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(1, -40, 0, 40)
 titleLabel.Position = UDim2.new(0, 20, 0, 55)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "COFRE DEL TESORO"
+titleLabel.Text = "TREASURE CHEST"
 titleLabel.TextColor3 = Color3.fromRGB(255, 220, 80)
 titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.FredokaOne
@@ -155,7 +153,7 @@ titleStroke.Color = Color3.fromRGB(100, 70, 0)
 titleStroke.Thickness = 2
 titleStroke.Parent = titleLabel
 
--- Línea separadora dorada
+-- Golden separator line
 local separator = Instance.new("Frame")
 separator.Name = "Separator"
 separator.Size = UDim2.new(0.8, 0, 0, 3)
@@ -169,13 +167,13 @@ local sepCorner = Instance.new("UICorner")
 sepCorner.CornerRadius = UDim.new(0, 2)
 sepCorner.Parent = separator
 
--- Recompensa (monedas)
+-- Reward (coins)
 local rewardLabel = Instance.new("TextLabel")
 rewardLabel.Name = "Reward"
 rewardLabel.Size = UDim2.new(1, -40, 0, 50)
 rewardLabel.Position = UDim2.new(0, 20, 0, 115)
 rewardLabel.BackgroundTransparency = 1
-rewardLabel.Text = "💰 10,000 Monedas 💰"
+rewardLabel.Text = "💰 10,000 Coins 💰"
 rewardLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
 rewardLabel.TextScaled = true
 rewardLabel.Font = Enum.Font.FredokaOne
@@ -187,13 +185,13 @@ rewardStroke.Color = Color3.fromRGB(0, 80, 0)
 rewardStroke.Thickness = 2
 rewardStroke.Parent = rewardLabel
 
--- Descripción / estado
+-- Description / status
 local descLabel = Instance.new("TextLabel")
 descLabel.Name = "Description"
 descLabel.Size = UDim2.new(1, -40, 0, 40)
 descLabel.Position = UDim2.new(0, 20, 0, 170)
 descLabel.BackgroundTransparency = 1
-descLabel.Text = "Únete al grupo para desbloquear esta recompensa"
+descLabel.Text = "Join the group to unlock this reward"
 descLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
 descLabel.TextScaled = true
 descLabel.Font = Enum.Font.GothamBold
@@ -201,7 +199,7 @@ descLabel.TextWrapped = true
 descLabel.ZIndex = 52
 descLabel.Parent = mainFrame
 
--- Botón de acción principal
+-- Main action button
 local actionButton = Instance.new("ImageButton")
 actionButton.Name = "ActionButton"
 actionButton.Size = UDim2.new(0.75, 0, 0, 55)
@@ -228,7 +226,7 @@ local actionText = Instance.new("TextLabel")
 actionText.Name = "ButtonText"
 actionText.Size = UDim2.new(1, 0, 1, 0)
 actionText.BackgroundTransparency = 1
-actionText.Text = "COBRAR RECOMPENSA"
+actionText.Text = "CLAIM REWARD"
 actionText.TextColor3 = Color3.fromRGB(255, 255, 255)
 actionText.TextScaled = true
 actionText.Font = Enum.Font.FredokaOne
@@ -240,7 +238,7 @@ actionTextStroke.Color = Color3.fromRGB(20, 80, 30)
 actionTextStroke.Thickness = 2
 actionTextStroke.Parent = actionText
 
--- Botón de cerrar
+-- Close button
 UIComponentsManager.createCloseButton(mainFrame, {
 	onClose = function()
 		if isUIOpen then
@@ -250,7 +248,7 @@ UIComponentsManager.createCloseButton(mainFrame, {
 })
 
 -- ============================================
--- ANIMACIONES Y LÓGICA DE UI
+-- ANIMATIONS AND UI LOGIC
 -- ============================================
 
 local function openUI()
@@ -262,7 +260,7 @@ local function openUI()
 	overlay.Visible = true
 	mainFrame.Visible = true
 
-	-- Animación de entrada
+	-- Entry animation
 	mainFrame.Size = UDim2.new(0, 0, 0, 0)
 	mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 
@@ -298,7 +296,7 @@ function closeUI()
 	mainFrame.Visible = false
 end
 
--- Cerrar al tocar el overlay
+-- Close when tapping overlay
 overlay.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 		closeUI()
@@ -306,51 +304,51 @@ overlay.InputBegan:Connect(function(input)
 end)
 
 -- ============================================
--- ACTUALIZAR UI SEGÚN ESTADO
+-- UPDATE UI BASED ON STATUS
 -- ============================================
 
 local function updateUIState(status)
 	if status.CanClaim then
-		-- Puede cobrar
-		descLabel.Text = "¡Estás en el grupo! Reclama tu recompensa"
+		-- Can claim
+		descLabel.Text = "You're in the group! Claim your reward"
 		descLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
 
 		actionButton.ImageColor3 = Color3.fromRGB(50, 200, 80)
 		actionStroke.Color = Color3.fromRGB(30, 130, 50)
-		actionText.Text = "COBRAR 10,000 MONEDAS"
+		actionText.Text = "CLAIM 10,000 COINS"
 		actionButton.Visible = true
 
 	elseif status.Reason == "AlreadyClaimed" then
-		-- Ya reclamó
-		descLabel.Text = "¡Ya reclamaste esta recompensa!"
+		-- Already claimed
+		descLabel.Text = "You already claimed this reward!"
 		descLabel.TextColor3 = Color3.fromRGB(255, 200, 80)
 
 		actionButton.ImageColor3 = Color3.fromRGB(80, 80, 80)
 		actionStroke.Color = Color3.fromRGB(50, 50, 50)
-		actionText.Text = "YA RECLAMADO ✓"
+		actionText.Text = "ALREADY CLAIMED ✓"
 		actionButton.Visible = true
 		hasClaimed = true
 
 	elseif status.Reason == "NotInGroup" then
-		-- No está en el grupo
-		descLabel.Text = "Debes unirte al grupo para desbloquear esta recompensa"
+		-- Not in the group
+		descLabel.Text = "You must join the group to unlock this reward"
 		descLabel.TextColor3 = Color3.fromRGB(255, 150, 150)
 
 		actionButton.ImageColor3 = Color3.fromRGB(80, 130, 255)
 		actionStroke.Color = Color3.fromRGB(40, 70, 180)
-		actionText.Text = "UNIRSE AL GRUPO"
+		actionText.Text = "JOIN THE GROUP"
 		actionButton.Visible = true
 
 	else
 		-- Error
-		descLabel.Text = "Error al verificar. Intenta de nuevo más tarde."
+		descLabel.Text = "Error verifying. Please try again later."
 		descLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 		actionButton.Visible = false
 	end
 end
 
 -- ============================================
--- HANDLER DEL BOTÓN DE ACCIÓN
+-- ACTION BUTTON HANDLER
 -- ============================================
 
 local isProcessing = false
@@ -358,26 +356,24 @@ local isProcessing = false
 actionButton.MouseButton1Click:Connect(function()
 	if isProcessing or hasClaimed then return end
 
-	-- Verificar estado actual
+	-- Check current status
 	local status = CheckTreasureStatus:InvokeServer()
 
 	if status.Reason == "NotInGroup" then
-		-- Abrir página del grupo
+		-- Show group notification
 		SoundManager.play("ButtonClick")
 
-		-- Intentar abrir el enlace del grupo
-		local success, err = pcall(function()
-			-- SetCore para abrir URL en el navegador del juego
+		pcall(function()
 			local StarterGui = game:GetService("StarterGui")
 			StarterGui:SetCore("SendNotification", {
-				Title = "Únete al grupo",
-				Text = "Ve a Roblox y busca el grupo ID: " .. GROUP_ID,
+				Title = "Join the Group",
+				Text = "Go to Roblox and search for group ID: " .. GROUP_ID,
 				Duration = 8,
 			})
 		end)
 
-		-- Después de unirse, el jugador puede cerrar y volver a interactuar
-		descLabel.Text = "Únete al grupo y vuelve a abrir el cofre"
+		-- After joining, the player can close and interact again
+		descLabel.Text = "Join the group and come back to the chest"
 		descLabel.TextColor3 = Color3.fromRGB(255, 220, 80)
 		return
 	end
@@ -392,9 +388,9 @@ actionButton.MouseButton1Click:Connect(function()
 		return
 	end
 
-	-- Intentar reclamar
+	-- Try to claim
 	isProcessing = true
-	actionText.Text = "PROCESANDO..."
+	actionText.Text = "PROCESSING..."
 	actionButton.ImageColor3 = Color3.fromRGB(150, 150, 150)
 
 	local success, message = ClaimTreasure:InvokeServer()
@@ -403,14 +399,14 @@ actionButton.MouseButton1Click:Connect(function()
 		SoundManager.play("CashRegister")
 		hasClaimed = true
 
-		-- Animación de éxito
+		-- Success animation
 		actionButton.ImageColor3 = Color3.fromRGB(255, 200, 50)
 		actionStroke.Color = Color3.fromRGB(180, 140, 30)
-		actionText.Text = "¡RECLAMADO! ✓"
-		descLabel.Text = "¡Has recibido 10,000 monedas!"
+		actionText.Text = "CLAIMED! ✓"
+		descLabel.Text = "You received 10,000 coins!"
 		descLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
 
-		-- Efecto de celebración en el texto de recompensa
+		-- Celebration effect on reward text
 		local popTween = TweenService:Create(rewardLabel, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 			TextColor3 = Color3.fromRGB(255, 255, 100),
 		})
@@ -420,7 +416,7 @@ actionButton.MouseButton1Click:Connect(function()
 			TextColor3 = Color3.fromRGB(100, 255, 100),
 		}):Play()
 
-		-- Cerrar automáticamente después de 2 segundos
+		-- Auto-close after 2 seconds
 		task.wait(2)
 		closeUI()
 	else
@@ -429,7 +425,7 @@ actionButton.MouseButton1Click:Connect(function()
 		actionButton.ImageColor3 = Color3.fromRGB(200, 60, 60)
 
 		task.wait(1.5)
-		-- Restaurar
+		-- Restore
 		local newStatus = CheckTreasureStatus:InvokeServer()
 		updateUIState(newStatus)
 	end
@@ -437,7 +433,7 @@ actionButton.MouseButton1Click:Connect(function()
 	isProcessing = false
 end)
 
--- Efecto hover del botón
+-- Hover effect
 actionButton.MouseEnter:Connect(function()
 	if hasClaimed or isProcessing then return end
 	SoundManager.play("ButtonHover")
@@ -459,7 +455,7 @@ actionButton.MouseLeave:Connect(function()
 end)
 
 -- ============================================
--- DETECCIÓN DE PROXIMIDAD
+-- PROXIMITY DETECTION
 -- ============================================
 
 local isNear = false
@@ -494,7 +490,7 @@ RunService.Heartbeat:Connect(function()
 
 	local distance = (humanoidRootPart.Position - treasurePos).Magnitude
 
-	-- Asignar el billboard al modelo si no está asignado
+	-- Attach billboard to the model if not already attached
 	if not proximityBillboard.Parent or proximityBillboard.Parent ~= treasureModel then
 		if treasureModel:IsA("Model") then
 			proximityBillboard.Adornee = treasureModel.PrimaryPart or treasureModel:FindFirstChildWhichIsA("BasePart")
@@ -505,16 +501,16 @@ RunService.Heartbeat:Connect(function()
 	end
 
 	if distance <= PROXIMITY_DISTANCE then
-		-- Mostrar indicador
+		-- Show indicator
 		if not hasClaimed then
 			proximityBillboard.Enabled = true
 		end
 
 		if not isNear then
 			isNear = true
-			-- Abrir UI automáticamente al acercarse
+			-- Auto-open UI when approaching
 			if not isUIOpen and not hasClaimed then
-				-- Consultar estado al servidor
+				-- Query status from server
 				task.spawn(function()
 					local status = CheckTreasureStatus:InvokeServer()
 					if status.Reason == "AlreadyClaimed" then
@@ -539,14 +535,14 @@ RunService.Heartbeat:Connect(function()
 end)
 
 -- ============================================
--- VERIFICAR ESTADO INICIAL
+-- CHECK INITIAL STATUS
 -- ============================================
 task.spawn(function()
-	task.wait(3) -- Esperar a que carguen los datos
+	task.wait(3) -- Wait for data to load
 	local status = CheckTreasureStatus:InvokeServer()
 	if status and status.Reason == "AlreadyClaimed" then
 		hasClaimed = true
 	end
 end)
 
-print("[TreasureChestUI] UI del cofre del tesoro inicializada")
+print("[TreasureChestUI] Treasure chest UI initialized")

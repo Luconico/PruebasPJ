@@ -1873,4 +1873,137 @@ getPlayerRobuxSpentBindable.OnInvoke = function(player)
 	return data.RobuxSpent or 0
 end
 
+-- ============================================
+-- TREASURE CHEST BINDABLE
+-- ============================================
+local claimTreasureBindable = Instance.new("BindableFunction")
+claimTreasureBindable.Name = "ClaimTreasureServer"
+claimTreasureBindable.Parent = serverFolder
+
+claimTreasureBindable.OnInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data then return false, "No data" end
+
+	if data.TreasureClaimed then
+		return false, "AlreadyClaimed"
+	end
+
+	data.TreasureClaimed = true
+
+	updatePlayerData(player, {
+		TreasureClaimed = true
+	})
+
+	print("[PlayerData] Treasure claimed:", player.Name)
+	return true
+end
+
+local checkTreasureBindable = Instance.new("BindableFunction")
+checkTreasureBindable.Name = "CheckTreasureClaimedServer"
+checkTreasureBindable.Parent = serverFolder
+
+checkTreasureBindable.OnInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data then return false end
+	return data.TreasureClaimed or false
+end
+
+-- ============================================
+-- REFERRAL SYSTEM BINDABLES
+-- ============================================
+local getReferralDataBindable = Instance.new("BindableFunction")
+getReferralDataBindable.Name = "GetReferralDataServer"
+getReferralDataBindable.Parent = serverFolder
+
+getReferralDataBindable.OnInvoke = function(player)
+	local data = getPlayerData(player)
+	if not data then return nil end
+
+	if not data.ReferralData then
+		data.ReferralData = {
+			ReferredPlayers = {},
+			ClaimedCount = 0,
+			PendingRewards = 0,
+		}
+	end
+
+	-- Return a copy of the referral data for reading
+	return {
+		ReferredPlayers = data.ReferralData.ReferredPlayers,
+		ClaimedCount = data.ReferralData.ClaimedCount,
+		PendingRewards = data.ReferralData.PendingRewards,
+	}
+end
+
+local addReferralBindable = Instance.new("BindableFunction")
+addReferralBindable.Name = "AddReferralServer"
+addReferralBindable.Parent = serverFolder
+
+addReferralBindable.OnInvoke = function(player, referredUserId, maxReferrals)
+	local data = getPlayerData(player)
+	if not data then return false, "No data" end
+
+	if not data.ReferralData then
+		data.ReferralData = {
+			ReferredPlayers = {},
+			ClaimedCount = 0,
+			PendingRewards = 0,
+		}
+	end
+
+	-- Check max
+	if #data.ReferralData.ReferredPlayers >= maxReferrals then
+		return false, "MaxReached"
+	end
+
+	-- Check duplicate
+	for _, id in ipairs(data.ReferralData.ReferredPlayers) do
+		if id == referredUserId then
+			return false, "AlreadyReferred"
+		end
+	end
+
+	-- Register
+	table.insert(data.ReferralData.ReferredPlayers, referredUserId)
+	data.ReferralData.PendingRewards = data.ReferralData.PendingRewards + 1
+
+	updatePlayerData(player, {
+		ReferralData = data.ReferralData,
+	})
+
+	print("[PlayerData] Referral added:", player.Name, "-> UserId", referredUserId)
+	return true, data.ReferralData.PendingRewards
+end
+
+local claimReferralBindable = Instance.new("BindableFunction")
+claimReferralBindable.Name = "ClaimReferralServer"
+claimReferralBindable.Parent = serverFolder
+
+claimReferralBindable.OnInvoke = function(player, maxReferrals)
+	local data = getPlayerData(player)
+	if not data then return false, "No data" end
+
+	if not data.ReferralData then
+		return false, "No referral data"
+	end
+
+	if data.ReferralData.PendingRewards <= 0 then
+		return false, "NoPending"
+	end
+
+	if data.ReferralData.ClaimedCount >= maxReferrals then
+		return false, "MaxClaimed"
+	end
+
+	data.ReferralData.PendingRewards = data.ReferralData.PendingRewards - 1
+	data.ReferralData.ClaimedCount = data.ReferralData.ClaimedCount + 1
+
+	updatePlayerData(player, {
+		ReferralData = data.ReferralData,
+	})
+
+	print("[PlayerData] Referral claimed:", player.Name, "(", data.ReferralData.ClaimedCount, "/", maxReferrals, ")")
+	return true, data.ReferralData.ClaimedCount, data.ReferralData.PendingRewards
+end
+
 print("[PlayerData] Data system initialized")
